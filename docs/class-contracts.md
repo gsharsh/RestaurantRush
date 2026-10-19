@@ -112,148 +112,283 @@ These are active Stage 1 relationships and must be tested in Stage 1. No future-
 
 These signatures are the baseline for implementation. A change is allowed when the affected owners agree and update this document, the Draw.io diagram and relevant tests in the same pull request.
 
+### Package layout
+
+| Package | Stage 1 types |
+| --- | --- |
+| `restaurantrush.app` | `RestaurantRushApp` |
+| `restaurantrush.boundary` | `RestaurantCLI` |
+| `restaurantrush.control` | `GameController`, `TurnManager`, `ArrivalSchedule` |
+| `restaurantrush.domain` | `Customer`, `RegularCustomer`, `Order`, `MenuItem`, `Restaurant`, `Table`, `CustomerStatus`, `OrderStatus`, `ActionResult` |
+| `restaurantrush.staff` | `Waiter`, `Chef`, `Cashier` |
+| `restaurantrush.view` | `GameSnapshot`, `CustomerView`, `TableView` |
+
+### Signature and failure conventions
+
+- Signatures below are package-qualified by the table above; imports are omitted for readability.
+- All listed fields are `private` unless explicitly marked otherwise. Constants are `private static final`.
+- Constructor nulls and invalid primitive values throw `IllegalArgumentException` before an object is created.
+- Invalid internal lifecycle transitions throw `IllegalStateException` without partial mutation.
+- Invalid manager actions return `ActionResult.fail(...)`, preserve all state and do not consume a staff choice.
+- A lookup documented as nullable returns `null` when no match exists. Other methods must not silently return `null`.
+- Collection getters return `List.copyOf(...)` or an equivalent immutable copy; they never return the owned mutable collection.
+- Owners may add private helper methods, but may not change a listed public/protected signature without the contract-change process in Section 12.
+
 ### 4.1 Boundary and immutable views
 
 #### `RestaurantRushApp` — owner M5
 
 Constructs one shared object graph and starts the application.
 
+**Declaration:** `public final class RestaurantRushApp` with a private no-argument constructor.
+
 | Public operation | Contract |
 | --- | --- |
 | `public static void main(String[] args)` | Create the Restaurant, ArrivalSchedule, Cashier, TurnManager, staff, GameController and RestaurantCLI, then call `run()`. Do not create duplicate domain instances. |
 
+`RestaurantRushApp` has no instance fields and is not instantiated.
+
 #### `RestaurantCLI` — owner M5
+
+**Declaration:** `public final class RestaurantCLI`
+
+| Private field | Type and initial contract |
+| --- | --- |
+| `controller` | `final GameController`; non-null shared controller |
+| `input` | `final Scanner`; non-null command source |
+| `output` | `final PrintStream`; non-null output destination |
 
 | Public operation | Contract |
 | --- | --- |
-| `void run()` | Start a turn, display its snapshot, retry Waiter input until one choice succeeds, retry Chef input until one choice succeeds, then finish the turn. Repeat through turn 18. Stop safely at end-of-input. |
-| `void displayState(GameSnapshot snapshot)` | Show turn, revenue, paid-customer average or `N/A`, queue, tables, customer satisfaction/status, order progress and current staff availability. |
-| `void displayOutcome(GameSnapshot snapshot, boolean victory)` | Show Victory or Defeat plus turns used, served, paid, abandoned, revenue and paid-customer average. |
+| `public RestaurantCLI(GameController controller, Scanner input, PrintStream output)` | Store the three non-null collaborators. Injection keeps CLI behaviour testable without replacing `System.in` or `System.out`. |
+| `public void run()` | Start a turn, display its snapshot, retry Waiter input until one choice succeeds, retry Chef input until one choice succeeds, then finish the turn. Repeat through turn 18. Stop safely at end-of-input without inventing completed turns or an outcome. |
+| `public void displayState(GameSnapshot snapshot)` | Require non-null input. Show turn, revenue, paid-customer average or `N/A`, queue, tables, customer satisfaction/status, order progress and current staff availability. |
+| `public void displayOutcome(GameSnapshot snapshot, boolean victory)` | Require a non-null finished snapshot. Show Victory or Defeat plus completed turns, served, paid, abandoned, revenue and paid-customer average. |
 
 The exact command words are agreed before CLI implementation. Malformed commands and non-integer IDs are explained and retried without calling a domain action. The CLI prints `ActionResult.message()` but does not recreate the validation rule.
 
 #### Immutable view records — owner M5
 
-| Type | Required content |
-| --- | --- |
-| `GameSnapshot` | turn, revenue, nullable paid average, waiting IDs, immutable customer/table views, Waiter/Chef availability, paid/served/abandoned counts |
-| `CustomerView` | customer ID, satisfaction, customer status, nullable order status/item/remaining units and nullable table ID |
-| `TableView` | table ID and nullable occupant ID |
+```java
+public record GameSnapshot(
+        int turn,
+        int completedTurns,
+        int revenueCents,
+        Double averagePaidSatisfaction,
+        List<Integer> waitingCustomerIds,
+        List<CustomerView> customers,
+        List<TableView> tables,
+        boolean waiterAvailable,
+        boolean chefAvailable,
+        int paidCount,
+        int servedCount,
+        int abandonedCount) {}
 
-`GameSnapshot.from(Restaurant, TurnManager)` creates immutable list copies. An existing snapshot must not change when the game later changes.
+public record CustomerView(
+        int id,
+        int satisfaction,
+        CustomerStatus status,
+        OrderStatus orderStatus,
+        String itemName,
+        Integer remainingUnits,
+        Integer tableId) {}
+
+public record TableView(int id, Integer occupantId) {}
+```
+
+`CustomerView` and `TableView` add these exact factories:
+
+| Public operation | Contract |
+| --- | --- |
+| `public static CustomerView from(Customer customer, Integer tableId)` | Require non-null customer and map its optional order fields consistently. |
+| `public static TableView from(Table table)` | Require non-null table and map its optional occupant ID. |
+
+Nullable `CustomerView` order fields are all `null` before ordering. `tableId` and `occupantId` are `null` when absent. `averagePaidSatisfaction` is `null` until the first payment. `GameSnapshot` uses a compact constructor to defensively copy list components with `List.copyOf(...)`; all three records reject invalid required values. `GameController.getSnapshot()` constructs the `GameSnapshot`, preventing a package dependency cycle between `control` and `view`. An existing snapshot must not change when the game later changes.
 
 ### 4.2 Control
 
 #### `GameController` — owner M4
 
+**Declaration:** `public final class GameController`
+
+| Private field | Type and contract |
+| --- | --- |
+| `restaurant` | `final Restaurant`; shared domain state |
+| `turnManager` | `final TurnManager`; sole turn-phase authority |
+| `waiter` | `final Waiter`; shared Waiter service |
+| `chef` | `final Chef`; shared Chef service |
+
 | Public operation | Contract |
 | --- | --- |
-| `void startTurn()` | Delegate once to `TurnManager.beginTurn(restaurant)` before the CLI displays the turn. |
-| `ActionResult seatCustomer(int customerId, int tableId)` | Require an available Waiter choice, delegate to Waiter and record the choice only on success. |
-| `ActionResult takeOrder(int customerId)` | Require an available Waiter choice, delegate to Waiter and record the choice only on success. |
-| `ActionResult serveOrder(int customerId)` | Require an available Waiter choice, delegate with the current turn and record the choice only on success. |
-| `ActionResult prepareOrder(int customerId)` | Require an available Chef choice, find the order, delegate to Chef and record the choice only on success. |
-| `ActionResult waitWaiter()` | Consume the available Waiter choice without another action; otherwise fail. |
-| `ActionResult waitChef()` | Consume the available Chef choice without another action; otherwise fail. |
-| `void finishTurn()` | Resolve automatic events once, then advance or finish the game. |
-| `GameSnapshot snapshot()` | Return a new immutable snapshot of the current state. |
-| `boolean isFinished()` | Return whether all 18 turns have completed. |
-| `boolean isVictory()` | Return true only after completion and only when all three objectives pass. |
+| `public GameController(Restaurant restaurant, TurnManager turnManager, Waiter waiter, Chef chef)` | Store four non-null shared collaborators. |
+| `public void startTurn()` | Delegate once to `turnManager.beginTurn(restaurant)` before the CLI displays the turn. Propagate lifecycle misuse as `IllegalStateException`. |
+| `public ActionResult seatCustomer(int customerId, int tableId)` | Fail if the Waiter choice is unavailable; otherwise delegate and record the choice only on success. |
+| `public ActionResult takeOrder(int customerId)` | Fail if the Waiter choice is unavailable; otherwise delegate and record the choice only on success. |
+| `public ActionResult serveOrder(int customerId)` | Fail if the Waiter choice is unavailable; otherwise delegate with the current turn and record the choice only on success. |
+| `public ActionResult prepareOrder(int customerId)` | Fail if the Chef choice is unavailable or no order exists; otherwise delegate and record the choice only on success. |
+| `public ActionResult waitWaiter()` | Consume the available Waiter choice and return success; fail without mutation if unavailable. |
+| `public ActionResult waitChef()` | Consume the available Chef choice and return success; fail without mutation if unavailable. |
+| `public void finishTurn()` | Call `resolveTurn(restaurant)` and then `advanceTurn()` exactly once. |
+| `public GameSnapshot getSnapshot()` | Read Restaurant and TurnManager state, use the view factories, and return a new immutable snapshot. |
+| `public boolean isFinished()` | Return `turnManager.isFinished()`. |
+| `public boolean isVictory()` | Return false during play. After completion, return true only when all three objectives pass. |
 
 Every manager action passes through the controller. An unavailable staff choice fails before invoking staff.
 
 #### `TurnManager` — owner M4
 
-`TurnManager` owns `currentTurn`, whether the turn has started/resolved, whether each staff choice has been used, completion state, the automatic `Cashier` collaborator and an injected `ArrivalSchedule`. It does not construct a concrete customer.
+**Declaration:** `public final class TurnManager`
+
+| Private field | Type and initial value |
+| --- | --- |
+| `FINAL_TURN` | `static final int`, value `18` |
+| `currentTurn` | `int`, initially `1`, retained as `18` after completion |
+| `completedTurns` | `int`, initially `0`, incremented once by each successful `advanceTurn()` |
+| `waiterTaskUsed` | `boolean`, initially `false` |
+| `chefTaskUsed` | `boolean`, initially `false` |
+| `turnStarted` | `boolean`, initially `false` |
+| `turnResolved` | `boolean`, initially `false` |
+| `finished` | `boolean`, initially `false` |
+| `cashier` | `final Cashier`, non-null automatic-payment collaborator |
+| `arrivals` | `final ArrivalSchedule`, non-null arrival collaborator |
+
+`TurnManager` does not construct a concrete customer or maintain restaurant totals.
 
 | Public operation | Contract |
 | --- | --- |
-| `TurnManager(Cashier cashier, ArrivalSchedule arrivals)` | Store the collaborators used for all turns. Reject null collaborators. |
-| `void beginTurn(Restaurant restaurant)` | Start an unfinished, not-yet-started turn; reset per-turn flags and add the scheduled arrival once. Reject duplicate starts. |
-| `boolean canAssignWaiter()` | True only during an unresolved active turn whose Waiter choice is unused. |
-| `boolean canAssignChef()` | True only after the Waiter choice and before the Chef choice in an unresolved active turn. |
-| `void recordWaiterTask()` | Require Waiter availability and mark the choice used. |
-| `void recordChefTask()` | Require Chef availability and mark the choice used. |
-| `void resolveTurn(Restaurant restaurant)` | Require both choices and an unresolved active turn. Execute the automatic events once in the order defined in Section 5. |
-| `void advanceTurn()` | Require a resolved turn. Advance up to turn 18 or mark the game finished after turn 18. |
-| `int currentTurn()` | Return the current turn number. |
-| `boolean isFinished()` | Return true only after turn 18 has been resolved and closed. |
+| `public TurnManager(Cashier cashier, ArrivalSchedule arrivals)` | Store both non-null collaborators and initialise the fields above. |
+| `public void beginTurn(Restaurant restaurant)` | Require non-null Restaurant and a not-started, unfinished turn. Reset task/resolution flags, obtain at most one arrival and add it once. |
+| `public boolean canAssignWaiter()` | True only during an unresolved active turn whose Waiter choice is unused. |
+| `public boolean canAssignChef()` | True only during an unresolved active turn after the Waiter choice and before the Chef choice. |
+| `public void recordWaiterTask()` | Require `canAssignWaiter()`; mark the choice used. Otherwise throw `IllegalStateException`. |
+| `public void recordChefTask()` | Require `canAssignChef()`; mark the choice used. Otherwise throw `IllegalStateException`. |
+| `public void resolveTurn(Restaurant restaurant)` | Require non-null Restaurant, an active unresolved turn and both completed choices. Execute Section 5 automatic events exactly once, then mark resolved. |
+| `public void advanceTurn()` | Require a started, resolved, unfinished turn. Increment `completedTurns`; either advance `currentTurn` or mark finished after turn 18; then close the turn. |
+| `public int getCurrentTurn()` | Return the current/displayed turn, from 1 through 18. |
+| `public int getCompletedTurns()` | Return completed turns, from 0 through 18. |
+| `public boolean isFinished()` | Return true only after turn 18 has resolved and advanced. |
 
 #### `ArrivalSchedule` — owner M4
 
-Owns the Stage 1 mapping of turns 1, 4, 7, 10, 13 and 16 to customer IDs 1 through 6. `Customer arrivalFor(int turn)` returns a new `RegularCustomer` for a scheduled turn and `null` otherwise. `TurnManager` calls it only from a guarded `beginTurn()`, so a turn cannot receive duplicate arrivals.
+**Declaration:** `public final class ArrivalSchedule`
+
+| Private field | Type and contract |
+| --- | --- |
+| `CUSTOMER_ID_BY_TURN` | immutable `static final Map<Integer, Integer>` containing `1->1`, `4->2`, `7->3`, `10->4`, `13->5`, `16->6` |
+
+| Public operation | Contract |
+| --- | --- |
+| `public ArrivalSchedule()` | Construct the stateless Stage 1 schedule. |
+| `public Customer arrivalFor(int turn)` | Require `1 <= turn <= 18`. Return a new `RegularCustomer` with the mapped ID, or `null` on a valid non-arrival turn. |
+
+`TurnManager` calls `arrivalFor()` only from a guarded `beginTurn()`, so duplicate start attempts cannot add duplicate arrivals.
 
 ### 4.3 Customer and order domain
 
 #### `Customer` — owner M1
 
-`Customer` is an abstract base for the lifecycle shared by every Stage 1 customer. Stage 1 uses only `RegularCustomer`, but Restaurant, staff and control code accept the base type.
+**Declaration:** `public abstract class Customer`
 
-| State owned | Initial value or invariant |
+`Customer` is the lifecycle base for every Stage 1 customer. Stage 1 instantiates only `RegularCustomer`, while Restaurant, staff and control code depend on the base type.
+
+| Private field | Type and initial value |
 | --- | --- |
-| ID | positive and immutable; base arrivals use 1 through 6 |
-| satisfaction | 100, always clamped to 0 through 100 |
-| status | initially `WAITING` |
-| served turn | `-1` until service |
-| ready-to-pay turn | `-1` until eating finishes |
-| order | `null` until ordering; at most one |
+| `id` | `final int`; positive; base arrivals use 1 through 6 |
+| `satisfaction` | `int`; initially `100`; always 0 through 100 |
+| `status` | `CustomerStatus`; initially `WAITING` |
+| `servedTurn` | `int`; initially `-1`; set once when served |
+| `readyToPayTurn` | `int`; initially `-1`; set once after eating |
+| `order` | `Order`; initially `null`; assigned at most once |
 
-| Public operation | Contract |
+| Protected/public operation | Contract |
 | --- | --- |
 | `protected Customer(int id)` | Initialise the shared lifecycle for a positive immutable ID. Only a concrete customer subclass is instantiated. |
-| `abstract int waitingLossPerTurn()` | Return this customer's Stage 1 waiting loss. Called by the base lifecycle method rather than by a type check. |
-| `abstract MenuItem chooseMenuItem(List<MenuItem> menu)` | Choose from a nonempty menu. The manager never supplies the selected item. |
-| `abstract int quotePriceCents(MenuItem item)` | Return the nonnegative bill to lock when this customer orders the item. |
-| `void seat()` | Require `WAITING`; become `SEATED`. |
-| `void acceptOrder(Order order)` | Require `SEATED`, no existing order and matching customer/order IDs. |
-| `void markServed(int turn)` | Require `SEATED` and an associated order already `SERVED`; become `EATING` and record the service turn. |
-| `void finishEating(int turn)` | If `EATING` and served on an earlier turn, become `READY_TO_PAY` and record this turn; otherwise do nothing. |
-| `void applyWaitingLoss()` | If `WAITING` or `SEATED`, subtract `waitingLossPerTurn()` with a floor of zero; otherwise do nothing. |
-| `void markPaid()` | Require `READY_TO_PAY` and an associated order already `PAID`; become `PAID`. |
-| `void abandon()` | Require `WAITING` or `SEATED`; become `LEFT` and cancel any unserved order. Restaurant coordinates queue/table cleanup. |
-
-Standard read-only accessors expose identity, satisfaction, status, timing and the optional order.
+| `public abstract int waitingLossPerTurn()` | Return a nonnegative waiting loss. Called polymorphically by the final lifecycle method. |
+| `public abstract MenuItem chooseMenuItem(List<MenuItem> menu)` | Require a non-null, nonempty menu and return one item contained in it. The manager never supplies the selected item. |
+| `public abstract int quotePriceCents(MenuItem item)` | Require non-null item and return a nonnegative bill to lock. |
+| `public final void seat()` | Require `WAITING`; become `SEATED`. |
+| `public final void acceptOrder(Order order)` | Require `SEATED`, no existing order, non-null order and matching IDs; store the order once. |
+| `public final void markServed(int turn)` | Require positive turn, `SEATED` and associated order already `SERVED`; become `EATING` and record the turn once. |
+| `public final void finishEating(int turn)` | Require positive turn. If `EATING` and `servedTurn < turn`, become `READY_TO_PAY` and record the turn; otherwise make no change. |
+| `public final void applyWaitingLoss()` | If `WAITING` or `SEATED`, subtract `waitingLossPerTurn()` with a floor of zero; otherwise make no change. |
+| `public final void markPaid()` | Require `READY_TO_PAY` and associated order already `PAID`; become `PAID`. |
+| `public final void abandon()` | Require `WAITING` or `SEATED`; cancel any unserved order and become `LEFT`. Restaurant coordinates queue/table cleanup. |
+| `public final int getId()` | Return the immutable ID. |
+| `public final int getSatisfaction()` | Return current satisfaction. |
+| `public final CustomerStatus getStatus()` | Return current lifecycle state. |
+| `public final int getServedTurn()` | Return service turn, or `-1` before service. |
+| `public final int getReadyToPayTurn()` | Return ready-to-pay turn, or `-1` before eating completes. |
+| `public final Order getOrder()` | Return the associated order, or `null` before ordering. |
 
 Lifecycle mutation stays in the base class. Subclasses supply only the documented behavioural rules unless a later contract deliberately changes that boundary.
 
 #### `RegularCustomer` — owner M1
 
-The only Stage 1 customer implementation. `RegularCustomer(int id)` delegates shared setup to the base constructor. It returns a waiting loss of 8, chooses `menu.get((id - 1) % menu.size())`, and quotes the selected item's full integer-cent price.
+**Declaration:** `public final class RegularCustomer extends Customer`
 
-#### `Order` — owner M1
-
-| State owned | Initial value or invariant |
-| --- | --- |
-| ID | positive, immutable and equal to its customer's ID |
-| menu item | non-null and immutable |
-| status | initially `PLACED` |
-| remaining units | item's preparation units; never negative |
-| bill cents | explicit nonnegative locked price supplied at construction; never recalculated |
+`RegularCustomer` adds no fields.
 
 | Public operation | Contract |
 | --- | --- |
-| `Order(int id, MenuItem item, int lockedBillCents)` | Create a `PLACED` order with the item's preparation units and the supplied Stage 1 quote. Validate all arguments. |
-| `boolean canPrepare()` | True only for `PLACED` or `PREPARING` with positive remaining units. |
-| `void prepareOneUnit()` | Require `canPrepare()`, subtract exactly one unit, then become `READY` at zero or `PREPARING` otherwise. |
-| `void markServed()` | Require `READY`; become `SERVED`. |
-| `void markPaid()` | Require `SERVED`; become `PAID`. |
-| `void cancel()` | Permit only from `PLACED`, `PREPARING` or `READY`; become `CANCELLED`. |
-| `boolean isReady()` | Return whether status is exactly `READY`; zero units alone is insufficient. |
+| `public RegularCustomer(int id)` | Delegate positive-ID validation and shared initialisation to `Customer`. |
+| `public int waitingLossPerTurn()` | Return `8`. |
+| `public MenuItem chooseMenuItem(List<MenuItem> menu)` | Return `menu.get((getId() - 1) % menu.size())` after validating the menu. |
+| `public int quotePriceCents(MenuItem item)` | Return `item.getPriceCents()` after validating the item. |
 
-Standard read-only accessors expose ID, item, status, remaining units and locked bill.
+#### `Order` — owner M1
+
+**Declaration:** `public final class Order`
+
+| Private field | Type and initial value |
+| --- | --- |
+| `id` | `final int`; positive and equal to its customer's ID |
+| `item` | `final MenuItem`; non-null |
+| `status` | `OrderStatus`; initially `PLACED` |
+| `remainingUnits` | `int`; initially `item.getPreparationUnits()`; never negative |
+| `billCents` | `final int`; explicit nonnegative locked quote |
+
+| Public operation | Contract |
+| --- | --- |
+| `public Order(int id, MenuItem item, int lockedBillCents)` | Validate positive ID, non-null item, positive item units and nonnegative quote; create a `PLACED` order. |
+| `public boolean canPrepare()` | True only for `PLACED` or `PREPARING` with positive remaining units. |
+| `public void prepareOneUnit()` | Require `canPrepare()`, subtract exactly one unit, then become `READY` at zero or `PREPARING` otherwise. |
+| `public void markServed()` | Require `READY`; become `SERVED`. |
+| `public void markPaid()` | Require `SERVED`; become `PAID`. |
+| `public void cancel()` | Require `PLACED`, `PREPARING` or `READY`; become `CANCELLED`. |
+| `public boolean isReady()` | Return whether status is exactly `READY`; zero units alone is insufficient. |
+| `public int getId()` | Return immutable order ID. |
+| `public MenuItem getItem()` | Return immutable item reference. |
+| `public OrderStatus getStatus()` | Return current order state. |
+| `public int getRemainingUnits()` | Return remaining Chef units. |
+| `public int getBillCents()` | Return the locked bill. |
 
 In Stage 1, Waiter must pass exactly `customer.quotePriceCents(item)`, which for `RegularCustomer` equals `item.priceCents()`. The separate constructor value is an exercised pricing boundary, not permission for arbitrary prices.
 
 #### `MenuItem` — owner M1
 
-An immutable value containing a nonblank name, nonnegative integer-cent price and positive preparation-unit count. It exposes read-only accessors and no setters.
+**Declaration:** `public class MenuItem`
+
+| Private field | Type and contract |
+| --- | --- |
+| `name` | `final String`; nonblank display name |
+| `priceCents` | `final int`; nonnegative base price |
+| `preparationUnits` | `final int`; positive number of Chef actions |
+
+| Public operation | Contract |
+| --- | --- |
+| `public MenuItem(String name, int priceCents, int preparationUnits)` | Validate all three values and create an immutable offering. |
+| `public final String getName()` | Return display name. |
+| `public final int getPriceCents()` | Return base price in cents. |
+| `public final int getPreparationUnits()` | Return required preparation units. |
+
+There are no setters. The class is not an invitation to add later-stage subclasses now; Stage 1 uses three direct instances only.
 
 #### Lifecycle enumerations — owner M1
 
-| Enumeration | Values and normal flow |
+| Exact declaration | Normal flow |
 | --- | --- |
-| `CustomerStatus` | `WAITING -> SEATED -> EATING -> READY_TO_PAY -> PAID`; `WAITING` or `SEATED` may instead become `LEFT` |
-| `OrderStatus` | `PLACED -> PREPARING -> READY -> SERVED -> PAID`; `PLACED`, `PREPARING` or `READY` may instead become `CANCELLED` |
+| `public enum CustomerStatus { WAITING, SEATED, EATING, READY_TO_PAY, PAID, LEFT }` | `WAITING -> SEATED -> EATING -> READY_TO_PAY -> PAID`; `WAITING` or `SEATED` may instead become `LEFT` |
+| `public enum OrderStatus { PLACED, PREPARING, READY, SERVED, PAID, CANCELLED }` | `PLACED -> PREPARING -> READY -> SERVED -> PAID`; `PLACED`, `PREPARING` or `READY` may instead become `CANCELLED` |
 
 A one-unit order moves directly from `PLACED` to `READY`. `PAID`, `LEFT` and `CANCELLED` are terminal in their respective lifecycles.
 
@@ -261,24 +396,67 @@ A one-unit order moves directly from `PLACED` to `READY`. `PAID`, `LEFT` and `CA
 
 #### `Table` — owner M2
 
-Owns a positive immutable ID and a nullable occupant. `assign(Customer)` requires an available table; `release()` requires an occupant. Restaurant coordinates these operations with customer and queue state.
+**Declaration:** `public final class Table`
 
-#### `Restaurant` — owner M2
-
-Restaurant owns the waiting queue, all-customer history, two tables, the ordered Stage 1 menu, all-order history, paid revenue, paid satisfaction total and paid/served/abandoned counts.
+| Private field | Type and initial value |
+| --- | --- |
+| `id` | `final int`; positive table ID |
+| `occupant` | `Customer`; initially `null` |
 
 | Public operation | Contract |
 | --- | --- |
-| `void addArrival(Customer customer)` | Add a unique customer to history and the back of the waiting queue. |
-| `ActionResult seat(int customerId, int tableId)` | Require an existing queued customer and free table. Validate first, then update the queue, table and customer atomically. |
-| `void registerOrder(Order order)` | Register a unique order. The customer and registry must share the same instance. |
-| `ActionResult serve(int customerId, int turn)` | Require a seated customer, occupied table and their registered `READY` order. Mark order served, mark customer eating and increment served count once. |
-| `Customer oldestEligiblePayer(int turn)` | Return the customer with the earliest ready-to-pay turn strictly before this turn, breaking ties by lowest customer ID, or `null`. |
-| `boolean recordPayment(Customer customer, int turn)` | Revalidate eligibility, mark the order/customer paid, release the table and update revenue and paid statistics exactly once. |
-| `void removeAbandoned(Customer customer)` | For an active unserved customer at zero satisfaction, remove from queue or release table, abandon/cancel and increment the count exactly once. |
-| `double averagePaidSatisfaction()` | Return the floating-point average; snapshot uses `null`/`N/A` when paid count is zero. |
+| `public Table(int id)` | Require positive ID and create an available table. |
+| `public boolean isAvailable()` | Return whether `occupant == null`. |
+| `public void assign(Customer customer)` | Require non-null customer and an available table; store the occupant. Restaurant coordinates queue removal and `customer.seat()`. |
+| `public void release()` | Require an occupant; clear it. Restaurant calls this only after valid payment or abandonment. |
+| `public int getId()` | Return immutable table ID. |
+| `public Customer getOccupant()` | Return occupant, or `null` while available. |
 
-Read-only queries provide customers, active customers, queue, tables, menu, orders, lookups and totals. Invalid cross-object actions must not partially change state.
+#### `Restaurant` — owner M2
+
+**Declaration:** `public final class Restaurant`
+
+| Private field | Type and initial value |
+| --- | --- |
+| `waitingQueue` | `final Deque<Customer>`; empty; arrival order |
+| `customers` | `final List<Customer>`; empty; retains all arrivals |
+| `tables` | `final List<Table>`; table IDs 1 and 2 |
+| `menu` | `final List<MenuItem>`; Salad, Burger, Pasta in that order |
+| `orders` | `final List<Order>`; empty; retains paid/cancelled history |
+| `revenueCents` | `int`; initially `0` |
+| `servedCount` | `int`; initially `0` |
+| `abandonedCount` | `int`; initially `0` |
+| `paidSatisfactionTotal` | `int`; initially `0` |
+| `paidCount` | `int`; initially `0` |
+
+| Public operation | Contract |
+| --- | --- |
+| `public Restaurant()` | Create the exact Stage 1 tables/menu and initialise empty collections and zero totals. |
+| `public void addArrival(Customer customer)` | Require non-null customer and unique positive ID; add the same object to history and queue. Invalid input changes neither. |
+| `public ActionResult seat(int customerId, int tableId)` | Require an existing queued customer and free table. Validate everything first, then remove from queue, assign table and call `customer.seat()` atomically. |
+| `public ActionResult registerOrder(int customerId, Order order)` | Require a seated customer with no order, non-null matching-ID order and no registered duplicate. Validate first, then call `customer.acceptOrder(order)` and add the same object to order history. |
+| `public ActionResult serve(int customerId, int turn)` | Require positive turn, a seated table occupant and their registered `READY` order. Validate first, mark order served, mark customer eating and increment served count once. |
+| `public Customer oldestEligiblePayer(int turn)` | Require positive turn. Return the `READY_TO_PAY` customer with the earliest ready-to-pay turn strictly before this turn, breaking ties by lower customer ID, or `null`. |
+| `public boolean recordPayment(Customer customer, int turn)` | Return false without mutation unless the supplied restaurant customer is eligible. Otherwise mark order then customer paid, release the table, add the locked bill and satisfaction, and increment paid count once. |
+| `public void removeAbandoned(Customer customer)` | Require a restaurant customer at zero satisfaction in `WAITING` or `SEATED`. Remove from queue or release table, call `abandon()` and increment abandoned count once. |
+| `public Customer findCustomer(int id)` | Return matching historical customer, or `null`. |
+| `public Order findOrder(int id)` | Return matching historical order, or `null`. |
+| `public Table findTable(int id)` | Return matching table, or `null`. |
+| `public Table findTableForCustomer(int customerId)` | Return the customer's occupied table, or `null`. |
+| `public List<Customer> getActiveCustomers()` | Immutable copy excluding `PAID` and `LEFT`. |
+| `public List<Customer> getWaitingQueue()` | Immutable arrival-order copy of the queue. |
+| `public List<Customer> getCustomers()` | Immutable copy of all arrived customers. |
+| `public List<Table> getTables()` | Immutable copy in table-ID order. |
+| `public List<MenuItem> getMenu()` | Immutable copy in deterministic selection order. |
+| `public List<Order> getOrders()` | Immutable copy of all orders. |
+| `public int getRevenueCents()` | Return successful-payment revenue. |
+| `public int getPaidCount()` | Return successful payment count. |
+| `public int getServedCount()` | Return successful service count. |
+| `public int getAbandonedCount()` | Return unhappy-departure count. |
+| `public int getPaidSatisfactionTotal()` | Return sum of satisfaction recorded at payment. |
+| `public double getAveragePaidSatisfaction()` | Return floating-point total/count, or `0.0` when count is zero; snapshot converts the zero-count case to `null`. |
+
+All cross-object operations validate their complete request before mutation. `registerOrder()` makes Customer and Restaurant share one `Order` instance; Waiter never links them separately.
 
 ### 4.5 Staff and results
 
@@ -286,23 +464,56 @@ No common `Staff` superclass is required in Stage 1: Waiter, Chef and Cashier do
 
 #### `Waiter` — owner M3
 
+**Declaration:** `public final class Waiter`
+
+Waiter has no fields or independent availability flag.
+
 | Public operation | Contract |
 | --- | --- |
-| `ActionResult seat(Restaurant restaurant, int customerId, int tableId)` | Delegate seating to Restaurant. |
-| `ActionResult takeOrder(Restaurant restaurant, int customerId)` | Require a seated customer without an order, ask the customer to choose from the menu and quote its price, create one shared order with that locked bill, link/register it atomically and report the dish. |
-| `ActionResult serve(Restaurant restaurant, int customerId, int turn)` | Delegate service to Restaurant. |
+| `public Waiter()` | Construct a stateless Waiter. |
+| `public ActionResult seat(Restaurant restaurant, int customerId, int tableId)` | Require non-null Restaurant and delegate seating. |
+| `public ActionResult takeOrder(Restaurant restaurant, int customerId)` | Fail if customer is missing, not `SEATED` or already has an order. Otherwise ask the customer to choose and quote, create `Order(customerId, item, quote)`, and delegate atomic linking to `restaurant.registerOrder(customerId, order)`. |
+| `public ActionResult serve(Restaurant restaurant, int customerId, int turn)` | Require non-null Restaurant and delegate service. |
 
 #### `Chef` — owner M3
 
-`ActionResult prepareOneUnit(Order order)` fails without mutation for a missing or ineligible order. Otherwise it calls `Order.prepareOneUnit()` exactly once and reports whether the order became `READY`.
+**Declaration:** `public final class Chef`
+
+Chef has no fields or independent availability flag.
+
+| Public operation | Contract |
+| --- | --- |
+| `public Chef()` | Construct a stateless Chef. |
+| `public ActionResult prepareOneUnit(Order order)` | Fail without mutation for `null` or `!order.canPrepare()`. Otherwise call `order.prepareOneUnit()` exactly once and report whether it became `READY`. |
 
 #### `Cashier` — owner M3
 
-`boolean collectOne(Restaurant restaurant, int turn)` automatically selects `restaurant.oldestEligiblePayer(turn)` and records at most one successful payment per turn. A customer becoming `READY_TO_PAY` this turn is not eligible until a later turn.
+**Declaration:** `public final class Cashier`
+
+| Private field | Type and initial value |
+| --- | --- |
+| `lastPaidTurn` | `int`; initially `-1`; updated only after successful payment |
+
+| Public operation | Contract |
+| --- | --- |
+| `public Cashier()` | Initialise `lastPaidTurn` to `-1`. |
+| `public boolean collectOne(Restaurant restaurant, int turn)` | Require non-null Restaurant and positive turn. Return false if a payment already succeeded this turn or no eligible payer exists. Otherwise call `recordPayment`; update `lastPaidTurn` only on success. |
+
+A customer becoming `READY_TO_PAY` this turn is not eligible until a later turn. `lastPaidTurn` is defensive protection; normal flow also invokes Cashier only once from `TurnManager.resolveTurn()`.
 
 #### `ActionResult` — owner M3
 
-An immutable result with `ok(String)`, `fail(String)`, `success()` and `message()`. It carries feedback but contains no printing or domain mutation.
+**Exact declaration:** `public record ActionResult(boolean success, String message)`
+
+| Public operation | Contract |
+| --- | --- |
+| `public ActionResult { ... }` compact constructor | Require a non-null, nonblank message. |
+| `public static ActionResult ok(String message)` | Return a successful result after message validation. |
+| `public static ActionResult fail(String message)` | Return a failed result after message validation. |
+| `public boolean success()` | Generated record accessor. |
+| `public String message()` | Generated record accessor. |
+
+The record contains no printing or domain mutation.
 
 ## 5. Turn and integration contract
 
@@ -363,6 +574,7 @@ Create `docs/testing/stage-1-tests.md` from `TEST-TEMPLATE.md` when testing begi
 Minimum Stage 1 coverage:
 
 - compilation and launch;
+- constructor validation, documented nullable lookups and immutable collection results;
 - arrival schedule, tables, menu and deterministic selection;
 - Regular-customer behaviour exercised through a `Customer` reference, with no concrete-type branching outside construction;
 - customer, order and table lifecycle transitions;
@@ -429,7 +641,7 @@ git switch main
 
 ## 10. Suggested Stage 1 integration order
 
-1. Agree package names, exact CLI commands, constructors, exception conventions and the contracts in this document.
+1. Review and ratify the package layout, signatures, failure conventions and remaining CLI decisions in this document.
 2. Each owner implements a small compiling vertical portion of their Stage 1 responsibility with focused tests.
 3. Integrate immutable menu/customer/order basics, then Restaurant/Table state, then staff operations.
 4. Integrate GameController/TurnManager timing before connecting the CLI.
@@ -442,11 +654,8 @@ git switch main
 | Decision | Owners | Default if not otherwise agreed |
 | --- | --- | --- |
 | Map names to M1-M5 | Whole team | Keep placeholders until recorded |
-| Exact package layout and constructor wiring | M4/M5 | One shared object graph created by `RestaurantRushApp` |
 | Exact CLI command wording and end-of-turn presentation | M4/M5 | Commands shown in the boundary contract are conceptual |
-| Invalid argument/null exception details | M1-M4 | `IllegalArgumentException` for bad values; `IllegalStateException` for invalid transitions; player errors use `ActionResult.fail` |
-| Whether snapshots show all historical customers or active customers only | M2/M5 | Show all arrived customers clearly marked by state |
-| How turns-used is represented after `finishTurn()` | M4/M5 | Add completed-turn data rather than labelling the next turn as completed |
+| Stage 1 release coordinator and evidence reviewer | Whole team | Assign before the first release-candidate run |
 
 ## 12. Contract change process
 

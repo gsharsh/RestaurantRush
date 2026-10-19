@@ -97,7 +97,7 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 
 - Map the five team members to the M1–M5 ownership roles in the class contract.
 - Finalise the exact CLI command wording and input presentation before Stage 1 implementation.
-- Agree the Stage 1 constructor wiring, exception conventions and completed-turn display.
+- Assign the Stage 1 release coordinator and evidence reviewer.
 - Confirm the submission deadline and lab-group archive name.
 
 ## Repository

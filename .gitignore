@@ -1,0 +1,12 @@
+# Java build output
+out/
+*.class
+
+# IDE and operating-system files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Microsoft Office temporary lock files
+~$*.docx

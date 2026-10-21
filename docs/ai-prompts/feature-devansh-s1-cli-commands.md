@@ -3,7 +3,7 @@
 - **Branch:** `feature/devansh-s1-cli-commands`
 - **Member:** Devansh Poddar (M5)
 - **Stage:** Stage 1
-- **Related pull request:** To be added
+- **Related pull request:** #3
 
 ## Prompt 1
 
@@ -25,4 +25,4 @@ Checked that each command maps to exactly one existing `GameController` operatio
 
 **Related commits**
 
-- To be added after commit
+- `fb3d383` - Propose Stage 1 CLI command wording

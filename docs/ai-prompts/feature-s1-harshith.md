@@ -1,589 +1,153 @@
 # AI prompt record
 
-- **Branch:** `feature/s1-harshith`
-- **Member:** Harshith (M1)
-- **Stage:** Stage 1
-- **Related pull request:** None; work is uncommitted.
+- **Branch/member:** `feature/s1-harshith`; Harshith (M1), Stage 1.
+- **Related PR:** Pending; no PR details supplied or verified.
+- **Human verification:** Pending throughout; automated results below are not approval.
+- **Current scope:** Six contracted M1 production types and four self-contained class tests: MenuItemTest, OrderTest, CustomerTest and RegularCustomerTest. Standalone demo, generated HTML, separate M1 handoff and the four extra testing files were removed. Add no optional extras.
 
-## Prompt 1 — M1 foundation
+Material excerpts below are verbatim; repeated specification text is omitted.
+The full shared APIs/invariants remain in [class-contracts.md](../class-contracts.md).
+All automated executions used Java/compiler 26.0.2 with Java 17 compilation target;
+no Java 17 runtime execution is claimed. “Test build” means `./compile.sh --tests`.
+Earlier references to “runner” mean the now-removed
+`java -ea -cp out/classes restaurantrush.domain.M1DomainTests` entry point.
+Current results and limits are in [stage-1-tests.md](../testing/stage-1-tests.md).
+Source names below are under `src/main/java/restaurantrush/domain/`; test names
+are under `src/test/java/restaurantrush/domain/`. Both evidence records were updated
+as needed. No commit, push, merge or tag was performed by these assistant tasks.
 
-**Prompt**
+## Prompt 1 — Foundation
+
+**Prompt — material excerpt**
 
 > On branch feature/s1-harshith, implement the M1 foundation feature: MenuItem, CustomerStatus and OrderStatus.
->
-> Apply the shared instructions. Do not implement Order or customer classes yet.
->
-> 1. MenuItem
->
-> Implement the exact contract declaration:
->
-> public class MenuItem
->
-> Do not make it final, abstract, a record or an enum.
->
-> Use the agreed private final fields:
-> - String name
-> - int priceCents
-> - int preparationUnits
->
-> Implement the exact constructor and final getters from Section 4.3.
->
-> Validate:
-> - Name must be non-null and nonblank.
-> - Price must be nonnegative; zero is valid.
-> - Preparation units must be positive.
->
-> There must be no setters. Preserve the supplied valid display name; do not introduce unagreed trimming or normalization rules.
->
-> Explain how private final state, validated construction and final accessors provide an immutable offering through the agreed API.
->
-> Do not introduce MenuItem subclasses. M2’s Restaurant will construct the production menu.
->
-> 2. Lifecycle enums
->
-> Implement exactly these constants:
->
-> CustomerStatus:
-> WAITING, SEATED, EATING, READY_TO_PAY, PAID, LEFT
->
-> OrderStatus:
-> PLACED, PREPARING, READY, SERVED, PAID, CANCELLED
->
-> Do not merge these state models or add extra constants.
->
-> Explain why preparation readiness belongs to OrderStatus while eating and payment readiness belong to CustomerStatus.
->
-> 3. Focused tests
->
-> Create a self-contained runner under:
-> /Users/gsharsh/RestaurantRush/src/test/java/restaurantrush/domain/
->
-> Use the entry point:
-> restaurantrush.domain.M1DomainTests
->
-> Structure it so later prompts can extend the suite.
->
-> Cover:
-> - Valid construction and exact getter values.
-> - Null, empty and whitespace-only names.
-> - Negative prices.
-> - Valid zero price.
-> - Zero and negative preparation units.
-> - Exact enum constants and their declared order.
->
-> Use the agreed menu as test fixtures:
-> - Salad: 900 cents, 1 unit.
-> - Burger: 1500 cents, 1 unit.
-> - Pasta: 1800 cents, 2 units.
->
-> Use checked assertions and a nonzero exit on failure.
->
-> Run:
-> ./compile.sh --tests
-> java -ea -cp out/classes restaurantrush.domain.M1DomainTests
->
-> Report actual results. Stop after this feature. Log this prompt under ai-prompts too.
 
-**What was used or rejected**
+**What was used or rejected:** Exact MenuItem declaration, validated private final state, final getters, unchanged display name and separate enums. No subclasses or extra APIs.
 
-Applied the requested API and validation to `MenuItem` and kept the two lifecycle
-enums separate with the exact constants and order. Private final fields hold only
-an immutable `String` and primitive integers; constructor validation establishes
-the invariants, and final getters expose them without setters or overrideable
-accessors. Valid display names are stored unchanged.
+**Files affected:** MenuItem.java, CustomerStatus.java, OrderStatus.java, M1DomainTests.java and evidence records.
 
-Order readiness describes preparation of the dish. Eating and readiness to pay
-describe the customer's lifecycle after service, including the separate timing
-delays in Section 5 of the contract.
+**Human verification:** Pending. Automated test build exited 0; runner reported PASS (39 checks), exit 0, in a working tree based on `aaf89d19a63dd2555e3f3ffb0393731d11843ffe`.
 
-Only these three production types are implemented. The agreed menu is test data;
-M2's `Restaurant` remains responsible for constructing the production menu.
-No contract changes, subclasses, dependencies or production placeholders were
-introduced. Human acceptance is pending.
+**Related commit, subsequently observed:** `7754d4883bd9d38dc72a7fb3e2b6cd9653afbb39` — feat(menu item & lifecycle).
 
-**Files affected**
+## Prompt 2 — Order
 
-- `src/main/java/restaurantrush/domain/MenuItem.java`
-- `src/main/java/restaurantrush/domain/CustomerStatus.java`
-- `src/main/java/restaurantrush/domain/OrderStatus.java`
-- `src/test/java/restaurantrush/domain/M1DomainTests.java`
-- `docs/ai-prompts/feature-s1-harshith.md`
-- `docs/testing/stage-1-tests.md`
-
-**Human verification**
-
-Pending Harshith's review. Codex executed `./compile.sh --tests` successfully
-(exit 0), then `java -ea -cp out/classes restaurantrush.domain.M1DomainTests`
-returned `M1DomainTests: PASS (39 checks)` (exit 0). These automated results are
-recorded in [the Stage 1 test record](../testing/stage-1-tests.md); they are not
-human verification. Compilation targeted Java 17 using JDK 26.0.2, and execution
-used Java 26.0.2.
-
-**Related commits**
-
-None created. This feature is an uncommitted working-tree change based on
-`aaf89d19a63dd2555e3f3ffb0393731d11843ffe`.
-
-## Prompt 2 — M1 Order
-
-**Prompt**
+**Prompt — material excerpt**
 
 > Implement the M1 Order feature, building on the existing MenuItem and lifecycle enums.
->
-> Apply the shared instructions. Preserve and extend the foundation tests. Do not implement customer or peer-owned classes yet.
->
-> 1. Exact design
->
-> Implement:
->
-> public final class Order
->
-> Use the exact contract fields and API:
-> - final positive int id.
-> - final non-null MenuItem item.
-> - OrderStatus status, initially PLACED.
-> - int remainingUnits, initially item.getPreparationUnits().
-> - final int billCents, copied from the explicit constructor quote.
->
-> The constructor is:
-> Order(int id, MenuItem item, int lockedBillCents)
->
-> Validate positive ID, non-null item, positive item units and a nonnegative quote before construction succeeds.
->
-> Implement every documented getter with its exact signature.
->
-> 2. Preparation and transitions
->
-> Implement the documented operations precisely:
->
-> - canPrepare(): true only for PLACED or PREPARING with positive remaining units.
-> - prepareOneUnit(): require canPrepare(), subtract exactly one unit, then become PREPARING or READY.
-> - markServed(): require READY, then become SERVED.
-> - markPaid(): require SERVED, then become PAID.
-> - cancel(): require PLACED, PREPARING or READY, then become CANCELLED.
-> - isReady(): check status == READY.
->
-> A one-unit order moves directly from PLACED to READY.
->
-> A two-unit order progresses:
-> PLACED -> PREPARING -> READY
->
-> Zero remaining units alone must not make a SERVED, PAID or CANCELLED order ready.
->
-> Reject invalid and repeated transitions without changing state. Do not make cancellation or payment silently idempotent.
->
-> 3. Locked billing
->
-> Store the supplied lockedBillCents value. Do not recompute it from MenuItem.
->
-> The constructor accepts a nonnegative explicit quote. In actual Stage 1 customer flow, Waiter must supply customer.quotePriceCents(item).
->
-> Explain this responsibility boundary without implementing Waiter or inventing pricing policies.
->
-> 4. OOP requirements
->
-> Order must own its preparation counter and lifecycle. Callers request behavior through methods rather than set status or remaining units.
->
-> Explain:
-> - Encapsulation through guarded operations.
-> - Immutable identity and locked billing.
-> - The has-a relationship with immutable MenuItem.
-> - Why referencing a shared MenuItem does not imply exclusive ownership of it.
->
-> Keep the implementation cohesive; add no controller, staff or customer responsibilities.
->
-> 5. Focused tests
->
-> Extend M1DomainTests to cover:
-> - Initial values and constructor validation.
-> - One-unit and two-unit preparation.
-> - Exactly one unit consumed per preparation call.
-> - Correct canPrepare() and isReady() results.
-> - Valid service and payment progression.
-> - Cancellation from PLACED, PREPARING and READY.
-> - Invalid and repeated transitions.
-> - State preservation after rejected operations.
-> - No negative remaining units.
-> - Terminal-state restrictions.
-> - Storage of the explicit quote, including zero, without recomputation.
->
-> Distinguish constructor quote-storage tests from normal Stage 1 pricing behavior.
->
-> Run the complete existing M1 test runner, report actual results and stop.
 
-**What was used or rejected**
+**What was used or rejected:** Exact guarded preparation/service/payment/cancellation lifecycle and explicit locked cents. Stored supplied quotes without recomputation; normal-flow quoting remains the caller's responsibility. No customer/peer behavior added.
 
-Implemented only the contracted `Order` type and extended the existing runner
-with checked assertions without removing foundation checks. `Order` owns its private
-preparation counter and status. Every mutation checks its required state before
-changing anything; repeated payment and cancellation are rejected.
+**Files affected:** Order.java, M1DomainTests.java and evidence records.
 
-The ID, item reference and supplied integer-cent bill are private final fields.
-`Order` has a `MenuItem` reference and returns that same immutable offering; the
-menu item can be shared by independent orders without exclusive ownership.
+**Human verification:** Pending. Automated test build exited 0; runner reported PASS (519 checks), exit 0, in a working tree based on `7754d4883bd9d38dc72a7fb3e2b6cd9653afbb39`.
 
-Constructor quote-storage tests deliberately use nonnegative quotes that differ
-from the menu price, including zero. They verify storage only. In actual Stage 1
-flow, Waiter must obtain and pass `customer.quotePriceCents(item)`; the Order
-constructor does not select or recompute prices. Customer, staff, control and
-peer-owned classes are not part of this feature. Human acceptance is pending.
+**Related commit, subsequently observed:** `b17df6781be0f1a86b84c397502312219c61e980` — feat(order): implement order lifecycle and locked billing, with tests too.
 
-**Files affected**
+## Prompt 3 — Customers
 
-- `src/main/java/restaurantrush/domain/Order.java`
-- `src/test/java/restaurantrush/domain/M1DomainTests.java`
-- `docs/ai-prompts/feature-s1-harshith.md`
-- `docs/testing/stage-1-tests.md`
-
-**Human verification**
-
-Pending Harshith's review. Codex executed `./compile.sh --tests` successfully
-(exit 0), then `java -ea -cp out/classes restaurantrush.domain.M1DomainTests`
-returned `M1DomainTests: PASS (519 checks)` (exit 0), including the original
-39 foundation checks. Compilation targeted Java 17 using JDK 26.0.2, and execution
-used Java 26.0.2. The current results are recorded in
-[the Stage 1 test record](../testing/stage-1-tests.md); they are not human
-verification.
-
-**Related commits**
-
-No Order-feature commit created. This feature is an uncommitted working-tree
-change based on `7754d4883bd9d38dc72a7fb3e2b6cd9653afbb39`, which contains the
-foundation implementation.
-
-
-## Prompt 3 — M1 customers
-
-**Prompt**
+**Prompt — material excerpt**
 
 > Implement the complete M1 customer feature: Customer and RegularCustomer.
->
-> Apply the shared instructions. Build on the existing MenuItem, Order and enums. Preserve earlier behavior and tests.
->
-> Implement Customer and RegularCustomer together so the shared lifecycle and active polymorphic rules are exercised in the same feature.
->
-> 1. Customer design
->
-> Implement exactly:
->
-> public abstract class Customer
->
-> Use the agreed private fields:
-> - final positive int id.
-> - int satisfaction, initially 100.
-> - CustomerStatus status, initially WAITING.
-> - int servedTurn, initially -1.
-> - int readyToPayTurn, initially -1.
-> - Order order, initially null and assigned at most once.
->
-> Implement the protected constructor, three abstract rule methods, all final lifecycle methods and all final getters exactly as documented.
->
-> The abstract rules are:
-> - waitingLossPerTurn()
-> - chooseMenuItem(List<MenuItem> menu)
-> - quotePriceCents(MenuItem item)
->
-> Keep shared lifecycle mutation in Customer. Do not duplicate it in RegularCustomer.
->
-> 2. Customer transitions
->
-> Implement:
->
-> - seat(): require WAITING; become SEATED.
-> - acceptOrder(Order): require SEATED, no existing order, non-null order and matching IDs; store the supplied instance.
-> - markServed(int): require positive turn, SEATED and associated order already SERVED; become EATING and record the turn.
-> - finishEating(int): require positive turn. If EATING and servedTurn < turn, become READY_TO_PAY and record the turn; otherwise make no change.
-> - applyWaitingLoss(): only WAITING and SEATED lose satisfaction. Call waitingLossPerTurn() polymorphically and floor the result at zero.
-> - markPaid(): require READY_TO_PAY and associated order already PAID; become PAID.
-> - abandon(): require WAITING or SEATED, cancel an attached unserved order where applicable and become LEFT.
->
-> Preserve these boundaries:
->
-> - Ordering/preparation leave the customer SEATED.
-> - applyWaitingLoss() never performs abandonment automatically.
-> - Customer.abandon() does not require zero satisfaction; Restaurant.removeAbandoned() owns that check.
-> - acceptOrder() has no additional agreed PLACED-order precondition.
-> - Domain IDs/turns must be positive, without imposing schedule/game maximums here.
-> - finishEating() must preserve its documented no-op behavior and must not rewrite recorded readiness on repeated calls.
-> - getOrder() returns the actual associated object, or null before ordering.
-> - Queue cleanup, table release, revenue and statistics belong to Restaurant.
-> - Staff availability and payment eligibility timing belong to collaborating systems.
->
-> Validate preconditions before mutation. Preserve state after failures.
->
-> 3. RegularCustomer
->
-> Implement exactly:
->
-> public final class RegularCustomer extends Customer
->
-> Add no fields.
->
-> Delegate construction and ID validation to Customer.
->
-> Override:
-> - waitingLossPerTurn(): return 8.
-> - chooseMenuItem(menu): validate the documented requirements, then return menu.get((getId() - 1) % menu.size()).
-> - quotePriceCents(item): validate the item, then return item.getPriceCents().
->
-> Return the existing selected menu object without changing the menu.
->
-> IDs 1–6 must select:
-> Salad, Burger, Pasta, Salad, Burger, Pasta.
->
-> Use @Override. Do not add future customer types.
->
-> 4. Demonstrate genuine OOP
->
-> Exercise a RegularCustomer through a variable declared as Customer.
->
-> Through that reference:
-> - Select an item.
-> - Obtain the quote.
-> - Invoke waiting-loss behavior.
-> - Exercise inherited lifecycle operations.
->
-> Customer.applyWaitingLoss() must call the overridable rule rather than hardcode 8.
->
-> Do not use instanceof, downcasts, class-name checks or concrete-type switches to choose behavior.
->
-> Explain:
-> - Abstraction through the Customer contract.
-> - Inheritance and reuse of shared lifecycle.
-> - Runtime dispatch of customer rules.
-> - Encapsulation through private state and final lifecycle methods.
-> - The template-method-style relationship between protected lifecycle invariants and overridable rules.
->
-> Do not introduce extra interfaces or synthetic production subclasses merely to demonstrate these concepts.
->
-> 5. Focused tests
->
-> Extend M1DomainTests with:
->
-> - Constructor validation and exact initial values.
-> - Selection and quoting through Customer references.
-> - Required null/empty menu and null item validation.
-> - Selected-object identity and no menu mutation.
-> - Valid customer lifecycle through PAID.
-> - Order-before-customer service/payment requirements.
-> - Null/mismatched order rejection.
-> - Rejection of second-order assignment.
-> - Preservation of the accepted Order identity.
-> - Invalid and repeated transitions without partial mutation.
-> - Same-turn finishEating() no-op.
-> - Later-turn eating completion and stable timestamps.
-> - Waiting loss only in WAITING/SEATED.
-> - Repeated losses reaching zero without automatically departing.
-> - No waiting loss in EATING, READY_TO_PAY, PAID or LEFT.
-> - Abandonment while WAITING and SEATED.
-> - Cancellation of attached PLACED, PREPARING and READY orders during abandonment.
-> - Customer.abandon() working without an invented zero-satisfaction requirement.
->
-> Use valid public operations to establish test states. Do not bypass invariants with reflection or setters.
->
-> Run all accumulated M1 tests, report actual results and stop.
 
-**What was used or rejected**
+**What was used or rejected:** Abstract Customer, field-free final RegularCustomer, final shared lifecycle, three polymorphic rules, documented no-ops and shared Order identity. No extra order-state acceptance guard, zero-satisfaction departure condition, maximum ID/turn or peer responsibilities.
 
-Added only the contracted abstract `Customer` and field-free final
-`RegularCustomer`. Private state and final lifecycle methods protect the shared
-invariants; three abstract rule methods supply customer behavior. The inherited
-waiting-loss operation calls `waitingLossPerTurn()` dynamically rather than
-hardcoding RegularCustomer's value. Tests exercise selection, quoting, waiting
-loss and lifecycle operations through `Customer` references.
+**Files affected:** Customer.java, RegularCustomer.java, M1DomainTests.java and evidence records.
 
-No type checks, downcasts, extra interfaces, future customer types, production
-stubs or peer-owned responsibilities were added. Customer IDs and turns have a
-positive lower bound with no schedule or game maximum. Waiting loss floors at
-zero without performing abandonment; customer abandonment does not require zero
-satisfaction. Order assignment preserves the supplied object's identity and has
-no extra order-status precondition. Valid eating-completion no-ops preserve the
-original timestamps.
+**Human verification:** Pending. Automated test build exited 0; runner reported PASS (2424 checks), exit 0, in a working tree based on `b17df6781be0f1a86b84c397502312219c61e980`.
 
-For invalid supplied method arguments, the implementation uses
-`IllegalArgumentException`; lifecycle misuse uses `IllegalStateException`.
-The contract explicitly prescribes the latter and constructor validation; method
-argument exception categories use ordinary implementation judgment. No precedence
-is promised when a call violates multiple preconditions.
+**Related commit, subsequently observed:** `9a32cc426421b5391f27199b25eec60ac26aeb64` — feat(customer): implement customer lifecycle and RegularCustomer rules.
 
-Edge interpretation: abandonment requires only `WAITING` or `SEATED`, cancels
-attached `PLACED`, `PREPARING` or `READY` orders, and leaves an attached `SERVED`,
-`PAID` or already `CANCELLED` order unchanged before becoming `LEFT`. This follows
-"where applicable" without adding a precondition that would contradict the
-explicitly unrestricted order-state acceptance boundary. Repeated abandonment
-still fails. The selected menu entry is validated as non-null under the shared
-non-null-return convention; unused entries do not add a menu-wide restriction.
+## Prompt 4 — Collaboration
 
-**Files affected**
+**Prompt — material excerpt**
 
-- `src/main/java/restaurantrush/domain/Customer.java`
-- `src/main/java/restaurantrush/domain/RegularCustomer.java`
-- `src/test/java/restaurantrush/domain/M1DomainTests.java`
-- `docs/ai-prompts/feature-s1-harshith.md`
-- `docs/testing/stage-1-tests.md`
+> Complete the M1 collaboration feature: cross-class lifecycle tests and an executable OOP demonstration.
 
-**Human verification**
+**What was used or rejected:** Added normal quote/selection/shared-Order collaboration, abandonment and rejected-handoff checks. The requested standalone demo was created then, but removed by the later scope correction. No peer implementations or stronger guards.
 
-Pending Harshith's review. On 2026-10-24 (Asia/Singapore), Codex executed
-`./compile.sh --tests` successfully (exit 0), then
-`java -ea -cp out/classes restaurantrush.domain.M1DomainTests` returned
-`M1DomainTests: PASS (2424 checks)` (exit 0). All previous 519 checks were retained.
-Compilation targeted Java 17 using JDK 26.0.2; execution used Java 26.0.2.
-The results are recorded in [the Stage 1 test record](../testing/stage-1-tests.md);
-they are not human verification.
+**Files affected:** M1DomainTests.java, the since-deleted M1DomainDemo.java and evidence records.
 
-**Related commits**
+**Human verification:** Pending. Automated test build exited 0; runner PASS (2914 checks), exit 0; historical demo PASS (257 checks), exit 0. Original working-tree base: `9a32cc426421b5391f27199b25eec60ac26aeb64`.
 
-No customer-feature commit created. This feature is an uncommitted working-tree
-change based on `b17df6781be0f1a86b84c397502312219c61e980`, which contains the
-foundation and Order implementation.
+**Related commit, subsequently observed:** `b6db48f378e73852a7e039efb8e877c38b634757` — Add M1 collaboration tests.
 
-## Prompt 4 — M1 collaboration and executable OOP demo
+## Prompt 5 — Verification and contribution evidence
+
+**Prompt — material excerpts**
+
+> Complete the verification and contribution evidence for my Stage 1 M1 work.
+>
+> Add useful class/method documentation explaining responsibilities, meaningful preconditions, exceptions, transitions and nullable getters.
+
+**What was used or rejected:** Audit found no behavioral defect. Added requested source comments and updated README/evidence. Exact APIs, bodies and tests were preserved. A separate handoff and generated Javadoc HTML were later removed. Flagged the contract's `priceCents()` prose typo instead of adding an alias or editing the shared agreement.
+
+**Files affected:** All six production files (comments only), README.md, evidence records and the since-deleted docs/uml/m1-handoff.md.
+
+**Human verification:** Pending. Production/test builds, runner (2914 checks), historical demo (257 checks) and compiled API inspection exited 0. Strict Javadoc first exited 1 for 15 missing summaries; after correction it exited 0. These were working-tree results based on `b6db48f378e73852a7e039efb8e877c38b634757`, not exact-commit verification.
+
+**Related commits:** No new commit; PR details pending.
+
+## Prompt 6 — Remove optional artifacts
+
+**Prompt — material excerpt**
+
+> okay please remove this. i do not want anything "optional" added yet
+
+The selected context was the standalone demo. A follow-up questioned generated `out/javadoc` output.
+
+**What was used or rejected:** Removed the demo source/compiled class, generated Javadoc HTML and active regeneration/demo instructions. Required automated tests and production code were retained. Deleted handoff files were not restored.
+
+**Files affected:** Deleted M1DomainDemo.java and ignored out/javadoc; updated README.md and evidence records.
+
+**Human verification:** Pending. Production/test builds and runner PASS (2914 checks), all exit 0; removed artifacts confirmed absent.
+
+**Related commits:** Uncommitted working tree based on `b6db48f378e73852a7e039efb8e877c38b634757`.
+
+## Prompt 7 — Keep the repo focused
 
 **Prompt**
 
-> Complete the M1 collaboration feature: cross-class lifecycle tests and an executable OOP demonstration.
->
-> Apply the shared instructions. Review the six implemented M1 types first.
->
-> This feature verifies interaction among M1 objects. It must not implement missing Restaurant, staff, control, arrival or CLI classes.
->
-> 1. Cross-class verification
->
-> Extend M1DomainTests with scenarios checking:
->
-> - A Customer chooses an existing MenuItem through polymorphic dispatch.
-> - The chosen item and customer quote are supplied to Order construction.
-> - Customer accepts the exact Order instance.
-> - Preparation changes Order state without incorrectly changing customer state.
-> - The customer remains SEATED and loses satisfaction while food is unfinished or READY but unserved.
-> - Service marks Order SERVED before Customer becomes EATING.
-> - Eating cannot complete on the serving turn.
-> - Payment marks Order PAID before Customer becomes PAID.
-> - Abandonment cancels an unserved order, including READY.
-> - Rejected operations preserve all relevant M1 state and object identity.
->
-> Use the documented contract, rather than inventing stronger guards.
->
-> If peer classes exist, inspect compatibility with the agreed handoffs and report discrepancies. Do not silently rewrite another owner’s implementation.
->
-> 2. Executable demonstration
->
-> Create a test-only entry point:
->
-> restaurantrush.domain.M1DomainDemo
->
-> Place it under:
-> /Users/gsharsh/RestaurantRush/src/test/java/restaurantrush/domain/
->
-> Use a Customer reference containing RegularCustomer(3), the agreed menu and one shared Pasta order.
->
-> Obtain selection and quote through Customer, not by hardcoding the selected item into the customer flow.
->
-> Produce and assert this conceptual timeline:
->
-> Turn 7:
-> - Seat the customer.
-> - Apply waiting loss.
-> - Customer: SEATED, satisfaction 92.
->
-> Turn 8:
-> - Select and quote Pasta.
-> - Construct and accept the same Order with a bill of 1800 cents.
-> - Prepare one unit.
-> - Order: PREPARING, 1 unit remaining.
-> - Apply waiting loss: satisfaction 84.
->
-> Turn 9:
-> - Prepare the second unit.
-> - Order: READY, 0 units remaining.
-> - Apply waiting loss: satisfaction 76.
->
-> Turn 10:
-> - Mark the order SERVED, then mark the customer served.
-> - Customer: EATING.
-> - finishEating(10) makes no change.
->
-> Turn 11:
-> - finishEating(11) changes the customer to READY_TO_PAY.
-> - readyToPayTurn is 11.
-> - Satisfaction remains 76.
->
-> Turn 12:
-> - Simulate an already-validated payment.
-> - Mark the order PAID before marking the customer PAID.
-> - Satisfaction remains 76.
->
-> Keep demonstration printing outside the production domain classes.
->
-> Include representative rejected-operation examples with checked state preservation.
->
-> 3. Explain the demonstration
->
-> Identify the actual calls showing:
-> - Encapsulation.
-> - Abstraction.
-> - Inheritance.
-> - Runtime polymorphism.
-> - Shared object identity.
-> - Customer–Order and Order–MenuItem relationships.
->
-> Explain why the direct domain demonstration does not establish arrival scheduling, staff limits, cashier selection, queue/table cleanup or complete-game correctness.
->
-> 4. Execute
->
-> Run:
-> ./compile.sh --tests
-> java -ea -cp out/classes restaurantrush.domain.M1DomainTests
-> java -ea -cp out/classes restaurantrush.domain.M1DomainDemo
->
-> Report actual outcomes, a concise checked trace and any integration dependencies. Stop after this feature.
+> is there anything else optional or unnecessary you've added? check the repo and remove it, just keep what's required for the cli game and tests.
 
-**What was used or rejected**
+**What was used or rejected:** Audited all code, tests, build output and docs. No further optional code/dependencies found. Removed repeated review/OOP/handoff narratives from the test record and full-prompt duplication from this record. Kept concise material excerpts and actual evidence required by the shared agreement. Cleared only the stale staged addition of the already-deleted standalone handoff; preserved other staging. Kept the original brief, contract/templates, source comments, six M1 types, automated runner and normal compiler output.
 
-Reviewed all six M1 types and kept their production implementations unchanged.
-Extended the existing runner with three cross-class scenarios covering the
-normal Customer-selection/quote/Order flow, abandonment of unserved orders, and
-rejected handoffs with snapshots of customer, accepted/candidate orders, menu
-contents, offering values and shared identity. Earlier tests remain intact.
+**Files affected:** README.md, both evidence records and the staged addition of docs/uml/m1-handoff.md (cleared; file remains absent).
 
-Added `M1DomainDemo` exclusively under test sources. It uses a Customer reference
-holding RegularCustomer(3), obtains the existing selected Pasta and quote through
-the Customer API, and passes both to one shared Order. It asserts and prints the
-requested turns 7–12 and six rejected-operation examples. It explains the actual
-OOP calls and the limited domain-only scope.
+**Human verification:** Pending. Current production/test builds exited 0; runner reported `M1DomainTests: PASS (2914 checks)`, exit 0. Removed artifacts remain absent and generated output contains only the current classes and compiler source list.
 
-No peer implementations exist in this branch to assess their handoff
-compatibility. No missing peers, production stubs or stronger domain guards were
-added. The demo manually supplies turns and assumes validated payment; it does
-not establish scheduling, staff limits, Cashier selection, eligibility, revenue,
-queue/table cleanup or complete-game correctness. Human acceptance is pending.
+**Related commits:** Uncommitted working tree based on `b6db48f378e73852a7e039efb8e877c38b634757`; PR details pending.
 
-**Files affected**
+## Prompt 8 — Split tests by responsibility
 
-- `src/test/java/restaurantrush/domain/M1DomainTests.java`
-- `src/test/java/restaurantrush/domain/M1DomainDemo.java`
-- `docs/ai-prompts/feature-s1-harshith.md`
-- `docs/testing/stage-1-tests.md`
+**Prompt — material excerpt**
 
-**Human verification**
+> for this: src/test/java/restaurantrush/domain/M1DomainTests.java
+>
+> can you see how they broke down the tests to the diff parts of the game? i want you to follow something similar to that
 
-Pending Harshith's review. On 2026-10-24 (Asia/Singapore), Codex executed:
+Reference supplied: [tests/restaurantrush](https://github.com/YangXu624/Restaurant-Rush-Group-Assignment/tree/main/tests/restaurantrush). Its test tree separates entity, staff, control, boundary, support and integration responsibilities.
 
-- `./compile.sh --tests`: compiled production and test sources; exit 0.
-- `java -ea -cp out/classes restaurantrush.domain.M1DomainTests`:
-  `M1DomainTests: PASS (2914 checks)`; exit 0, retaining the prior 2424 checks.
-- `java -ea -cp out/classes restaurantrush.domain.M1DomainDemo`:
-  `M1DomainDemo: PASS (257 checks)`; exit 0, with the exact checked timeline and
-  all six rejected-operation examples preserving state and identities.
+**What was used or rejected:** Applied the per-class/responsibility organization to existing M1 tests. Moved all 28 test groups unchanged into six independently runnable suites; kept M1DomainTests as the aggregate entry point and shared checked assertions in package-private M1TestSupport. Retained all 2914 checks. Added no game behavior, peer tests, framework or demonstration.
 
-Compilation targeted Java 17 using JDK 26.0.2; execution used Java 26.0.2. The
-observed trace and OOP-call mapping are recorded in
-[the Stage 1 test record](../testing/stage-1-tests.md). These automated results
-are not human verification or full Stage 1 acceptance.
+**Files affected:** M1DomainTests.java; new MenuItemTest.java, LifecycleStatusTest.java, OrderTest.java, CustomerTest.java, RegularCustomerTest.java, M1CollaborationTest.java and M1TestSupport.java; README.md and both evidence records.
 
-**Related commits**
+**Human verification:** Pending. Production build, test build and aggregate runner exited 0; runner reported `M1DomainTests: PASS (2914 checks)`. Each standalone command `java -ea -cp out/classes restaurantrush.domain.<suite>` also exited 0: MenuItemTest 25, LifecycleStatusTest 14, OrderTest 480, CustomerTest 1795, RegularCustomerTest 110 and M1CollaborationTest 490 checks. Source comparison confirmed every original test body and helper was retained. This layout was superseded by Prompt 9.
 
-No collaboration-feature commit created. This feature is an uncommitted working-
-tree change based on `9a32cc426421b5391f27199b25eec60ac26aeb64`, which contains
-all six M1 production types and the previous tests.
+**Related commits:** Uncommitted working tree based on `b6db48f378e73852a7e039efb8e877c38b634757`; no new commit or PR.
+
+## Prompt 9 — Remove extra testing files
+
+**Prompt**
+
+> remove these if they are jsoptional
+
+The selected context named LifecycleStatusTest, M1CollaborationTest, M1DomainTests and M1TestSupport.
+
+**What was used or rejected:** Removed all four files. Moved enum checks into CustomerTest/OrderTest and collaboration checks into CustomerTest. Kept only the private assertion helpers needed by each of the four self-contained class tests. Preserved all 28 test groups and 2914 checks; added no replacement runner, helper file or game feature.
+
+**Files affected:** Deleted the four named testing files; updated MenuItemTest.java, OrderTest.java, CustomerTest.java, RegularCustomerTest.java, README.md and both evidence records.
+
+**Human verification:** Pending. `./compile.sh` and `./compile.sh --tests` exited 0. The four direct test commands recorded in the test record exited 0: MenuItemTest 25, OrderTest 487, CustomerTest 2292 and RegularCustomerTest 110 checks. Production source checksums are unchanged.
+
+**Related commits:** Uncommitted working tree based on `b6db48f378e73852a7e039efb8e877c38b634757`; no new commit or PR.

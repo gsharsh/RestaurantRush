@@ -250,3 +250,190 @@ verification.
 No Order-feature commit created. This feature is an uncommitted working-tree
 change based on `7754d4883bd9d38dc72a7fb3e2b6cd9653afbb39`, which contains the
 foundation implementation.
+
+
+## Prompt 3 — M1 customers
+
+**Prompt**
+
+> Implement the complete M1 customer feature: Customer and RegularCustomer.
+>
+> Apply the shared instructions. Build on the existing MenuItem, Order and enums. Preserve earlier behavior and tests.
+>
+> Implement Customer and RegularCustomer together so the shared lifecycle and active polymorphic rules are exercised in the same feature.
+>
+> 1. Customer design
+>
+> Implement exactly:
+>
+> public abstract class Customer
+>
+> Use the agreed private fields:
+> - final positive int id.
+> - int satisfaction, initially 100.
+> - CustomerStatus status, initially WAITING.
+> - int servedTurn, initially -1.
+> - int readyToPayTurn, initially -1.
+> - Order order, initially null and assigned at most once.
+>
+> Implement the protected constructor, three abstract rule methods, all final lifecycle methods and all final getters exactly as documented.
+>
+> The abstract rules are:
+> - waitingLossPerTurn()
+> - chooseMenuItem(List<MenuItem> menu)
+> - quotePriceCents(MenuItem item)
+>
+> Keep shared lifecycle mutation in Customer. Do not duplicate it in RegularCustomer.
+>
+> 2. Customer transitions
+>
+> Implement:
+>
+> - seat(): require WAITING; become SEATED.
+> - acceptOrder(Order): require SEATED, no existing order, non-null order and matching IDs; store the supplied instance.
+> - markServed(int): require positive turn, SEATED and associated order already SERVED; become EATING and record the turn.
+> - finishEating(int): require positive turn. If EATING and servedTurn < turn, become READY_TO_PAY and record the turn; otherwise make no change.
+> - applyWaitingLoss(): only WAITING and SEATED lose satisfaction. Call waitingLossPerTurn() polymorphically and floor the result at zero.
+> - markPaid(): require READY_TO_PAY and associated order already PAID; become PAID.
+> - abandon(): require WAITING or SEATED, cancel an attached unserved order where applicable and become LEFT.
+>
+> Preserve these boundaries:
+>
+> - Ordering/preparation leave the customer SEATED.
+> - applyWaitingLoss() never performs abandonment automatically.
+> - Customer.abandon() does not require zero satisfaction; Restaurant.removeAbandoned() owns that check.
+> - acceptOrder() has no additional agreed PLACED-order precondition.
+> - Domain IDs/turns must be positive, without imposing schedule/game maximums here.
+> - finishEating() must preserve its documented no-op behavior and must not rewrite recorded readiness on repeated calls.
+> - getOrder() returns the actual associated object, or null before ordering.
+> - Queue cleanup, table release, revenue and statistics belong to Restaurant.
+> - Staff availability and payment eligibility timing belong to collaborating systems.
+>
+> Validate preconditions before mutation. Preserve state after failures.
+>
+> 3. RegularCustomer
+>
+> Implement exactly:
+>
+> public final class RegularCustomer extends Customer
+>
+> Add no fields.
+>
+> Delegate construction and ID validation to Customer.
+>
+> Override:
+> - waitingLossPerTurn(): return 8.
+> - chooseMenuItem(menu): validate the documented requirements, then return menu.get((getId() - 1) % menu.size()).
+> - quotePriceCents(item): validate the item, then return item.getPriceCents().
+>
+> Return the existing selected menu object without changing the menu.
+>
+> IDs 1–6 must select:
+> Salad, Burger, Pasta, Salad, Burger, Pasta.
+>
+> Use @Override. Do not add future customer types.
+>
+> 4. Demonstrate genuine OOP
+>
+> Exercise a RegularCustomer through a variable declared as Customer.
+>
+> Through that reference:
+> - Select an item.
+> - Obtain the quote.
+> - Invoke waiting-loss behavior.
+> - Exercise inherited lifecycle operations.
+>
+> Customer.applyWaitingLoss() must call the overridable rule rather than hardcode 8.
+>
+> Do not use instanceof, downcasts, class-name checks or concrete-type switches to choose behavior.
+>
+> Explain:
+> - Abstraction through the Customer contract.
+> - Inheritance and reuse of shared lifecycle.
+> - Runtime dispatch of customer rules.
+> - Encapsulation through private state and final lifecycle methods.
+> - The template-method-style relationship between protected lifecycle invariants and overridable rules.
+>
+> Do not introduce extra interfaces or synthetic production subclasses merely to demonstrate these concepts.
+>
+> 5. Focused tests
+>
+> Extend M1DomainTests with:
+>
+> - Constructor validation and exact initial values.
+> - Selection and quoting through Customer references.
+> - Required null/empty menu and null item validation.
+> - Selected-object identity and no menu mutation.
+> - Valid customer lifecycle through PAID.
+> - Order-before-customer service/payment requirements.
+> - Null/mismatched order rejection.
+> - Rejection of second-order assignment.
+> - Preservation of the accepted Order identity.
+> - Invalid and repeated transitions without partial mutation.
+> - Same-turn finishEating() no-op.
+> - Later-turn eating completion and stable timestamps.
+> - Waiting loss only in WAITING/SEATED.
+> - Repeated losses reaching zero without automatically departing.
+> - No waiting loss in EATING, READY_TO_PAY, PAID or LEFT.
+> - Abandonment while WAITING and SEATED.
+> - Cancellation of attached PLACED, PREPARING and READY orders during abandonment.
+> - Customer.abandon() working without an invented zero-satisfaction requirement.
+>
+> Use valid public operations to establish test states. Do not bypass invariants with reflection or setters.
+>
+> Run all accumulated M1 tests, report actual results and stop.
+
+**What was used or rejected**
+
+Added only the contracted abstract `Customer` and field-free final
+`RegularCustomer`. Private state and final lifecycle methods protect the shared
+invariants; three abstract rule methods supply customer behavior. The inherited
+waiting-loss operation calls `waitingLossPerTurn()` dynamically rather than
+hardcoding RegularCustomer's value. Tests exercise selection, quoting, waiting
+loss and lifecycle operations through `Customer` references.
+
+No type checks, downcasts, extra interfaces, future customer types, production
+stubs or peer-owned responsibilities were added. Customer IDs and turns have a
+positive lower bound with no schedule or game maximum. Waiting loss floors at
+zero without performing abandonment; customer abandonment does not require zero
+satisfaction. Order assignment preserves the supplied object's identity and has
+no extra order-status precondition. Valid eating-completion no-ops preserve the
+original timestamps.
+
+For invalid supplied method arguments, the implementation uses
+`IllegalArgumentException`; lifecycle misuse uses `IllegalStateException`.
+The contract explicitly prescribes the latter and constructor validation; method
+argument exception categories use ordinary implementation judgment. No precedence
+is promised when a call violates multiple preconditions.
+
+Edge interpretation: abandonment requires only `WAITING` or `SEATED`, cancels
+attached `PLACED`, `PREPARING` or `READY` orders, and leaves an attached `SERVED`,
+`PAID` or already `CANCELLED` order unchanged before becoming `LEFT`. This follows
+"where applicable" without adding a precondition that would contradict the
+explicitly unrestricted order-state acceptance boundary. Repeated abandonment
+still fails. The selected menu entry is validated as non-null under the shared
+non-null-return convention; unused entries do not add a menu-wide restriction.
+
+**Files affected**
+
+- `src/main/java/restaurantrush/domain/Customer.java`
+- `src/main/java/restaurantrush/domain/RegularCustomer.java`
+- `src/test/java/restaurantrush/domain/M1DomainTests.java`
+- `docs/ai-prompts/feature-s1-harshith.md`
+- `docs/testing/stage-1-tests.md`
+
+**Human verification**
+
+Pending Harshith's review. On 2026-10-24 (Asia/Singapore), Codex executed
+`./compile.sh --tests` successfully (exit 0), then
+`java -ea -cp out/classes restaurantrush.domain.M1DomainTests` returned
+`M1DomainTests: PASS (2424 checks)` (exit 0). All previous 519 checks were retained.
+Compilation targeted Java 17 using JDK 26.0.2; execution used Java 26.0.2.
+The results are recorded in [the Stage 1 test record](../testing/stage-1-tests.md);
+they are not human verification.
+
+**Related commits**
+
+No customer-feature commit created. This feature is an uncommitted working-tree
+change based on `b17df6781be0f1a86b84c397502312219c61e980`, which contains the
+foundation and Order implementation.

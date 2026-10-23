@@ -36,6 +36,9 @@ public final class M1DomainTests {
         testFinishEatingNoOps();
         testWaitingLossBounds();
         testCustomerAbandonment();
+        testM1CollaborationThroughPayment();
+        testM1CollaborationAbandonment();
+        testRejectedM1CollaborationHandoffs();
         System.out.println("M1DomainTests: PASS (" + checks + " checks)");
     }
 
@@ -494,6 +497,136 @@ public final class M1DomainTests {
             expectUnchangedIllegalState("repeated customer abandonment", customer, customer::abandon);
             expectCustomerNoOp(customer, customer::applyWaitingLoss);
         }
+    }
+
+    private static void testM1CollaborationThroughPayment() {
+        List<MenuItem> menu = agreedMenuFixture();
+        Runnable menuUnchanged = snapshotMenu(menu);
+        Customer customer = new RegularCustomer(3);
+        customer.seat();
+        MenuItem selected = customer.chooseMenuItem(menu);
+        check(selected == menu.get(2), "collaboration must use the shared Pasta offering");
+        int quote = customer.quotePriceCents(selected);
+        check(quote == 1800, "collaboration must use the customer's regular quote");
+        Order order = new Order(customer.getId(), selected, quote);
+        customer.acceptOrder(order);
+        checkCustomer(customer, 3, 100, CustomerStatus.SEATED, -1, -1, order);
+        checkOrder(order, 3, selected, OrderStatus.PLACED, 2, quote, true, false);
+
+        customer.applyWaitingLoss();
+        order.prepareOneUnit();
+        checkCustomer(customer, 3, 92, CustomerStatus.SEATED, -1, -1, order);
+        checkOrder(order, 3, selected, OrderStatus.PREPARING, 1, quote, true, false);
+        customer.applyWaitingLoss();
+        order.prepareOneUnit();
+        checkCustomer(customer, 3, 84, CustomerStatus.SEATED, -1, -1, order);
+        checkOrder(order, 3, selected, OrderStatus.READY, 0, quote, false, true);
+        customer.applyWaitingLoss();
+        checkCustomer(customer, 3, 76, CustomerStatus.SEATED, -1, -1, order);
+        checkOrder(order, 3, selected, OrderStatus.READY, 0, quote, false, true);
+        expectUnchangedIllegalState("collaboration customer service before order service", customer,
+                () -> customer.markServed(9));
+        menuUnchanged.run();
+
+        order.markServed();
+        checkCustomer(customer, 3, 76, CustomerStatus.SEATED, -1, -1, order);
+        customer.markServed(9);
+        checkCustomer(customer, 3, 76, CustomerStatus.EATING, 9, -1, order);
+        expectCustomerNoOp(customer, () -> customer.finishEating(9));
+        customer.finishEating(10);
+        checkCustomer(customer, 3, 76, CustomerStatus.READY_TO_PAY, 9, 10, order);
+        expectUnchangedIllegalState("collaboration customer payment before order payment", customer,
+                customer::markPaid);
+        menuUnchanged.run();
+        order.markPaid();
+        checkCustomer(customer, 3, 76, CustomerStatus.READY_TO_PAY, 9, 10, order);
+        customer.markPaid();
+        checkCustomer(customer, 3, 76, CustomerStatus.PAID, 9, 10, order);
+        checkOrder(order, 3, selected, OrderStatus.PAID, 0, quote, false, false);
+        menuUnchanged.run();
+    }
+
+    private static void testM1CollaborationAbandonment() {
+        List<MenuItem> menu = agreedMenuFixture();
+        Runnable menuUnchanged = snapshotMenu(menu);
+        OrderStatus[] sources = {OrderStatus.PLACED, OrderStatus.PREPARING, OrderStatus.READY};
+        for (int prepared = 0; prepared < sources.length; prepared++) {
+            Customer customer = new RegularCustomer(6);
+            customer.seat();
+            MenuItem selected = customer.chooseMenuItem(menu);
+            check(selected == menu.get(2), "abandonment must retain the selected shared offering");
+            int quote = customer.quotePriceCents(selected);
+            Order order = new Order(customer.getId(), selected, quote);
+            customer.acceptOrder(order);
+            for (int unit = 0; unit < prepared; unit++) {
+                order.prepareOneUnit();
+            }
+            customer.applyWaitingLoss();
+            checkCustomer(customer, 6, 92, CustomerStatus.SEATED, -1, -1, order);
+            checkOrder(order, 6, selected, sources[prepared], 2 - prepared, 1800,
+                    prepared < 2, prepared == 2);
+            customer.abandon();
+            checkCustomer(customer, 6, 92, CustomerStatus.LEFT, -1, -1, order);
+            checkOrder(order, 6, selected, OrderStatus.CANCELLED, 2 - prepared, 1800, false, false);
+            expectUnchangedIllegalState("collaboration preparation after abandonment", customer,
+                    order::prepareOneUnit);
+            menuUnchanged.run();
+        }
+    }
+
+    private static void testRejectedM1CollaborationHandoffs() {
+        List<MenuItem> menu = agreedMenuFixture();
+        Runnable menuUnchanged = snapshotMenu(menu);
+        Customer customer = new RegularCustomer(3);
+        customer.seat();
+        MenuItem selected = customer.chooseMenuItem(menu);
+        int quote = customer.quotePriceCents(selected);
+        Order mismatched = new Order(4, selected, quote);
+        Runnable mismatchedUnchanged = snapshotOrder(mismatched);
+        expectUnchangedIllegalArgument("collaboration mismatched order handoff", customer,
+                () -> customer.acceptOrder(mismatched));
+        mismatchedUnchanged.run();
+        menuUnchanged.run();
+
+        Order accepted = new Order(customer.getId(), selected, quote);
+        customer.acceptOrder(accepted);
+        Order replacement = new Order(customer.getId(), selected, quote);
+        Runnable replacementUnchanged = snapshotOrder(replacement);
+        expectUnchangedIllegalState("collaboration replacement order handoff", customer,
+                () -> customer.acceptOrder(replacement));
+        replacementUnchanged.run();
+        mismatchedUnchanged.run();
+        menuUnchanged.run();
+        expectUnchangedIllegalState("collaboration payment of an unserved associated order", customer,
+                accepted::markPaid);
+        replacementUnchanged.run();
+        mismatchedUnchanged.run();
+        menuUnchanged.run();
+    }
+
+    private static List<MenuItem> agreedMenuFixture() {
+        return new ArrayList<>(List.of(
+                new MenuItem("Salad", 900, 1),
+                new MenuItem("Burger", 1500, 1),
+                new MenuItem("Pasta", 1800, 2)));
+    }
+
+    private static Runnable snapshotMenu(List<MenuItem> menu) {
+        List<MenuItem> items = List.copyOf(menu);
+        List<Runnable> offeringChecks = new ArrayList<>();
+        for (MenuItem item : items) {
+            String name = item.getName();
+            int priceCents = item.getPriceCents();
+            int preparationUnits = item.getPreparationUnits();
+            offeringChecks.add(() -> checkMenuItem(item, name, priceCents, preparationUnits));
+        }
+        return () -> {
+            check(menu.size() == items.size(), "collaboration must preserve menu size");
+            for (int index = 0; index < items.size(); index++) {
+                check(menu.get(index) == items.get(index), "collaboration must preserve menu item identity/order");
+                offeringChecks.get(index).run();
+            }
+        };
     }
 
     private static Order customerOrderInState(int id, OrderStatus status) {

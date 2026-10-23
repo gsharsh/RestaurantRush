@@ -437,3 +437,153 @@ they are not human verification.
 No customer-feature commit created. This feature is an uncommitted working-tree
 change based on `b17df6781be0f1a86b84c397502312219c61e980`, which contains the
 foundation and Order implementation.
+
+## Prompt 4 — M1 collaboration and executable OOP demo
+
+**Prompt**
+
+> Complete the M1 collaboration feature: cross-class lifecycle tests and an executable OOP demonstration.
+>
+> Apply the shared instructions. Review the six implemented M1 types first.
+>
+> This feature verifies interaction among M1 objects. It must not implement missing Restaurant, staff, control, arrival or CLI classes.
+>
+> 1. Cross-class verification
+>
+> Extend M1DomainTests with scenarios checking:
+>
+> - A Customer chooses an existing MenuItem through polymorphic dispatch.
+> - The chosen item and customer quote are supplied to Order construction.
+> - Customer accepts the exact Order instance.
+> - Preparation changes Order state without incorrectly changing customer state.
+> - The customer remains SEATED and loses satisfaction while food is unfinished or READY but unserved.
+> - Service marks Order SERVED before Customer becomes EATING.
+> - Eating cannot complete on the serving turn.
+> - Payment marks Order PAID before Customer becomes PAID.
+> - Abandonment cancels an unserved order, including READY.
+> - Rejected operations preserve all relevant M1 state and object identity.
+>
+> Use the documented contract, rather than inventing stronger guards.
+>
+> If peer classes exist, inspect compatibility with the agreed handoffs and report discrepancies. Do not silently rewrite another owner’s implementation.
+>
+> 2. Executable demonstration
+>
+> Create a test-only entry point:
+>
+> restaurantrush.domain.M1DomainDemo
+>
+> Place it under:
+> /Users/gsharsh/RestaurantRush/src/test/java/restaurantrush/domain/
+>
+> Use a Customer reference containing RegularCustomer(3), the agreed menu and one shared Pasta order.
+>
+> Obtain selection and quote through Customer, not by hardcoding the selected item into the customer flow.
+>
+> Produce and assert this conceptual timeline:
+>
+> Turn 7:
+> - Seat the customer.
+> - Apply waiting loss.
+> - Customer: SEATED, satisfaction 92.
+>
+> Turn 8:
+> - Select and quote Pasta.
+> - Construct and accept the same Order with a bill of 1800 cents.
+> - Prepare one unit.
+> - Order: PREPARING, 1 unit remaining.
+> - Apply waiting loss: satisfaction 84.
+>
+> Turn 9:
+> - Prepare the second unit.
+> - Order: READY, 0 units remaining.
+> - Apply waiting loss: satisfaction 76.
+>
+> Turn 10:
+> - Mark the order SERVED, then mark the customer served.
+> - Customer: EATING.
+> - finishEating(10) makes no change.
+>
+> Turn 11:
+> - finishEating(11) changes the customer to READY_TO_PAY.
+> - readyToPayTurn is 11.
+> - Satisfaction remains 76.
+>
+> Turn 12:
+> - Simulate an already-validated payment.
+> - Mark the order PAID before marking the customer PAID.
+> - Satisfaction remains 76.
+>
+> Keep demonstration printing outside the production domain classes.
+>
+> Include representative rejected-operation examples with checked state preservation.
+>
+> 3. Explain the demonstration
+>
+> Identify the actual calls showing:
+> - Encapsulation.
+> - Abstraction.
+> - Inheritance.
+> - Runtime polymorphism.
+> - Shared object identity.
+> - Customer–Order and Order–MenuItem relationships.
+>
+> Explain why the direct domain demonstration does not establish arrival scheduling, staff limits, cashier selection, queue/table cleanup or complete-game correctness.
+>
+> 4. Execute
+>
+> Run:
+> ./compile.sh --tests
+> java -ea -cp out/classes restaurantrush.domain.M1DomainTests
+> java -ea -cp out/classes restaurantrush.domain.M1DomainDemo
+>
+> Report actual outcomes, a concise checked trace and any integration dependencies. Stop after this feature.
+
+**What was used or rejected**
+
+Reviewed all six M1 types and kept their production implementations unchanged.
+Extended the existing runner with three cross-class scenarios covering the
+normal Customer-selection/quote/Order flow, abandonment of unserved orders, and
+rejected handoffs with snapshots of customer, accepted/candidate orders, menu
+contents, offering values and shared identity. Earlier tests remain intact.
+
+Added `M1DomainDemo` exclusively under test sources. It uses a Customer reference
+holding RegularCustomer(3), obtains the existing selected Pasta and quote through
+the Customer API, and passes both to one shared Order. It asserts and prints the
+requested turns 7–12 and six rejected-operation examples. It explains the actual
+OOP calls and the limited domain-only scope.
+
+No peer implementations exist in this branch to assess their handoff
+compatibility. No missing peers, production stubs or stronger domain guards were
+added. The demo manually supplies turns and assumes validated payment; it does
+not establish scheduling, staff limits, Cashier selection, eligibility, revenue,
+queue/table cleanup or complete-game correctness. Human acceptance is pending.
+
+**Files affected**
+
+- `src/test/java/restaurantrush/domain/M1DomainTests.java`
+- `src/test/java/restaurantrush/domain/M1DomainDemo.java`
+- `docs/ai-prompts/feature-s1-harshith.md`
+- `docs/testing/stage-1-tests.md`
+
+**Human verification**
+
+Pending Harshith's review. On 2026-10-24 (Asia/Singapore), Codex executed:
+
+- `./compile.sh --tests`: compiled production and test sources; exit 0.
+- `java -ea -cp out/classes restaurantrush.domain.M1DomainTests`:
+  `M1DomainTests: PASS (2914 checks)`; exit 0, retaining the prior 2424 checks.
+- `java -ea -cp out/classes restaurantrush.domain.M1DomainDemo`:
+  `M1DomainDemo: PASS (257 checks)`; exit 0, with the exact checked timeline and
+  all six rejected-operation examples preserving state and identities.
+
+Compilation targeted Java 17 using JDK 26.0.2; execution used Java 26.0.2. The
+observed trace and OOP-call mapping are recorded in
+[the Stage 1 test record](../testing/stage-1-tests.md). These automated results
+are not human verification or full Stage 1 acceptance.
+
+**Related commits**
+
+No collaboration-feature commit created. This feature is an uncommitted working-
+tree change based on `9a32cc426421b5391f27199b25eec60ac26aeb64`, which contains
+all six M1 production types and the previous tests.

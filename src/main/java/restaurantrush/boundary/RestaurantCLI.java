@@ -104,9 +104,16 @@ public final class RestaurantCLI {
                 + ", Chef " + chef + ", Cashier automatic (one payment per turn)");
     }
 
-    /** Prints the final result after turn 18. */
+    /**
+     * Prints the final result after turn 18.
+     *
+     * @throws IllegalArgumentException if the snapshot is null or unfinished
+     */
     public void displayOutcome(GameSnapshot snapshot, boolean victory) {
         required(snapshot, "snapshot");
+        if (snapshot.completedTurns() != 18) {
+            throw new IllegalArgumentException("An outcome requires 18 completed turns.");
+        }
         output.println();
         output.println("================ " + (victory ? "VICTORY" : "DEFEAT") + " ================");
         output.println("Turns completed:        " + snapshot.completedTurns() + " of 18");

@@ -195,6 +195,26 @@ Constructs one shared object graph and starts the application.
 
 The exact command words are agreed before CLI implementation. Malformed commands and non-integer IDs are explained and retried without calling a domain action. The CLI prints `ActionResult.message()` but does not recreate the validation rule.
 
+##### Stage 1 CLI commands — proposed by M5, pending M4 review
+
+Commands are case-insensitive and surrounding whitespace is ignored. IDs are the positive integers shown in the start-of-turn display.
+
+| Phase | Command | Controller call |
+| --- | --- | --- |
+| Waiter | `seat <customerId> <tableId>` | `seatCustomer(customerId, tableId)` |
+| Waiter | `order <customerId>` | `takeOrder(customerId)` |
+| Waiter | `serve <customerId>` | `serveOrder(customerId)` |
+| Waiter | `wait` | `waitWaiter()` |
+| Chef | `cook <customerId>` | `prepareOrder(customerId)` |
+| Chef | `wait` | `waitChef()` |
+| Either | `help` | None; reprints the commands for the current phase and does not consume a choice |
+
+- The prompt names the current phase, for example `Waiter> ` then `Chef> `, so the same `wait` word is unambiguous.
+- An unknown command, wrong number of arguments or non-integer ID prints a usage message and re-prompts without calling the controller.
+- A well-formed command that the domain rejects prints `ActionResult.message()` and re-prompts; the staff choice is not consumed.
+- After `finishTurn()`, the CLI prints a one-line end-of-turn summary from the new snapshot: served, unhappy departures, revenue, paid-customer average (`N/A` before the first payment) and turns used.
+- After turn 18, `displayOutcome()` prints Victory or Defeat with the final totals.
+
 #### Immutable view records — owner M5
 
 ```java

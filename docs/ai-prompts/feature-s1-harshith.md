@@ -5,6 +5,8 @@
 - **Human verification:** Pending throughout; automated results below are not approval.
 - **Current scope:** Six contracted M1 production types and four self-contained class tests: MenuItemTest, OrderTest, CustomerTest and RegularCustomerTest. Standalone demo, generated HTML, separate M1 handoff and the four extra testing files were removed. Add no optional extras.
 
+The focused cross-owner TurnManager fix on `fix/harshith` is recorded in Prompt 6 below.
+
 Material excerpts below are verbatim; repeated specification text is omitted.
 The full shared APIs/invariants remain in [class-contracts.md](../class-contracts.md).
 All automated executions used Java/compiler 26.0.2 with Java 17 compilation target;
@@ -87,4 +89,3 @@ as needed. No commit, push, merge or tag was performed by these assistant tasks.
 **Human verification:** Pending. Production/test builds, runner (2914 checks), historical demo (257 checks) and compiled API inspection exited 0. Strict Javadoc first exited 1 for 15 missing summaries; after correction it exited 0. These were working-tree results based on `b6db48f378e73852a7e039efb8e877c38b634757`, not exact-commit verification.
 
 **Related commits:** No new commit; PR details pending.
-

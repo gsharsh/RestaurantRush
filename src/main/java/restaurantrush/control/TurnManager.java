@@ -53,7 +53,8 @@ public final class TurnManager {
     }
 
     /**
-     * Begin a new turn: reset task flags, obtain arrival, add to restaurant.
+     * Begin a new turn after successfully adding any scheduled arrival.
+     * A rejected arrival leaves the turn state unchanged.
      *
      * @param restaurant non-null domain state
      * @throws IllegalArgumentException if restaurant is null
@@ -67,16 +68,16 @@ public final class TurnManager {
             throw new IllegalStateException("cannot begin turn: already started or finished");
         }
 
-        turnStarted = true;
-        waiterTaskUsed = false;
-        chefTaskUsed = false;
-        turnResolved = false;
-
         // Add scheduled arrival if any
         var arrival = arrivals.arrivalFor(currentTurn);
         if (arrival != null) {
             restaurant.addArrival(arrival);
         }
+
+        turnStarted = true;
+        waiterTaskUsed = false;
+        chefTaskUsed = false;
+        turnResolved = false;
     }
 
     /**
@@ -167,11 +168,11 @@ public final class TurnManager {
     /**
      * Advance to the next turn or mark game finished.
      *
-     * @throws IllegalStateException if turn is not resolved or already advanced
+     * @throws IllegalStateException if turn is not resolved, already advanced or the game is finished
      */
     public void advanceTurn() {
-        if (!turnStarted || !turnResolved) {
-            throw new IllegalStateException("cannot advance turn: not resolved");
+        if (finished || !turnStarted || !turnResolved) {
+            throw new IllegalStateException("cannot advance turn: not resolved or already finished");
         }
 
         completedTurns++;
@@ -180,8 +181,8 @@ public final class TurnManager {
             finished = true;
         } else {
             currentTurn++;
-            turnStarted = false;
         }
+        turnStarted = false;
     }
 
     /**

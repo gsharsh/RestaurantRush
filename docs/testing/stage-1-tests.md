@@ -1,4 +1,38 @@
-# Stage 1 test record — M1 domain
+# Stage 1 test record — Harshith's contributions
+
+## TurnManager guard fixes — 2026-10-26
+
+- **Status:** Focused verification passed using real staff dependencies; the branch's normal build remains blocked by unmerged dependencies.
+- **Tested implementation:** Uncommitted working tree on `fix/harshith`, base SHA `f2600c45a6dd4c1383a435700f214d2609310848`. This SHA is not the exact tested implementation commit.
+- **Additional dependency sources:** `Restaurant`, `Table`, `ActionResult`, `Waiter`, `Chef` and `Cashier` from `feature/s1-staff` at `820720c4382bdbfb340e0706f17304ccb26e1eba`. They were read from a temporary checkout and verified against that Git revision; nothing was copied or merged into this branch.
+- **Tester/reviewer:** Codex automated execution; human/M4 review pending.
+- **Java/compiler:** Java 26.0.2 and `javac 26.0.2`; compilation targets Java 17. No Java 17 runtime execution is claimed.
+
+| Check | Expected outcome | Observed outcome | Result |
+| --- | --- | --- | --- |
+| `./compile.sh` | Branch production sources compile | Exit 1: missing Restaurant and staff/result dependencies | FAIL |
+| `./compile.sh --tests` | Branch production and tests compile | Exit 1: same missing dependencies | FAIL |
+| New regression before the fix | Detect both reviewed bugs | Exit 1: rejected start leaves Waiter available; repeated final advancement produces completed turn 19 | EXPECTED FAILURE |
+| Focused compilation after the fix | Current sources/tests compile with the real dependency sources above | Exit 0 | PASS |
+| `TurnManagerTest` | Failed-start preservation/retry, repeated final rejection and normal 18-turn progression pass | `TurnManagerTest: PASS (650 checks)`; exit 0 | PASS |
+| Existing tests in the same focused build | All six existing runners pass | MenuItemTest 25; OrderTest 487; CustomerTest 2292; RegularCustomerTest 110; ViewRecordsTest 46; RestaurantCLITest 16 checks; every runner exit 0 | PASS |
+
+The exact focused commands executed were:
+
+```bash
+javac --release 17 -d /private/tmp/restaurantrush-turn-guards-nq0sb0z_/classes-before @/private/tmp/restaurantrush-turn-guards-nq0sb0z_/sources-before.txt
+java -ea -cp /private/tmp/restaurantrush-turn-guards-nq0sb0z_/classes-before restaurantrush.control.TurnManagerTest
+javac --release 17 -d /private/tmp/restaurantrush-turn-guards-nq0sb0z_/classes-after @/private/tmp/restaurantrush-turn-guards-nq0sb0z_/sources-after.txt
+java -ea -cp /private/tmp/restaurantrush-turn-guards-nq0sb0z_/classes-after restaurantrush.control.TurnManagerTest
+```
+
+The temporary argument files list all current production/test sources plus the six dependency sources above. Each existing runner was executed separately with `java -ea -cp /private/tmp/restaurantrush-turn-guards-nq0sb0z_/classes-after` and its fully qualified class name listed in the earlier M1 record below (`restaurantrush.domain.*`), plus `restaurantrush.view.ViewRecordsTest` and `restaurantrush.boundary.RestaurantCLITest`.
+
+Once those dependencies are integrated, rerun normally with `./compile.sh --tests` followed by `java -ea -cp out/classes restaurantrush.control.TurnManagerTest`. The test uses public APIs and checked assertions; failures produce a nonzero exit without reflection, test hooks or substitute production classes.
+
+This change does not establish full Stage 1 acceptance. No new whole-game victory/defeat run, commit, push or merge was performed for this fix. The existing deletion of `control/.gitkeep` was preserved.
+
+## Historical M1 verification — 2026-10-24
 
 - **Status:** All four self-contained M1 class tests passed. Full Stage 1 acceptance is pending.
 - **Tested implementation:** Uncommitted working tree on `feature/s1-harshith`.

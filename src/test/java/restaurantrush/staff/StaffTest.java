@@ -9,6 +9,7 @@ import restaurantrush.domain.Order;
 import restaurantrush.domain.OrderStatus;
 import restaurantrush.domain.RegularCustomer;
 import restaurantrush.domain.Restaurant;
+import restaurantrush.domain.Table;
 
 /**
  * Waiter, Chef and Cashier tests. Staff are always driven through the abstract
@@ -29,6 +30,7 @@ public final class StaffTest {
         testChefPreparation();
         testCashierTimingAndOrder();
         testStaffWorkUnchangedForOtherCustomerSubtype();
+        testCashierWithTwoEligiblePayers();
         System.out.println("StaffTest: PASS (" + checks + " checks)");
     }
 
@@ -196,6 +198,100 @@ public final class StaffTest {
         restaurant.addArrival(other);
         waiter.seat(restaurant, 2, 1);
         check(other.waitingLossPerTurn() == 5, "subtype loses less while waiting");
+    }
+
+    private static void testCashierWithTwoEligiblePayers() {
+        Restaurant restaurant = new Restaurant();
+        Waiter waiter = new Waiter();
+        Chef chef = new Chef();
+        Cashier cashier = new Cashier();
+        Customer newer = new RegularCustomer(1);
+        Customer older = new RegularCustomer(2);
+        restaurant.addArrival(newer);
+        restaurant.addArrival(older);
+        expectOk(waiter.seat(restaurant, 1, 1));
+        expectOk(waiter.seat(restaurant, 2, 2));
+        newer.applyWaitingLoss();
+        expectOk(waiter.takeOrder(restaurant, 1));
+        expectOk(waiter.takeOrder(restaurant, 2));
+        Order newerOrder = newer.getOrder();
+        Order olderOrder = older.getOrder();
+        expectOk(chef.prepareOneUnit(newerOrder));
+        expectOk(chef.prepareOneUnit(olderOrder));
+        expectOk(waiter.serve(restaurant, 2, 3));
+        older.finishEating(4);
+        expectOk(waiter.serve(restaurant, 1, 4));
+        newer.finishEating(5);
+
+        check(newer.getStatus() == CustomerStatus.READY_TO_PAY && newer.getReadyToPayTurn() == 5
+                && newer.getReadyToPayTurn() < 6 && newerOrder.getStatus() == OrderStatus.SERVED
+                && restaurant.findTable(1).getOccupant() == newer, "customer 1 is eligible before turn 6 collection");
+        check(older.getStatus() == CustomerStatus.READY_TO_PAY && older.getReadyToPayTurn() == 4
+                && older.getReadyToPayTurn() < 6 && olderOrder.getStatus() == OrderStatus.SERVED
+                && restaurant.findTable(2).getOccupant() == older, "customer 2 is eligible before turn 6 collection");
+        check(cashier.collectOne(restaurant, 6), "one of two eligible customers pays on turn 6");
+        check(older.getStatus() == CustomerStatus.PAID && olderOrder.getStatus() == OrderStatus.PAID,
+                "older readiness wins over lower ID and insertion order");
+        check(newer.getStatus() == CustomerStatus.READY_TO_PAY && newerOrder.getStatus() == OrderStatus.SERVED
+                && restaurant.oldestEligiblePayer(6) == newer, "customer 1 remains eligible on turn 6");
+
+        int customerIdBefore = newer.getId();
+        int satisfactionBefore = newer.getSatisfaction();
+        CustomerStatus customerStatusBefore = newer.getStatus();
+        int servedTurnBefore = newer.getServedTurn();
+        int readyTurnBefore = newer.getReadyToPayTurn();
+        int orderIdBefore = newerOrder.getId();
+        MenuItem itemBefore = newerOrder.getItem();
+        OrderStatus orderStatusBefore = newerOrder.getStatus();
+        int remainingUnitsBefore = newerOrder.getRemainingUnits();
+        int billBefore = newerOrder.getBillCents();
+        boolean canPrepareBefore = newerOrder.canPrepare();
+        boolean isReadyBefore = newerOrder.isReady();
+        Table tableBefore = restaurant.findTableForCustomer(customerIdBefore);
+        Customer occupantBefore = tableBefore.getOccupant();
+        boolean tableAvailableBefore = tableBefore.isAvailable();
+        int revenueBefore = restaurant.getRevenueCents();
+        int paidBefore = restaurant.getPaidCount();
+        int paidSatisfactionBefore = restaurant.getPaidSatisfactionTotal();
+        double averageBefore = restaurant.getAveragePaidSatisfaction();
+        int servedBefore = restaurant.getServedCount();
+        int abandonedBefore = restaurant.getAbandonedCount();
+
+        check(!cashier.collectOne(restaurant, 6), "a second turn 6 payment is rejected despite an eligible payer");
+        check(restaurant.findCustomer(customerIdBefore) == newer && newer.getId() == customerIdBefore,
+                "rejected second payment preserves customer identity");
+        check(newer.getOrder() == newerOrder && restaurant.findOrder(orderIdBefore) == newerOrder,
+                "rejected second payment preserves the shared order identity");
+        check(newer.getStatus() == customerStatusBefore && newer.getSatisfaction() == satisfactionBefore,
+                "rejected second payment preserves customer status and satisfaction");
+        check(newer.getServedTurn() == servedTurnBefore && newer.getReadyToPayTurn() == readyTurnBefore,
+                "rejected second payment preserves customer timestamps");
+        check(newerOrder.getId() == orderIdBefore && newerOrder.getItem() == itemBefore
+                && newerOrder.getBillCents() == billBefore, "rejected second payment preserves order identity and quote");
+        check(newerOrder.getStatus() == orderStatusBefore && newerOrder.getRemainingUnits() == remainingUnitsBefore
+                && newerOrder.canPrepare() == canPrepareBefore && newerOrder.isReady() == isReadyBefore,
+                "rejected second payment preserves order lifecycle and preparation state");
+        check(restaurant.findTableForCustomer(customerIdBefore) == tableBefore
+                && tableBefore.getOccupant() == occupantBefore && tableBefore.isAvailable() == tableAvailableBefore,
+                "rejected second payment preserves table identity and occupancy");
+        check(restaurant.oldestEligiblePayer(6) == newer, "customer 1 remains eligible after rejection");
+        check(restaurant.getRevenueCents() == revenueBefore, "rejected second payment preserves revenue");
+        check(restaurant.getPaidCount() == paidBefore, "rejected second payment preserves paid count");
+        check(restaurant.getPaidSatisfactionTotal() == paidSatisfactionBefore,
+                "rejected second payment preserves paid satisfaction total");
+        check(restaurant.getAveragePaidSatisfaction() == averageBefore,
+                "rejected second payment preserves paid satisfaction average");
+        check(restaurant.getServedCount() == servedBefore && restaurant.getAbandonedCount() == abandonedBefore,
+                "rejected second payment preserves served and abandoned counts");
+
+        check(cashier.collectOne(restaurant, 7), "remaining eligible customer pays on turn 7");
+        check(newer.getStatus() == CustomerStatus.PAID && newerOrder.getStatus() == OrderStatus.PAID,
+                "remaining customer and shared order are paid");
+        check(tableBefore.isAvailable() && tableBefore.getOccupant() == null, "remaining customer's table is released");
+        check(restaurant.getPaidCount() == paidBefore + 1 && restaurant.getRevenueCents() == revenueBefore + billBefore,
+                "next-turn payment adds one customer and the remaining locked bill");
+        check(restaurant.getPaidSatisfactionTotal() == paidSatisfactionBefore + satisfactionBefore,
+                "next-turn payment records the remaining customer's satisfaction");
     }
 
     private static void expectOk(ActionResult result) {

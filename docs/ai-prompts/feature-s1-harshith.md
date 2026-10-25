@@ -5,7 +5,7 @@
 - **Human verification:** Pending throughout; automated results below are not approval.
 - **Current scope:** Six contracted M1 production types and four self-contained class tests: MenuItemTest, OrderTest, CustomerTest and RegularCustomerTest. Standalone demo, generated HTML, separate M1 handoff and the four extra testing files were removed. Add no optional extras.
 
-The focused cross-owner TurnManager fix on `fix/harshith` is recorded in Prompt 6 below.
+Focused cross-owner test work on `fix/harshith` is recorded in Prompt 6 below.
 
 Material excerpts below are verbatim; repeated specification text is omitted.
 The full shared APIs/invariants remain in [class-contracts.md](../class-contracts.md).

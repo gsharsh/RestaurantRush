@@ -1,8 +1,44 @@
 # Stage 1 test record — Harshith's contributions
 
+## Cashier coverage — 2026-10-26
+
+- **Status:** Production build, test build and all ten current test runners passed.
+- **Tested implementation:** Uncommitted working tree on `fix/harshith`, HEAD `3f940d72fa85aae0947016b3a6d30cd2b2bbeecd`, with the user's pending merge of `83c0e9388b4f8d1fcddd2603651be81f0db821a4`. Neither SHA alone identifies the exact tested implementation.
+- **Tester/reviewer:** Codex automated execution for Harshith; human/M3 review pending.
+- **Java/compiler:** Java 26.0.2 and `javac 26.0.2`; compilation targets Java 17. Java 17 runtime execution is unverified.
+
+| Check | Exact command | Expected and observed outcome | Result |
+| --- | --- | --- | --- |
+| Production build | `./compile.sh` | Sources compile; exit 0 | PASS |
+| Test build | `./compile.sh --tests` | Production and tests compile; exit 0 | PASS |
+| Staff regression | `java -ea -cp out/classes restaurantrush.staff.StaffTest` | Existing 92 checks plus 32 new checks pass: `StaffTest: PASS (124 checks)`; exit 0 | PASS |
+| Mutation analysis | `python3 /private/tmp/restaurantrush-cashier-test-p9lejr8p/mutation-check.py` | Analysis exits 0: original tests pass both deliberately incorrect implementations, strengthened tests reject both with AssertionError/exit 1 | PASS |
+
+The added case makes customer 1 ready on turn 5 and customer 2 ready on turn 4, then collects on turn 6. Both are explicitly checked as eligible. The older customer must pay first despite having the higher ID and later insertion position. A second turn-6 call must preserve the remaining Customer/Order/Table identity and state, revenue, counts and satisfaction totals/average. The remaining customer pays on turn 7. All earlier timing and subtype tests are unchanged; production sources are unchanged.
+
+The nine other runners were also executed separately, all with exit 0:
+
+```bash
+java -ea -cp out/classes restaurantrush.domain.MenuItemTest
+java -ea -cp out/classes restaurantrush.domain.OrderTest
+java -ea -cp out/classes restaurantrush.domain.CustomerTest
+java -ea -cp out/classes restaurantrush.domain.RegularCustomerTest
+java -ea -cp out/classes restaurantrush.domain.ActionResultTest
+java -ea -cp out/classes restaurantrush.domain.RestaurantStateTest
+java -ea -cp out/classes restaurantrush.view.ViewRecordsTest
+java -ea -cp out/classes restaurantrush.boundary.RestaurantCLITest
+java -ea -cp out/classes restaurantrush.control.TurnManagerTest
+```
+
+Observed results respectively: 25, 487, 2292, 110 and 7 checks; 15 Restaurant scenarios; 46, 16 and 650 checks.
+
+Mutation copies were isolated under `/private/tmp/restaurantrush-cashier-test-p9lejr8p/`. Removing only Cashier's same-turn guard and selecting the newest eligible payer each passed the original 92 checks. Each mutation now fails the new case at the corresponding assertion. No substitute collaborators were introduced.
+
+The user's staged entries and pending merge state were preserved exactly. No commit, push or merge was performed by this task. This verification does not establish full Stage 1 acceptance.
+
 ## TurnManager guard fixes — 2026-10-26
 
-- **Status:** Focused verification passed using real staff dependencies; the branch's normal build remains blocked by unmerged dependencies.
+- **Status at that earlier verification:** Focused verification passed using real staff dependencies; the branch's normal build was blocked by unmerged dependencies. The later Cashier verification above supersedes that build status.
 - **Tested implementation:** Uncommitted working tree on `fix/harshith`, base SHA `f2600c45a6dd4c1383a435700f214d2609310848`. This SHA is not the exact tested implementation commit.
 - **Additional dependency sources:** `Restaurant`, `Table`, `ActionResult`, `Waiter`, `Chef` and `Cashier` from `feature/s1-staff` at `820720c4382bdbfb340e0706f17304ccb26e1eba`. They were read from a temporary checkout and verified against that Git revision; nothing was copied or merged into this branch.
 - **Tester/reviewer:** Codex automated execution; human/M4 review pending.

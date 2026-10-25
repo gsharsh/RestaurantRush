@@ -2,15 +2,14 @@
 
 RestaurantRush is the SC2002 Object-Oriented Design and Programming group assignment. The goal is to build a Java 17 command-line restaurant-management game in three cumulative, independently runnable stages.
 
-> **Current branch status:** Harshith's six Stage 1 M1 domain types and accumulated
-> automated tests are implemented. Peer integration, the complete
-> application, human review and Stage 1 release acceptance remain pending.
+> **Current branch status:** The Stage 1 game is integrated and runnable.
+> Human review and Stage 1 release acceptance remain pending.
 
 ## Required releases
 
 | Stage | Required addition | Git tag | Status |
 | --- | --- | --- | --- |
-| Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | M1 domain implemented; integration and acceptance pending |
+| Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | Integrated and runnable; release acceptance pending |
 | Stage 2 | VIP and Critic customer behaviour implemented polymorphically | `stage-2` | Not started |
 | Stage 3 | Host, ComboMeal and Happy Hour | `stage-3` | Not started |
 
@@ -47,6 +46,17 @@ The project is compiled with `javac --release 17`, even when a newer JDK is inst
 
 ## Compile and run
 
+From the repository root:
+
+```bash
+# Run the interactive game
+./run.sh
+```
+
+`run.sh` compiles the production sources and launches
+`restaurantrush.app.RestaurantRushApp`. Type `help` at a Waiter or Chef prompt
+to see the available commands.
+
 Compile the current production sources:
 
 ```bash
@@ -77,14 +87,10 @@ Tests follow the production package under `src/test/java/restaurantrush/domain/`
 | `CustomerTest` | Exact customer enum constants, lifecycle, timing, satisfaction, order assignment and cross-class collaboration |
 | `RegularCustomerTest` | Menu selection, price quotes and waiting-loss rules |
 
-`run.sh` targets `restaurantrush.app.RestaurantRushApp`. That peer-owned entry
-point is absent from this branch, so whole-game launch is pending. Once the
-complete application is integrated, its launch command is `./run.sh`.
-
 The [Stage 1 test record](docs/testing/stage-1-tests.md) records the actual working
 tree, compiler/runtime versions, commands and observed M1 results. The shared
 [class contract](docs/class-contracts.md) describes the exact APIs, associations
-and remaining M2/M3/M4 integration responsibilities. The
+and M2/M3/M4 integration responsibilities. The
 [branch AI-prompt record](docs/ai-prompts/feature-s1-harshith.md) separates AI work,
 observed checks and pending human verification.
 

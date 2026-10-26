@@ -1,0 +1,289 @@
+Compiled production sources to /Users/devanshpoddar/Developer/RestaurantRush/out/classes
+Welcome to Restaurant Rush! Type 'help' at any prompt to see the commands.
+
+========== Turn 1 of 18 ==========
+Revenue: $0.00   Avg paid satisfaction: N/A
+Waiting queue: C1
+Tables:
+  Table 1: free
+  Table 2: free
+Customers:
+  C1  satisfaction 100  WAITING  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 1 is seated at table 1.
+Chef> Chef skipped this turn
+End of turn 1: served 0, unhappy departures 0, revenue $0.00, avg paid satisfaction N/A, turns used 1/18
+
+========== Turn 2 of 18 ==========
+Revenue: $0.00   Avg paid satisfaction: N/A
+Waiting queue: (empty)
+Tables:
+  Table 1: C1
+  Table 2: free
+Customers:
+  C1  satisfaction 92  SEATED  table 1  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 1 ordered Salad ($9.00).
+Chef> Salad is READY to serve.
+End of turn 2: served 0, unhappy departures 0, revenue $0.00, avg paid satisfaction N/A, turns used 2/18
+
+========== Turn 3 of 18 ==========
+Revenue: $0.00   Avg paid satisfaction: N/A
+Waiting queue: (empty)
+Tables:
+  Table 1: C1
+  Table 2: free
+Customers:
+  C1  satisfaction 84  SEATED  table 1  order: Salad READY
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Served Salad to customer 1.
+Chef> Chef skipped this turn
+End of turn 3: served 1, unhappy departures 0, revenue $0.00, avg paid satisfaction N/A, turns used 3/18
+
+========== Turn 4 of 18 ==========
+Revenue: $0.00   Avg paid satisfaction: N/A
+Waiting queue: C2
+Tables:
+  Table 1: C1
+  Table 2: free
+Customers:
+  C1  satisfaction 84  EATING  table 1  order: Salad SERVED
+  C2  satisfaction 100  WAITING  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 2 is seated at table 2.
+Chef> Chef skipped this turn
+End of turn 4: served 1, unhappy departures 0, revenue $0.00, avg paid satisfaction N/A, turns used 4/18
+
+========== Turn 5 of 18 ==========
+Revenue: $0.00   Avg paid satisfaction: N/A
+Waiting queue: (empty)
+Tables:
+  Table 1: C1
+  Table 2: C2
+Customers:
+  C1  satisfaction 84  READY_TO_PAY  table 1  order: Salad SERVED
+  C2  satisfaction 92  SEATED  table 2  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 2 ordered Burger ($15.00).
+Chef> Burger is READY to serve.
+End of turn 5: served 1, unhappy departures 0, revenue $9.00, avg paid satisfaction 84.0, turns used 5/18
+
+========== Turn 6 of 18 ==========
+Revenue: $9.00   Avg paid satisfaction: 84.0
+Waiting queue: (empty)
+Tables:
+  Table 1: free
+  Table 2: C2
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  SEATED  table 2  order: Burger READY
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Served Burger to customer 2.
+Chef> Chef skipped this turn
+End of turn 6: served 2, unhappy departures 0, revenue $9.00, avg paid satisfaction 84.0, turns used 6/18
+
+========== Turn 7 of 18 ==========
+Revenue: $9.00   Avg paid satisfaction: 84.0
+Waiting queue: C3
+Tables:
+  Table 1: free
+  Table 2: C2
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  EATING  table 2  order: Burger SERVED
+  C3  satisfaction 100  WAITING  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 3 is seated at table 1.
+Chef> Chef skipped this turn
+End of turn 7: served 2, unhappy departures 0, revenue $9.00, avg paid satisfaction 84.0, turns used 7/18
+
+========== Turn 8 of 18 ==========
+Revenue: $9.00   Avg paid satisfaction: 84.0
+Waiting queue: (empty)
+Tables:
+  Table 1: C3
+  Table 2: C2
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  READY_TO_PAY  table 2  order: Burger SERVED
+  C3  satisfaction 92  SEATED  table 1  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 3 ordered Pasta ($18.00).
+Chef> Prepared one unit of Pasta; 1 unit(s) left.
+End of turn 8: served 2, unhappy departures 0, revenue $24.00, avg paid satisfaction 84.0, turns used 8/18
+
+========== Turn 9 of 18 ==========
+Revenue: $24.00   Avg paid satisfaction: 84.0
+Waiting queue: (empty)
+Tables:
+  Table 1: C3
+  Table 2: free
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  PAID  order: Burger PAID
+  C3  satisfaction 84  SEATED  table 1  order: Pasta PREPARING (1 unit left)
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Waiter skipped this turn
+Chef> Pasta is READY to serve.
+End of turn 9: served 2, unhappy departures 0, revenue $24.00, avg paid satisfaction 84.0, turns used 9/18
+
+========== Turn 10 of 18 ==========
+Revenue: $24.00   Avg paid satisfaction: 84.0
+Waiting queue: C4
+Tables:
+  Table 1: C3
+  Table 2: free
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  PAID  order: Burger PAID
+  C3  satisfaction 76  SEATED  table 1  order: Pasta READY
+  C4  satisfaction 100  WAITING  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Served Pasta to customer 3.
+Chef> Chef skipped this turn
+End of turn 10: served 3, unhappy departures 0, revenue $24.00, avg paid satisfaction 84.0, turns used 10/18
+
+========== Turn 11 of 18 ==========
+Revenue: $24.00   Avg paid satisfaction: 84.0
+Waiting queue: C4
+Tables:
+  Table 1: C3
+  Table 2: free
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  PAID  order: Burger PAID
+  C3  satisfaction 76  EATING  table 1  order: Pasta SERVED
+  C4  satisfaction 92  WAITING  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 4 is seated at table 2.
+Chef> Chef skipped this turn
+End of turn 11: served 3, unhappy departures 0, revenue $24.00, avg paid satisfaction 84.0, turns used 11/18
+
+========== Turn 12 of 18 ==========
+Revenue: $24.00   Avg paid satisfaction: 84.0
+Waiting queue: (empty)
+Tables:
+  Table 1: C3
+  Table 2: C4
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  PAID  order: Burger PAID
+  C3  satisfaction 76  READY_TO_PAY  table 1  order: Pasta SERVED
+  C4  satisfaction 84  SEATED  table 2  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 4 ordered Salad ($9.00).
+Chef> Salad is READY to serve.
+End of turn 12: served 3, unhappy departures 0, revenue $42.00, avg paid satisfaction 81.3, turns used 12/18
+
+========== Turn 13 of 18 ==========
+Revenue: $42.00   Avg paid satisfaction: 81.3
+Waiting queue: C5
+Tables:
+  Table 1: free
+  Table 2: C4
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  PAID  order: Burger PAID
+  C3  satisfaction 76  PAID  order: Pasta PAID
+  C4  satisfaction 76  SEATED  table 2  order: Salad READY
+  C5  satisfaction 100  WAITING  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Served Salad to customer 4.
+Chef> Chef skipped this turn
+End of turn 13: served 4, unhappy departures 0, revenue $42.00, avg paid satisfaction 81.3, turns used 13/18
+
+========== Turn 14 of 18 ==========
+Revenue: $42.00   Avg paid satisfaction: 81.3
+Waiting queue: C5
+Tables:
+  Table 1: free
+  Table 2: C4
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  PAID  order: Burger PAID
+  C3  satisfaction 76  PAID  order: Pasta PAID
+  C4  satisfaction 76  EATING  table 2  order: Salad SERVED
+  C5  satisfaction 92  WAITING  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 5 is seated at table 1.
+Chef> Chef skipped this turn
+End of turn 14: served 4, unhappy departures 0, revenue $42.00, avg paid satisfaction 81.3, turns used 14/18
+
+========== Turn 15 of 18 ==========
+Revenue: $42.00   Avg paid satisfaction: 81.3
+Waiting queue: (empty)
+Tables:
+  Table 1: C5
+  Table 2: C4
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  PAID  order: Burger PAID
+  C3  satisfaction 76  PAID  order: Pasta PAID
+  C4  satisfaction 76  READY_TO_PAY  table 2  order: Salad SERVED
+  C5  satisfaction 84  SEATED  table 1  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 5 ordered Burger ($15.00).
+Chef> Burger is READY to serve.
+End of turn 15: served 4, unhappy departures 0, revenue $51.00, avg paid satisfaction 80.0, turns used 15/18
+
+========== Turn 16 of 18 ==========
+Revenue: $51.00   Avg paid satisfaction: 80.0
+Waiting queue: C6
+Tables:
+  Table 1: C5
+  Table 2: free
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  PAID  order: Burger PAID
+  C3  satisfaction 76  PAID  order: Pasta PAID
+  C4  satisfaction 76  PAID  order: Salad PAID
+  C5  satisfaction 76  SEATED  table 1  order: Burger READY
+  C6  satisfaction 100  WAITING  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Served Burger to customer 5.
+Chef> Chef skipped this turn
+End of turn 16: served 5, unhappy departures 0, revenue $51.00, avg paid satisfaction 80.0, turns used 16/18
+
+========== Turn 17 of 18 ==========
+Revenue: $51.00   Avg paid satisfaction: 80.0
+Waiting queue: C6
+Tables:
+  Table 1: C5
+  Table 2: free
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  PAID  order: Burger PAID
+  C3  satisfaction 76  PAID  order: Pasta PAID
+  C4  satisfaction 76  PAID  order: Salad PAID
+  C5  satisfaction 76  EATING  table 1  order: Burger SERVED
+  C6  satisfaction 92  WAITING  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 6 is seated at table 2.
+Chef> Chef skipped this turn
+End of turn 17: served 5, unhappy departures 0, revenue $51.00, avg paid satisfaction 80.0, turns used 17/18
+
+========== Turn 18 of 18 ==========
+Revenue: $51.00   Avg paid satisfaction: 80.0
+Waiting queue: (empty)
+Tables:
+  Table 1: C5
+  Table 2: C6
+Customers:
+  C1  satisfaction 84  PAID  order: Salad PAID
+  C2  satisfaction 84  PAID  order: Burger PAID
+  C3  satisfaction 76  PAID  order: Pasta PAID
+  C4  satisfaction 76  PAID  order: Salad PAID
+  C5  satisfaction 76  READY_TO_PAY  table 1  order: Burger SERVED
+  C6  satisfaction 84  SEATED  table 2  no order yet
+Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
+Waiter> Customer 6 ordered Pasta ($18.00).
+Chef> Prepared one unit of Pasta; 1 unit(s) left.
+End of turn 18: served 5, unhappy departures 0, revenue $66.00, avg paid satisfaction 79.2, turns used 18/18
+
+================ VICTORY ================
+Turns completed:        18 of 18
+Customers served:       5
+Customers paid:         5 (target at least 4)
+Unhappy departures:     0
+Revenue:                $66.00 (target at least $45.00)
+Avg paid satisfaction:  79.2 (target at least 60)

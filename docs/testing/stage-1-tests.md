@@ -1,5 +1,29 @@
 # Stage 1 test record — Harshith's contributions
 
+## Whole-game victory and defeat scenarios (M5) — 2026-10-26
+
+- **Status:** Separate reproducible victory and defeat runs passed through the full CLI.
+- **Tested commit:** `f21512f` (`main` after PRs #3–#9), clean working tree apart from the new scenario files.
+- **Tester:** Devansh Poddar (M5). **Reviewer:** pending.
+- **Java/compiler:** OpenJDK 21.0.12 (Homebrew), compiled with `javac --release 17` via `compile.sh`.
+- **Machine:** macOS, `~/Developer/RestaurantRush`.
+
+| Test | Exact command | Expected outcome | Observed outcome | Result |
+| --- | --- | --- | --- | --- |
+| Test build | `./compile.sh --tests` | Production and test sources compile | `Compiled production and test sources`; exit 0 | PASS |
+| Victory run | `./run.sh < docs/testing/scenarios/stage-1-victory.txt > docs/testing/scenarios/stage-1-victory.out` | All 18 turns complete; at least 4 paid, at least $45.00, paid average at least 60; VICTORY | 18 of 18 turns; 5 served; 5 paid; 0 unhappy departures; revenue $66.00; average 79.2; `VICTORY` | PASS |
+| Defeat run | `./run.sh < docs/testing/scenarios/stage-1-defeat.txt > docs/testing/scenarios/stage-1-defeat.out` | All 18 turns complete with targets missed; DEFEAT | 18 of 18 turns; 0 served; 0 paid; 2 unhappy departures; revenue $0.00; average N/A; `DEFEAT` | PASS |
+
+Saved inputs and full outputs are in `docs/testing/scenarios/`. Each input file holds exactly 36 commands: one Waiter command then one Chef command for each of the 18 turns.
+
+**Victory plan.** Every customer is seated on their arrival turn or as soon as a table frees, ordered the next turn with the Chef cooking immediately, and served on the first turn the dish is READY. Customers 1–5 pay on turns 5, 8, 12, 15 and 18 with recorded satisfaction 84, 84, 76, 76 and 76. Customer 6 (turn-16 arrival) orders on turn 18 and cannot pay, as the brief expects. No command in the victory input was rejected.
+
+**Defeat plan.** The Waiter and Chef `wait` on every turn. Customer 1 reaches 0 satisfaction and leaves at the end of turn 13 (13 × 8 points); customer 2 leaves at the end of turn 16. Nobody is served or pays.
+
+**Brief Section 3.3 check.** In the victory run, customer 3 (Pasta, 2 units) follows the brief's worked example: end-of-turn satisfaction 92 (seated), 84 (ordered, unit 1), 76 (unit 2, READY but not servable that turn), then served with no further loss, READY_TO_PAY the next turn and paid the turn after with 76 recorded.
+
+**Observation (not a rule failure).** `GameController.getSnapshot()` builds customer views from `restaurant.getCustomers()`, so PAID and LEFT customers remain listed in every later start-of-turn display. Using `getActiveCustomers()` would show only customers still in the restaurant. Raised with M4.
+
 ## Cashier coverage — 2026-10-26
 
 - **Status:** Production build, test build and all ten current test runners passed.
@@ -127,6 +151,8 @@ also confirmed the exact contracted APIs/modifiers and the actual call from
 `applyWaitingLoss()` to the overridden `waitingLossPerTurn()` rule.
 
 ## Reproducible scenarios
+
+Whole-game victory and defeat runs are recorded in the M5 section at the top of this file. The note below refers to the earlier M1-only verification.
 
 No whole-game victory/defeat scenario was executed. These are direct M1 domain
 tests; they do not establish arrivals, staff limits, Cashier selection/eligibility,

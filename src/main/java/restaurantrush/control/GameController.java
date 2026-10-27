@@ -210,7 +210,7 @@ public final class GameController {
             .map(restaurantrush.domain.Customer::getId)
             .toList();
 
-        var customers = restaurant.getCustomers().stream()
+        var customers = restaurant.getActiveCustomers().stream()
             .map(c -> {
                 Integer tableId = null;
                 var table = restaurant.findTableForCustomer(c.getId());

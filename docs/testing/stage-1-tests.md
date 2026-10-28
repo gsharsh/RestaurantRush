@@ -1,4 +1,32 @@
-# Stage 1 test record — Harshith's contributions
+# Stage 1 test record
+
+## Stage 1 release-candidate verification — 2026-10-28
+
+- **Status:** All Stage 1 test classes and both whole-game scenarios pass. Awaiting review by another member before tagging.
+- **Tested code:** `main` at `54dbebd` plus branch `docs/s1-release-evidence` (unused import removed from `ArrivalSchedule`; two `GameController` failure messages reworded to match the rest of the game; scenario outputs re-recorded; README test commands completed).
+- **Tag commit:** to be recorded here when `stage-1` is created. Re-run the commands below on that exact commit first.
+- **Tester:** Vedavit (M2). **Reviewer:** pending.
+- **Java/compiler:** OpenJDK 21.0.12 (Homebrew), compiled with `javac --release 17`.
+
+| Test | Exact command | Expected outcome | Observed outcome | Result |
+| --- | --- | --- | --- | --- |
+| Production build | `./compile.sh` | Compiles without errors | Exit 0 | PASS |
+| Test build | `./compile.sh --tests` | Production and test sources compile | Exit 0 | PASS |
+| All test classes | The ten `java -ea -cp out/classes ...Test` commands listed in the README | Every class reports PASS and exits 0 | MenuItem 25, Order 487, Customer 2292, RegularCustomer 110, ActionResult 7 checks; RestaurantState 15/15; Staff 124; TurnManager 650; ViewRecords 46; RestaurantCLI 16 — all PASS | PASS |
+| Victory run | `java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/scenarios/stage-1-victory.txt` | 18 turns; at least 4 paid, at least $45.00, paid average at least 60; VICTORY | 18 of 18 turns; 5 served; 5 paid; 0 unhappy departures; $66.00; average 79.2; `VICTORY`; output identical to `stage-1-victory.out` | PASS |
+| Defeat run | `java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/scenarios/stage-1-defeat.txt` | 18 turns with targets missed; DEFEAT | 18 of 18 turns; 0 served; 0 paid; 2 unhappy departures; $0.00; average N/A; `DEFEAT`; output identical to `stage-1-defeat.out` | PASS |
+
+**Why the scenario outputs were re-recorded.** PR #14 (`60cab62`) changed the start-of-turn display to list only customers still in the restaurant, so the 26 Oct outputs no longer matched the program. Game results are unchanged. The outputs are now captured with `java` directly instead of `./run.sh`, so they no longer start with a machine-specific "Compiled production sources to ..." line and match on any computer.
+
+**Manual checks through the CLI.**
+
+- Unknown commands, missing or non-numeric IDs, unknown customers/tables, ordering before seating and serving a dish that is not READY are all explained and re-prompted without using the Waiter's or Chef's choice.
+- A seated customer with an unserved Salad, left unattended, reaches 0 satisfaction and leaves at the end of turn 13; table 1 is freed and unhappy departures becomes 1.
+- Input ending mid-game stops with "Input ended before the game finished" and no result.
+- No Stage 2 or Stage 3 code (VIP, Critic, Host, ComboMeal, Happy Hour) is present.
+
+**UML check.** Every field and public method in the compiled Stage 1 classes appears in `docs/uml/class-diagram.drawio`, and the diagram lists nothing that is absent from the code. Only private helper methods and compiler-generated record/enum members are omitted.
+
 
 ## Whole-game victory and defeat scenarios (M5) — 2026-10-26
 
@@ -22,7 +50,7 @@ Saved inputs and full outputs are in `docs/testing/scenarios/`. Each input file 
 
 **Brief Section 3.3 check.** In the victory run, customer 3 (Pasta, 2 units) follows the brief's worked example: end-of-turn satisfaction 92 (seated), 84 (ordered, unit 1), 76 (unit 2, READY but not servable that turn), then served with no further loss, READY_TO_PAY the next turn and paid the turn after with 76 recorded.
 
-**Observation (not a rule failure).** `GameController.getSnapshot()` builds customer views from `restaurant.getCustomers()`, so PAID and LEFT customers remain listed in every later start-of-turn display. Using `getActiveCustomers()` would show only customers still in the restaurant. Raised with M4.
+**Observation (not a rule failure).** `GameController.getSnapshot()` builds customer views from `restaurant.getCustomers()`, so PAID and LEFT customers remain listed in every later start-of-turn display. Using `getActiveCustomers()` would show only customers still in the restaurant. Raised with M4. *Fixed in PR #14 (`60cab62`); outputs re-recorded on 2026-10-28 (see the release-candidate section above).*
 
 ## Cashier coverage — 2026-10-26
 
@@ -171,8 +199,8 @@ Restaurant registration, queue/table cleanup, statistics or CLI behavior.
 ## Tag-gate review
 
 - [ ] Exact committed release-candidate SHA recorded
-- [ ] Required full Stage 1 tests and victory/defeat scenarios executed
-- [x] Current M1 test results recorded
+- [x] Required full Stage 1 tests and victory/defeat scenarios executed (2026-10-28)
+- [x] Current test results recorded
 - [ ] Another member reviewed the evidence
-- [ ] Shared UML matches the release-candidate code
+- [x] Shared UML matches the release-candidate code (2026-10-28)
 - [ ] Working tree is clean before tagging

@@ -63,7 +63,10 @@ Compile the current production sources:
 ./compile.sh
 ```
 
-Compile production and test sources together, then execute the M1 checks:
+### Running the tests
+
+`compile.sh --tests` compiles the tests but does not run them. Each test class is
+self-contained and exits nonzero on failure:
 
 ```bash
 ./compile.sh --tests
@@ -71,28 +74,42 @@ java -ea -cp out/classes restaurantrush.domain.MenuItemTest
 java -ea -cp out/classes restaurantrush.domain.OrderTest
 java -ea -cp out/classes restaurantrush.domain.CustomerTest
 java -ea -cp out/classes restaurantrush.domain.RegularCustomerTest
+java -ea -cp out/classes restaurantrush.domain.ActionResultTest
+java -ea -cp out/classes restaurantrush.domain.RestaurantStateTest
+java -ea -cp out/classes restaurantrush.staff.StaffTest
+java -ea -cp out/classes restaurantrush.control.TurnManagerTest
+java -ea -cp out/classes restaurantrush.view.ViewRecordsTest
+java -ea -cp out/classes restaurantrush.boundary.RestaurantCLITest
 ```
 
-`compile.sh --tests` compiles tests but does not run them. Each self-contained
-test class uses checked assertions and exits nonzero on failure. These domain
-tests do not establish scheduling, staff limits, Cashier selection,
-queue/table cleanup or full-game correctness.
+| Test class | Owner | Responsibility |
+| --- | --- | --- |
+| `MenuItemTest` | M1 | Menu values and constructor validation |
+| `OrderTest` | M1 | Order states, preparation, service, payment, cancellation and locked billing |
+| `CustomerTest` | M1 | Customer states, lifecycle timing, satisfaction and order assignment |
+| `RegularCustomerTest` | M1 | Menu selection, price quotes and waiting-loss rules |
+| `ActionResultTest` | M3 | Success/failure results and message validation |
+| `RestaurantStateTest` | M2 | Queue, seating, order registration, serving, payment order, abandonment and read-only views |
+| `StaffTest` | M3 | Waiter, Chef and Cashier actions, including substitution by another `Customer` subtype |
+| `TurnManagerTest` | M4 | Turn order, staff limits, arrivals, automatic events and turn guards |
+| `ViewRecordsTest` | M5 | Immutable snapshot and view records |
+| `RestaurantCLITest` | M5 | Command parsing, retries and displays |
 
-Tests follow the production package under `src/test/java/restaurantrush/domain/`:
+### Reproducible victory and defeat runs
 
-| Test class | Responsibility |
-| --- | --- |
-| `MenuItemTest` | Menu values and constructor validation |
-| `OrderTest` | Exact order enum constants, preparation, service, payment, cancellation and locked billing |
-| `CustomerTest` | Exact customer enum constants, lifecycle, timing, satisfaction, order assignment and cross-class collaboration |
-| `RegularCustomerTest` | Menu selection, price quotes and waiting-loss rules |
+The saved inputs in `docs/testing/scenarios/` replay a full 18-turn game. Compare
+the output with the saved `.out` file (no output from `diff` means identical):
 
-The [Stage 1 test record](docs/testing/stage-1-tests.md) records the actual working
-tree, compiler/runtime versions, commands and observed M1 results. The shared
-[class contract](docs/class-contracts.md) describes the exact APIs, associations
-and M2/M3/M4 integration responsibilities. The
-[branch AI-prompt record](docs/ai-prompts/feature-s1-harshith.md) separates AI work,
-observed checks and pending human verification.
+```bash
+./compile.sh
+java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/scenarios/stage-1-victory.txt | diff docs/testing/scenarios/stage-1-victory.out -
+java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/scenarios/stage-1-defeat.txt | diff docs/testing/scenarios/stage-1-defeat.out -
+```
+
+The [Stage 1 test record](docs/testing/stage-1-tests.md) records the tested commit,
+Java version, commands and observed results. The shared
+[class contract](docs/class-contracts.md) describes the exact APIs and
+responsibilities, and `docs/ai-prompts/` holds the per-branch AI-prompt records.
 
 ## Team ownership
 

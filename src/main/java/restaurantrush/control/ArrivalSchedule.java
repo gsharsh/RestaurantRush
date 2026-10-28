@@ -2,7 +2,6 @@ package restaurantrush.control;
 
 import restaurantrush.domain.Customer;
 import restaurantrush.domain.RegularCustomer;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

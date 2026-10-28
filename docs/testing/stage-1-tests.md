@@ -4,7 +4,7 @@
 
 - **Status:** All Stage 1 test classes and both whole-game scenarios pass. Awaiting review by another member before tagging.
 - **Tested code:** `main` at `54dbebd` plus branch `docs/s1-release-evidence` (unused import removed from `ArrivalSchedule`; two `GameController` failure messages reworded to match the rest of the game; scenario outputs re-recorded; README test commands completed).
-- **Tag commit:** to be recorded here when `stage-1` is created. Re-run the commands below on that exact commit first.
+- **Tag commit:** `284b259d` (main with GameController fix). Re-run the commands below on that exact commit first.
 - **Tester:** Vedavit (M2). **Reviewer:** pending.
 - **Java/compiler:** OpenJDK 21.0.12 (Homebrew), compiled with `javac --release 17`.
 

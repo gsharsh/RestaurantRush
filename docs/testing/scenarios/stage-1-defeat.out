@@ -1,4 +1,3 @@
-Compiled production sources to /Users/devanshpoddar/Developer/RestaurantRush/out/classes
 Welcome to Restaurant Rush! Type 'help' at any prompt to see the commands.
 
 ========== Turn 1 of 18 ==========
@@ -199,7 +198,6 @@ Tables:
   Table 1: free
   Table 2: free
 Customers:
-  C1  satisfaction 0  LEFT  no order yet
   C2  satisfaction 20  WAITING  no order yet
   C3  satisfaction 44  WAITING  no order yet
   C4  satisfaction 68  WAITING  no order yet
@@ -216,7 +214,6 @@ Tables:
   Table 1: free
   Table 2: free
 Customers:
-  C1  satisfaction 0  LEFT  no order yet
   C2  satisfaction 12  WAITING  no order yet
   C3  satisfaction 36  WAITING  no order yet
   C4  satisfaction 60  WAITING  no order yet
@@ -233,7 +230,6 @@ Tables:
   Table 1: free
   Table 2: free
 Customers:
-  C1  satisfaction 0  LEFT  no order yet
   C2  satisfaction 4  WAITING  no order yet
   C3  satisfaction 28  WAITING  no order yet
   C4  satisfaction 52  WAITING  no order yet
@@ -251,8 +247,6 @@ Tables:
   Table 1: free
   Table 2: free
 Customers:
-  C1  satisfaction 0  LEFT  no order yet
-  C2  satisfaction 0  LEFT  no order yet
   C3  satisfaction 20  WAITING  no order yet
   C4  satisfaction 44  WAITING  no order yet
   C5  satisfaction 68  WAITING  no order yet
@@ -269,8 +263,6 @@ Tables:
   Table 1: free
   Table 2: free
 Customers:
-  C1  satisfaction 0  LEFT  no order yet
-  C2  satisfaction 0  LEFT  no order yet
   C3  satisfaction 12  WAITING  no order yet
   C4  satisfaction 36  WAITING  no order yet
   C5  satisfaction 60  WAITING  no order yet

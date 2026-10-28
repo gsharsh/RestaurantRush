@@ -137,12 +137,12 @@ public final class GameController {
 
         var customer = restaurant.findCustomer(customerId);
         if (customer == null) {
-            return ActionResult.fail("Customer not found: " + customerId);
+            return ActionResult.fail("There is no customer " + customerId + ".");
         }
 
         var order = customer.getOrder();
         if (order == null) {
-            return ActionResult.fail("Customer has no order: " + customerId);
+            return ActionResult.fail("Customer " + customerId + " has not ordered yet.");
         }
 
         ActionResult result = chef.prepareOneUnit(order);

@@ -1,4 +1,3 @@
-Compiled production sources to /Users/devanshpoddar/Developer/RestaurantRush/out/classes
 Welcome to Restaurant Rush! Type 'help' at any prompt to see the commands.
 
 ========== Turn 1 of 18 ==========
@@ -75,7 +74,6 @@ Tables:
   Table 1: free
   Table 2: C2
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
   C2  satisfaction 84  SEATED  table 2  order: Burger READY
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
 Waiter> Served Burger to customer 2.
@@ -89,7 +87,6 @@ Tables:
   Table 1: free
   Table 2: C2
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
   C2  satisfaction 84  EATING  table 2  order: Burger SERVED
   C3  satisfaction 100  WAITING  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
@@ -104,7 +101,6 @@ Tables:
   Table 1: C3
   Table 2: C2
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
   C2  satisfaction 84  READY_TO_PAY  table 2  order: Burger SERVED
   C3  satisfaction 92  SEATED  table 1  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
@@ -119,8 +115,6 @@ Tables:
   Table 1: C3
   Table 2: free
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
-  C2  satisfaction 84  PAID  order: Burger PAID
   C3  satisfaction 84  SEATED  table 1  order: Pasta PREPARING (1 unit left)
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
 Waiter> Waiter skipped this turn
@@ -134,8 +128,6 @@ Tables:
   Table 1: C3
   Table 2: free
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
-  C2  satisfaction 84  PAID  order: Burger PAID
   C3  satisfaction 76  SEATED  table 1  order: Pasta READY
   C4  satisfaction 100  WAITING  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
@@ -150,8 +142,6 @@ Tables:
   Table 1: C3
   Table 2: free
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
-  C2  satisfaction 84  PAID  order: Burger PAID
   C3  satisfaction 76  EATING  table 1  order: Pasta SERVED
   C4  satisfaction 92  WAITING  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
@@ -166,8 +156,6 @@ Tables:
   Table 1: C3
   Table 2: C4
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
-  C2  satisfaction 84  PAID  order: Burger PAID
   C3  satisfaction 76  READY_TO_PAY  table 1  order: Pasta SERVED
   C4  satisfaction 84  SEATED  table 2  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
@@ -182,9 +170,6 @@ Tables:
   Table 1: free
   Table 2: C4
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
-  C2  satisfaction 84  PAID  order: Burger PAID
-  C3  satisfaction 76  PAID  order: Pasta PAID
   C4  satisfaction 76  SEATED  table 2  order: Salad READY
   C5  satisfaction 100  WAITING  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
@@ -199,9 +184,6 @@ Tables:
   Table 1: free
   Table 2: C4
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
-  C2  satisfaction 84  PAID  order: Burger PAID
-  C3  satisfaction 76  PAID  order: Pasta PAID
   C4  satisfaction 76  EATING  table 2  order: Salad SERVED
   C5  satisfaction 92  WAITING  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
@@ -216,9 +198,6 @@ Tables:
   Table 1: C5
   Table 2: C4
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
-  C2  satisfaction 84  PAID  order: Burger PAID
-  C3  satisfaction 76  PAID  order: Pasta PAID
   C4  satisfaction 76  READY_TO_PAY  table 2  order: Salad SERVED
   C5  satisfaction 84  SEATED  table 1  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
@@ -233,10 +212,6 @@ Tables:
   Table 1: C5
   Table 2: free
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
-  C2  satisfaction 84  PAID  order: Burger PAID
-  C3  satisfaction 76  PAID  order: Pasta PAID
-  C4  satisfaction 76  PAID  order: Salad PAID
   C5  satisfaction 76  SEATED  table 1  order: Burger READY
   C6  satisfaction 100  WAITING  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
@@ -251,10 +226,6 @@ Tables:
   Table 1: C5
   Table 2: free
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
-  C2  satisfaction 84  PAID  order: Burger PAID
-  C3  satisfaction 76  PAID  order: Pasta PAID
-  C4  satisfaction 76  PAID  order: Salad PAID
   C5  satisfaction 76  EATING  table 1  order: Burger SERVED
   C6  satisfaction 92  WAITING  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)
@@ -269,10 +240,6 @@ Tables:
   Table 1: C5
   Table 2: C6
 Customers:
-  C1  satisfaction 84  PAID  order: Salad PAID
-  C2  satisfaction 84  PAID  order: Burger PAID
-  C3  satisfaction 76  PAID  order: Pasta PAID
-  C4  satisfaction 76  PAID  order: Salad PAID
   C5  satisfaction 76  READY_TO_PAY  table 1  order: Burger SERVED
   C6  satisfaction 84  SEATED  table 2  no order yet
 Staff: Waiter available, Chef available after the Waiter, Cashier automatic (one payment per turn)

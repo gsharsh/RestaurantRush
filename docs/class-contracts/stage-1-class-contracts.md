@@ -41,8 +41,8 @@ Stage 1 is complete only when:
 
 - Java 17 language target, compiled with plain `javac`.
 - Command-line interface only; all mandatory behaviour works offline.
-- Production packages live under `src/main/java/restaurantrush`.
-- Tests live under `src/test/java/restaurantrush` and use a self-contained Java runner unless the team deliberately changes the build agreement.
+- Production packages live under `src/restaurantrush/`.
+- Tests live under `tests/restaurantrush/` and mirror their `restaurantrush.*` package declarations. They use a self-contained Java runner unless the team deliberately changes the build agreement.
 - Draw.io is the editable UML source format.
 - Money is stored as integer cents and displayed with two decimal places.
 - Build output belongs under `out/` and is never committed.
@@ -661,7 +661,7 @@ The Waiter acts before the Chef, so an order completed by the Chef cannot be ser
 
 Maintain:
 
-- `docs/uml/class-diagram.drawio`
+- `docs/uml/stage-1-uml/class-diagram.drawio`
 - a reviewed PDF or high-resolution PNG export for evidence
 
 M5 coordinates the single editable file to avoid XML merge conflicts. M1-M4 supply and verify the attributes, operations and relationships for their own types. Only one person edits the Draw.io source at a time.
@@ -676,7 +676,7 @@ Use a self-contained Java test runner unless the team explicitly agrees to a dif
 
 Each owner writes focused tests for their area. Cross-subsystem scenarios are reviewed jointly; M5 coordinates the scripted end-to-end runs but is not solely responsible for integration quality.
 
-Create `docs/testing/stage-1-tests.md` from `TEST-TEMPLATE.md` when testing begins. Record:
+Maintain `docs/testing/stage-1-testscript/stage-1-tests.md` using the shared [test template](../testing/TEST-TEMPLATE.md). Keep the replay inputs and saved outputs in the same Stage 1 testing folder. Record:
 
 - tester, reviewer, date, Java version and exact commit SHA;
 - the command or repeatable steps;
@@ -705,15 +705,15 @@ Minimum Stage 1 coverage:
 
 ## 8. Lightweight AI-prompt evidence
 
-For each AI-assisted feature branch, copy `docs/ai-prompts/TEMPLATE.md` to a concise file named after the branch. Record only prompts that materially affected design, code or tests, together with what was accepted or rejected, affected files, human verification and related commits.
+For each AI-assisted Stage 1 feature branch, copy `docs/ai-prompts/TEMPLATE.md` to a concise file named after the branch in `docs/ai-prompts/stage-1-prompts/`. Record only prompts that materially affected design, code or tests, together with what was accepted or rejected, affected files, human verification and related commits.
 
 Do not store credentials, private information or entire chat transcripts. Link the prompt record in the pull request and merge it with the relevant work. This supports the individual GAI declarations but does not replace them or prove that AI advice was correct.
 
 ## 9. Stage 1 release baseline
 
-The Stage 1 source baseline is commit `698a85a210ea5bc549ee9b49f328985eb758b5cc`. The published `stage-1` tag was removed on 2026-10-29. Stage 1 completion and this cleanup await the user's review; do not recreate the tag without the user's explicit approval.
+The published `stage-1` tag points to commit `1b9ebf92330316628010880245f98a67416aaef9`. The current folder reorganisation is uncommitted and is separate from that release. Keep the existing tag fixed when reviewing and committing the reorganisation.
 
-Current build, test, scenario-replay and contribution instructions are in the [README](../README.md). Observed results and historical regression notes are in the [Stage 1 test record](testing/stage-1-tests.md).
+Current build, test, scenario-replay and contribution instructions are in the [README](../../README.md). Observed results are in the [Stage 1 test record](../testing/stage-1-testscript/stage-1-tests.md).
 
 ## 10. Contract change process
 

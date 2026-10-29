@@ -2,21 +2,20 @@
 
 RestaurantRush is the SC2002 Object-Oriented Design and Programming group assignment. The goal is to build a Java 17 command-line restaurant-management game in three cumulative, independently runnable stages.
 
-> **Current stage:** The Stage 1 game is implemented. Completion and repository
-> cleanup await the user's review. The published `stage-1` tag was removed on
-> 2026-10-29; do not recreate it without the user's explicit approval.
+> **Current stage:** Stage 1 is published at `stage-1` (`1b9ebf9`). The current
+> folder reorganisation is uncommitted and leaves that release unchanged.
 
 ## Required releases
 
 | Stage | Required addition | Git tag | Status |
 | --- | --- | --- | --- |
-| Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | Implementation complete; user review pending; tag removed |
+| Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | Published at `1b9ebf9` |
 | Stage 2 | VIP and Critic customer behaviour implemented polymorphically | `stage-2` | Not started |
 | Stage 3 | Host, ComboMeal and Happy Hour | `stage-3` | Not started |
 
 Each tag must point to a commit that compiles and runs independently. Stage 1 source must not contain Stage 2 or Stage 3 implementations, and Stage 2 source must not contain Stage 3 implementations.
 
-Development proceeds one stage at a time. The current class contract defines only Stage 1. After `stage-1` is accepted and tagged, the team will review the working design and extend the contract for Stage 2 rather than predicting all later APIs now.
+Development proceeds one stage at a time. The current class contract defines only Stage 1; later stages extend that baseline and have their own runnable release tags.
 
 ## Repository structure
 
@@ -24,19 +23,24 @@ Development proceeds one stage at a time. The current class contract defines onl
 .
 ├── docs/
 │   ├── SC2002_Restaurant_Rush_Group_Assignment.docx # Assignment brief
-│   ├── class-contracts.md      # Stage 1 responsibilities, interfaces and workflow
-│   ├── ai-prompts/             # One concise AI-use record per feature branch
-│   ├── testing/                # Stage test records and reproducible-run evidence
-│   └── uml/                    # Editable Draw.io sources and reviewed exports
-├── src/
-│   ├── main/java/restaurantrush/
-│   └── test/java/restaurantrush/
+│   ├── class-contracts/
+│   │   └── stage-1-class-contracts.md
+│   ├── ai-prompts/             # Shared template and stage-specific prompt folders
+│   ├── testing/
+│   │   ├── TEST-TEMPLATE.md
+│   │   ├── stage-1-testscript/ # Test record, replay inputs and saved outputs
+│   │   └── stage-2-tests/
+│   └── uml/
+│       ├── stage-1-uml/        # Editable Draw.io source and PNG export
+│       └── stage-2-uml/
+├── src/restaurantrush/         # Production Java packages
+├── tests/restaurantrush/ # Java test packages
 ├── compile.sh
 ├── test.sh
 └── run.sh
 ```
 
-The Stage 1 design, ownership plan, Git workflow, testing process and evidence requirements are in [docs/class-contracts.md](docs/class-contracts.md).
+The Stage 1 design, ownership plan, Git workflow, testing process and evidence requirements are in [the Stage 1 class contract](docs/class-contracts/stage-1-class-contracts.md).
 
 ## Prerequisites
 
@@ -99,19 +103,19 @@ Run one test class:
 
 ### Reproducible victory and defeat runs
 
-The saved inputs in `docs/testing/scenarios/` replay a full 18-turn game. Compare
+The saved inputs in `docs/testing/stage-1-testscript/` replay a full 18-turn game. Compare
 the output with the saved `.out` file (no output from `diff` means identical):
 
 ```bash
 ./compile.sh
-java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/scenarios/stage-1-victory.txt | diff docs/testing/scenarios/stage-1-victory.out -
-java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/scenarios/stage-1-defeat.txt | diff docs/testing/scenarios/stage-1-defeat.out -
+java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-1-testscript/stage-1-victory.txt | diff docs/testing/stage-1-testscript/stage-1-victory.out -
+java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-1-testscript/stage-1-defeat.txt | diff docs/testing/stage-1-testscript/stage-1-defeat.out -
 ```
 
-The [Stage 1 test record](docs/testing/stage-1-tests.md) records the tested commit,
+The [Stage 1 test record](docs/testing/stage-1-testscript/stage-1-tests.md) records the tested commit,
 Java version, commands and observed results. The shared
-[class contract](docs/class-contracts.md) describes the exact APIs and
-responsibilities, and `docs/ai-prompts/` holds the per-branch AI-prompt records.
+[class contract](docs/class-contracts/stage-1-class-contracts.md) describes the exact APIs and
+responsibilities, and `docs/ai-prompts/stage-1-prompts/` holds the Stage 1 per-branch AI-prompt records.
 
 ## Team ownership
 
@@ -140,16 +144,15 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 
 ## Development evidence
 
-- Create one prompt record from [docs/ai-prompts/TEMPLATE.md](docs/ai-prompts/TEMPLATE.md) for each AI-assisted branch.
+- Create one prompt record from [docs/ai-prompts/TEMPLATE.md](docs/ai-prompts/TEMPLATE.md) for each AI-assisted branch, in the corresponding stage's prompt folder.
 - Record observed tests using [docs/testing/TEST-TEMPLATE.md](docs/testing/TEST-TEMPLATE.md).
-- Maintain the Stage 1 class diagram as `docs/uml/class-diagram.drawio`, together with a reviewed PDF or PNG export. Later diagram work will be planned at the relevant stage.
+- Maintain the Stage 1 class diagram as `docs/uml/stage-1-uml/class-diagram.drawio`, together with a reviewed PDF or PNG export. Later diagram work will be planned at the relevant stage.
 - Before creating `stage-1`, compile the candidate commit, run its tests and victory/defeat scenarios, and have another member review the evidence.
 - Keep tests under the same feature branch as the behaviour they verify, and record the observed result against the exact commit SHA.
 
 ## Decisions still open
 
-- Complete the user's Stage 1 gameplay and cleanup review before recreating `stage-1`.
-- Assign the Stage 1 release coordinator and evidence reviewer.
+- Review the current folder reorganisation while keeping the published `stage-1` tag fixed at `1b9ebf9`.
 - Confirm the submission deadline and lab-group archive name.
 
 ## Repository

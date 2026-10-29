@@ -5,6 +5,9 @@
 - **Stage:** Stage 1
 - **Related pull request:** #3
 
+Paths and verification notes below describe the original implementation layout.
+See the [current repository structure](../../../README.md#repository-structure) for the moved files.
+
 ## Prompt 1
 
 **Prompt**

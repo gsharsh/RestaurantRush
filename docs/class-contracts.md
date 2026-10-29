@@ -4,9 +4,9 @@
 
 This document is the team's working agreement for **Stage 1 only**. It defines the responsibilities, public interfaces, invariants, integration rules and evidence that the five members can implement against without waiting for one another.
 
-It is a design contract, not a claim that the classes or tests already exist. The assignment brief remains authoritative; if this document and the brief disagree, the team must correct this document before merging the affected implementation.
+The assignment brief remains authoritative; if this document and the brief disagree, the team must correct this document before merging the affected implementation.
 
-Stage 2 and Stage 3 class designs are intentionally deferred. Their required features are acknowledged in the assignment brief, but their classes, methods and empty placeholders must not be added to the Stage 1 runnable version. After `stage-1` is accepted and tagged, the team will review what actually changed and revise this contract for Stage 2.
+Stage 2 and Stage 3 classes, methods and empty placeholders must not be added to the Stage 1 runnable version. Later-stage changes belong in their stage-specific contracts and releases; this document preserves the Stage 1 baseline.
 
 ## 1. Stage 1 scope and completion standard
 
@@ -150,7 +150,7 @@ These signatures are the baseline for implementation. A change is allowed when t
 - Invalid manager actions return `ActionResult.fail(...)`, preserve all state and do not consume a staff choice.
 - A lookup documented as nullable returns `null` when no match exists. Other methods must not silently return `null`.
 - Collection getters return `List.copyOf(...)` or an equivalent immutable copy; they never return the owned mutable collection.
-- Owners may add private helper methods, but may not change a listed public/protected signature without the contract-change process in Section 12.
+- Owners may add private helper methods, but may not change a listed public/protected signature without the contract-change process in Section 10.
 
 
 
@@ -195,7 +195,7 @@ Constructs one shared object graph and starts the application.
 
 The exact command words are agreed before CLI implementation. Malformed commands and non-integer IDs are explained and retried without calling a domain action. The CLI prints `ActionResult.message()` but does not recreate the validation rule.
 
-##### Stage 1 CLI commands — proposed by M5, pending M4 review
+##### Stage 1 CLI commands
 
 Commands are case-insensitive and surrounding whitespace is ignored. IDs are the positive integers shown in the start-of-turn display.
 
@@ -442,7 +442,7 @@ Lifecycle mutation stays in the base class. Subclasses supply only the documente
 | `public int getBillCents()`                                | Return the locked bill.                                                                                  |
 
 
-In Stage 1, Waiter must pass exactly `customer.quotePriceCents(item)`, which for `RegularCustomer` equals `item.priceCents()`. The separate constructor value is an exercised pricing boundary, not permission for arbitrary prices.
+In Stage 1, Waiter must pass exactly `customer.quotePriceCents(item)`, which for `RegularCustomer` equals `item.getPriceCents()`. The separate constructor value is an exercised pricing boundary, not permission for arbitrary prices.
 
 #### `MenuItem` — owner M1
 
@@ -709,79 +709,13 @@ For each AI-assisted feature branch, copy `docs/ai-prompts/TEMPLATE.md` to a con
 
 Do not store credentials, private information or entire chat transcripts. Link the prompt record in the pull request and merge it with the relevant work. This supports the individual GAI declarations but does not replace them or prove that AI advice was correct.
 
-## 9. Stage 1 Git workflow and tag gate
+## 9. Stage 1 release baseline
 
-Before contributing:
+The Stage 1 source baseline is commit `698a85a210ea5bc549ee9b49f328985eb758b5cc`. The published `stage-1` tag was removed on 2026-10-29. Stage 1 completion and this cleanup await the user's review; do not recreate the tag without the user's explicit approval.
 
-```bash
-git config user.name
-git config user.email
-```
+Current build, test, scenario-replay and contribution instructions are in the [README](../README.md). Observed results and historical regression notes are in the [Stage 1 test record](testing/stage-1-tests.md).
 
-Start a short-lived task from the latest `main`:
-
-```bash
-git switch main
-git pull --ff-only
-git switch -c feature/s1-customer-orders
-```
-
-Before opening a pull request:
-
-```bash
-git fetch origin
-git merge origin/main
-./compile.sh --tests
-git push -u origin feature/s1-customer-orders
-```
-
-Pull requests target `main`. Request the relevant owner when shared contracts or owned files change. Prefer a normal reviewed merge when preserving meaningful individual commits helps the development evidence; do not manufacture commits or rewrite authorship for contribution statistics.
-
-Do not merge Stage 2 implementation before `stage-1` is tagged. The release coordinator creates the tag only after the Stage 1 acceptance checks pass—not merely because every member has committed:
-
-```bash
-git switch main
-git pull --ff-only
-./compile.sh --tests
-git tag -a stage-1 -m "Stage 1: Basic restaurant operation"
-git push origin stage-1
-```
-
-Finally, verify the grader's view from the tag and return to `main`:
-
-```bash
-git switch --detach stage-1
-./compile.sh --tests
-git switch main
-```
-
-
-
-## 10. Suggested Stage 1 integration order
-
-1. Review and ratify the package layout, signatures, failure conventions and remaining CLI decisions in this document.
-2. Each owner implements a small compiling vertical portion of their Stage 1 responsibility with focused tests.
-3. Integrate immutable menu/customer/order basics, then Restaurant/Table state, then staff operations.
-4. Integrate GameController/TurnManager timing before connecting the CLI.
-5. Run lifecycle and invalid-action tests at each integration point instead of waiting for the full game.
-6. Add reproducible victory and defeat inputs, update Draw.io and complete the Stage 1 test record.
-7. Review the exact candidate commit, tag `stage-1`, and only then hold the Stage 2 design meeting.
-
-
-
-## 11. Stage 1 decisions still to settle
-
-
-| Decision                                               | Owners     | Default if not otherwise agreed                        |
-| ------------------------------------------------------ | ---------- | ------------------------------------------------------ |
-| Map names to M1-M5                                     | Whole team | Keep placeholders until recorded                       |
-| Exact CLI command wording and end-of-turn presentation | M4/M5      | Commands shown in the boundary contract are conceptual |
-| Stage 1 release coordinator and evidence reviewer      | Whole team | Assign before the first release-candidate run          |
-
-
-
-
-## 12. Contract change process
+## 10. Contract change process
 
 - Change a public signature or shared invariant only through a pull request reviewed by every affected owner.
 - In the same pull request, update the contract, relevant tests and Draw.io source/export.

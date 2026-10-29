@@ -2,6 +2,12 @@
 
 ## Document status
 
+**Stage transition — 2026-10-29:** The Stage 1 source baseline is `698a85a`.
+The release tag was removed while cleanup is reviewed on `refactor/stage-1`.
+This document remains the Stage 1 baseline; its pending items describe that earlier workflow.
+Use the [Stage 2 contract draft](stage-2-contracts.md) for the next stage's
+requirements, proposed extensions and team handoffs.
+
 This document is the team's working agreement for **Stage 1 only**. It defines the responsibilities, public interfaces, invariants, integration rules and evidence that the five members can implement against without waiting for one another.
 
 It is a design contract, not a claim that the classes or tests already exist. The assignment brief remains authoritative; if this document and the brief disagree, the team must correct this document before merging the affected implementation.

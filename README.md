@@ -2,20 +2,21 @@
 
 RestaurantRush is the SC2002 Object-Oriented Design and Programming group assignment. The goal is to build a Java 17 command-line restaurant-management game in three cumulative, independently runnable stages.
 
-> **Current branch status:** The Stage 1 game is integrated and runnable.
-> Human review and Stage 1 release acceptance remain pending.
+> **Current stage:** Stage 2 design preparation has begun; implementation has not
+> started. The Stage 1 source baseline is `698a85a`; its release tag was removed
+> for cleanup review. See the [Stage 2 contract draft](docs/stage-2-contracts.md).
 
 ## Required releases
 
 | Stage | Required addition | Git tag | Status |
 | --- | --- | --- | --- |
-| Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | Integrated and runnable; release acceptance pending |
-| Stage 2 | VIP and Critic customer behaviour implemented polymorphically | `stage-2` | Not started |
+| Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | Cleanup under review; release tag pending |
+| Stage 2 | VIP and Critic customer behaviour implemented polymorphically | `stage-2` | Contract draft prepared; implementation not started |
 | Stage 3 | Host, ComboMeal and Happy Hour | `stage-3` | Not started |
 
 Each tag must point to a commit that compiles and runs independently. Stage 1 source must not contain Stage 2 or Stage 3 implementations, and Stage 2 source must not contain Stage 3 implementations.
 
-Development proceeds one stage at a time. The current class contract defines only Stage 1. After `stage-1` is accepted and tagged, the team will review the working design and extend the contract for Stage 2 rather than predicting all later APIs now.
+Development proceeds one stage at a time. The [Stage 1 class contract](docs/class-contracts.md) records the Stage 1 baseline. The [Stage 2 addendum](docs/stage-2-contracts.md) sets out the required customer extensions, proposed design choices, ownership and acceptance checks for team review.
 
 ## Repository structure
 
@@ -24,6 +25,7 @@ Development proceeds one stage at a time. The current class contract defines onl
 ├── docs/
 │   ├── SC2002_Restaurant_Rush_Group_Assignment.docx # Assignment brief
 │   ├── class-contracts.md      # Stage 1 responsibilities, interfaces and workflow
+│   ├── stage-2-contracts.md    # Stage 2 contract draft and team handoffs
 │   ├── ai-prompts/             # One concise AI-use record per feature branch
 │   ├── testing/                # Stage test records and reproducible-run evidence
 │   └── uml/                    # Editable Draw.io sources and reviewed exports
@@ -34,7 +36,7 @@ Development proceeds one stage at a time. The current class contract defines onl
 └── run.sh
 ```
 
-The Stage 1 design, ownership plan, Git workflow, testing process and evidence requirements are in [docs/class-contracts.md](docs/class-contracts.md).
+The Stage 1 design and shared workflow are in [docs/class-contracts.md](docs/class-contracts.md). Begin Stage 2 with [docs/stage-2-contracts.md](docs/stage-2-contracts.md).
 
 ## Prerequisites
 
@@ -113,7 +115,7 @@ responsibilities, and `docs/ai-prompts/` holds the per-branch AI-prompt records.
 
 ## Team ownership
 
-The current ownership table applies to Stage 1 only. Later-stage ownership will be agreed after the team has completed and reviewed the Stage 1 design.
+The table below records Stage 1 ownership. The Stage 2 addendum proposes carrying these roles forward, with focused implementation for M1/M4 and integration, testing and evidence responsibilities for the other members. Stage 2 assignments remain subject to team agreement.
 
 | Role | Stage 1 ownership | Principal types |
 | --- | --- | --- |
@@ -140,15 +142,29 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 
 - Create one prompt record from [docs/ai-prompts/TEMPLATE.md](docs/ai-prompts/TEMPLATE.md) for each AI-assisted branch.
 - Record observed tests using [docs/testing/TEST-TEMPLATE.md](docs/testing/TEST-TEMPLATE.md).
-- Maintain the Stage 1 class diagram as `docs/uml/class-diagram.drawio`, together with a reviewed PDF or PNG export. Later diagram work will be planned at the relevant stage.
-- Before creating `stage-1`, compile the candidate commit, run its tests and victory/defeat scenarios, and have another member review the evidence.
+- Evolve `docs/uml/class-diagram.drawio` and its reviewed export with each stage; the Stage 1 baseline commit preserves the earlier diagram.
+- Before creating each stage tag, compile the candidate commit, run its tests and victory/defeat scenarios, and have another member review the evidence.
 - Keep tests under the same feature branch as the behaviour they verify, and record the observed result against the exact commit SHA.
 
 ## Decisions still open
 
-- Finalise the exact CLI command wording and input presentation before Stage 1 implementation.
-- Assign the Stage 1 release coordinator and evidence reviewer.
+- Review the Stage 2 VIP rounding policy, arrival mapping and ownership proposed in the addendum. The Critic preference is confirmed: most preparation units, then higher price, then menu order.
+- Assign the Stage 2 release coordinator and evidence reviewer.
 - Confirm the submission deadline and lab-group archive name.
+
+## Stage 1 → Stage 2 transition
+
+The Stage 1 source baseline is
+[`698a85a`](https://github.com/gsharsh/RestaurantRush/commit/698a85a210ea5bc549ee9b49f328985eb758b5cc).
+The published `stage-1` tag was removed on 2026-10-29 while the documentation
+cleanup is reviewed separately on `refactor/stage-1`. This Stage 2 draft remains
+based on the source baseline; the cleanup has not been merged into this branch.
+
+This kickoff changes documentation only: it adds the Stage 2 contract draft and
+AI-use record, updates this README, and links the addendum from the Stage 1
+contract. No Java files have been changed or deleted for Stage 2. As implementation
+lands, record the actual new, changed and deleted files with reasons here and add
+the relevant implementation commits or comparison link, as required by brief §5.
 
 ## Repository
 

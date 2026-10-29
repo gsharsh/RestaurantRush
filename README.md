@@ -32,7 +32,7 @@ Development proceeds one stage at a time. The [Stage 1 contract](docs/class-cont
 │   │   ├── TEST-TEMPLATE.md
 │   │   ├── stage-1-tests.md   # Stage 1 verification record
 │   │   ├── stage-1-testscript/ # Replay inputs and saved outputs
-│   │   └── stage-2-testscipt/  # Stage 2 replay folder
+│   │   └── stage-2-testscript/  # Stage 2 replay folder
 │   └── uml/
 │       ├── stage-1-uml/        # Editable Draw.io source and PNG export
 │       └── stage-2-uml/
@@ -122,7 +122,7 @@ responsibilities, and `docs/ai-prompts/stage-1-prompts/` holds the Stage 1 per-b
 
 ## Team ownership
 
-The table below records Stage 1 ownership. The Stage 2 addendum proposes carrying these roles forward, with focused implementation for M1/M4 and integration, testing and evidence responsibilities for the other members. Stage 2 assignments remain subject to team agreement.
+The table below records Stage 1 ownership. The [Stage 2 addendum](docs/class-contracts/stage-2-class-contracts.md#stage-2-handoffs-and-ownership) assigns VIP implementation to Harshith, Critic implementation to Vedavit, staff/payment regressions to Hunar, arrival/controller work to Viti, and CLI presentation/evidence to Devansh. Each member supplies their own UML details, with Devansh coordinating the diagram.
 
 | Role | Stage 1 ownership | Principal types |
 | --- | --- | --- |
@@ -155,7 +155,7 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 
 ## Decisions still open
 
-- Review the Stage 2 VIP rounding policy, arrival mapping and ownership proposed in the addendum. The Critic preference is confirmed: most preparation units, then higher price, then menu order.
+- Review the proposed Stage 2 VIP rounding policy, arrival mapping and optional type-label display. The ownership split and Critic preference are confirmed: the Critic chooses most preparation units, then higher price, then menu order.
 - Assign the Stage 2 release coordinator and evidence reviewer.
 - Confirm the submission deadline and lab-group archive name.
 

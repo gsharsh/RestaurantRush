@@ -13,7 +13,7 @@
 
 **What was used or rejected**
 
-The assistant (Claude) suggested settling the open Section 11 decision on CLI command wording first, because every other member's integration depends on it. It drafted a command table for the Waiter and Chef phases (`seat`, `order`, `serve`, `cook`, `wait`, `help`), phase-labelled prompts so `wait` is unambiguous, retry rules that separate malformed input from domain rejections, and an end-of-turn summary line covering the fields required by Section 3.5 of the brief. I reviewed the wording against the brief and the existing `GameController` contract before committing.
+The assistant (Claude) suggested settling the then-open CLI wording decision first, because every other member's integration depends on it. It drafted a command table for the Waiter and Chef phases (`seat`, `order`, `serve`, `cook`, `wait`, `help`), phase-labelled prompts so `wait` is unambiguous, retry rules that separate malformed input from domain rejections, and an end-of-turn summary line covering the fields required by Section 3.5 of the brief. I reviewed the wording against the brief and the existing `GameController` contract before committing.
 
 **Files affected**
 

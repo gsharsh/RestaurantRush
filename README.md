@@ -2,14 +2,15 @@
 
 RestaurantRush is the SC2002 Object-Oriented Design and Programming group assignment. The goal is to build a Java 17 command-line restaurant-management game in three cumulative, independently runnable stages.
 
-> **Current branch status:** The Stage 1 game is integrated and runnable.
-> Human review and Stage 1 release acceptance remain pending.
+> **Current stage:** The Stage 1 game is implemented. Completion and repository
+> cleanup await the user's review. The published `stage-1` tag was removed on
+> 2026-10-29; do not recreate it without the user's explicit approval.
 
 ## Required releases
 
 | Stage | Required addition | Git tag | Status |
 | --- | --- | --- | --- |
-| Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | Integrated and runnable; release acceptance pending |
+| Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | Implementation complete; user review pending; tag removed |
 | Stage 2 | VIP and Critic customer behaviour implemented polymorphically | `stage-2` | Not started |
 | Stage 3 | Host, ComboMeal and Happy Hour | `stage-3` | Not started |
 
@@ -31,6 +32,7 @@ Development proceeds one stage at a time. The current class contract defines onl
 │   ├── main/java/restaurantrush/
 │   └── test/java/restaurantrush/
 ├── compile.sh
+├── test.sh
 └── run.sh
 ```
 
@@ -65,22 +67,21 @@ Compile the current production sources:
 
 ### Running the tests
 
-`compile.sh --tests` compiles the tests but does not run them. Each test class is
-self-contained and exits nonzero on failure:
+Run all self-contained Java tests:
 
 ```bash
-./compile.sh --tests
-java -ea -cp out/classes restaurantrush.domain.MenuItemTest
-java -ea -cp out/classes restaurantrush.domain.OrderTest
-java -ea -cp out/classes restaurantrush.domain.CustomerTest
-java -ea -cp out/classes restaurantrush.domain.RegularCustomerTest
-java -ea -cp out/classes restaurantrush.domain.ActionResultTest
-java -ea -cp out/classes restaurantrush.domain.RestaurantStateTest
-java -ea -cp out/classes restaurantrush.staff.StaffTest
-java -ea -cp out/classes restaurantrush.control.TurnManagerTest
-java -ea -cp out/classes restaurantrush.view.ViewRecordsTest
-java -ea -cp out/classes restaurantrush.boundary.RestaurantCLITest
+./test.sh
 ```
+
+Run one test class:
+
+```bash
+./test.sh restaurantrush.control.GameControllerTest
+```
+
+`test.sh` compiles production and test sources, then runs the discovered
+`*Test.java` entry points with assertions enabled. Each exits nonzero on failure.
+`./compile.sh --tests` remains available for compilation without execution.
 
 | Test class | Owner | Responsibility |
 | --- | --- | --- |
@@ -91,9 +92,10 @@ java -ea -cp out/classes restaurantrush.boundary.RestaurantCLITest
 | `ActionResultTest` | M3 | Success/failure results and message validation |
 | `RestaurantStateTest` | M2 | Queue, seating, order registration, serving, payment order, abandonment and read-only views |
 | `StaffTest` | M3 | Waiter, Chef and Cashier actions, including substitution by another `Customer` subtype |
-| `TurnManagerTest` | M4 | Turn order, staff limits, arrivals, automatic events and turn guards |
+| `TurnManagerTest` | M4 | Turn phases, duplicate/premature call guards and failed-start preservation |
+| `GameControllerTest` | M4 | Action limits, failed-action preservation, arrival snapshots, lifecycle timing and victory boundaries |
 | `ViewRecordsTest` | M5 | Immutable snapshot and view records |
-| `RestaurantCLITest` | M5 | Command parsing, retries and displays |
+| `RestaurantCLITest` | M5 | Final-outcome display and rejection of unfinished/null snapshots |
 
 ### Reproducible victory and defeat runs
 
@@ -146,7 +148,7 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 
 ## Decisions still open
 
-- Finalise the exact CLI command wording and input presentation before Stage 1 implementation.
+- Complete the user's Stage 1 gameplay and cleanup review before recreating `stage-1`.
 - Assign the Stage 1 release coordinator and evidence reviewer.
 - Confirm the submission deadline and lab-group archive name.
 

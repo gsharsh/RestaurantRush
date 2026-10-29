@@ -3,7 +3,8 @@
 ## Document status
 
 **Stage transition — 2026-10-29:** The Stage 1 source baseline is `698a85a`.
-The release tag was removed while cleanup is reviewed on `refactor/stage-1`.
+The release tag was removed while cleanup is reviewed on `refactor/stage-1`;
+do not recreate it without the user's explicit approval.
 This document remains the Stage 1 baseline; its pending items describe that earlier workflow.
 Use the [Stage 2 contract draft](stage-2-contracts.md) for the next stage's
 requirements, proposed extensions and team handoffs.

@@ -79,3 +79,13 @@ Preserved the Stage 2 draft, confirmed Critic preference and branch-specific REA
 - GitHub confirmed deletion of `refs/tags/stage-1`; a subsequent remote read returned no matching tag.
 - Stage 1 cleanup remains separate from this draft and awaits the user's review.
 - The Stage 2 draft is saved in a local documentation commit; no Stage 2 implementation or tag is claimed.
+
+## Prompt 5 — Hold the Stage 1 tag for user review
+
+**Prompt**
+
+> dont retag stage 1 yet, let me review that stage 1 is done too
+
+**What was used**
+
+Left `stage-1` absent. Both Stage 1 completion and cleanup require explicit user approval before any replacement tag is created. Updated this branch's release wording while retaining the separate Stage 2 design draft; no cleanup commit was merged into `docs/stage-2`.

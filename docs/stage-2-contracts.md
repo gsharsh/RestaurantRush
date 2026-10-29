@@ -100,7 +100,7 @@ Customer-type labels would help players prioritise customers, but the brief does
 3. M4 registers the mixed arrival schedule and verifies it across all 18 turns. Run existing tests alongside the new ones; adjust assertions only where the intentionally changed arrival composition makes them obsolete.
 4. M5 records complete Stage 2 runs and coordinates UML and README updates. Each owner verifies their portion, and the team reviews the exact release candidate before tagging `stage-2`.
 
-Use focused feature branches from the current `main`, owner-reviewed pull requests and the existing AI-prompt/test evidence templates. Keep the Stage 1 cleanup on `refactor/stage-1` until review is complete. Recreate `stage-1` only after a release candidate has been accepted.
+Use focused feature branches from the current `main`, owner-reviewed pull requests and the existing AI-prompt/test evidence templates. Keep the Stage 1 cleanup on `refactor/stage-1` until review is complete. Do not recreate `stage-1` until the user explicitly approves Stage 1 completion and cleanup.
 
 ## Acceptance and evidence checklist
 

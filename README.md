@@ -4,7 +4,8 @@ RestaurantRush is the SC2002 Object-Oriented Design and Programming group assign
 
 > **Current stage:** Stage 2 design preparation has begun; implementation has not
 > started. The Stage 1 source baseline is `698a85a`; its release tag was removed
-> for cleanup review. See the [Stage 2 contract draft](docs/stage-2-contracts.md).
+> for cleanup review. Do not recreate it without the user's explicit approval.
+> See the [Stage 2 contract draft](docs/stage-2-contracts.md).
 
 ## Required releases
 
@@ -157,7 +158,8 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 The Stage 1 source baseline is
 [`698a85a`](https://github.com/gsharsh/RestaurantRush/commit/698a85a210ea5bc549ee9b49f328985eb758b5cc).
 The published `stage-1` tag was removed on 2026-10-29 while the documentation
-cleanup is reviewed separately on `refactor/stage-1`. This Stage 2 draft remains
+cleanup is reviewed separately on `refactor/stage-1`. Recreating the tag requires
+the user's explicit approval of Stage 1 completion and cleanup. This Stage 2 draft remains
 based on the source baseline; the cleanup has not been merged into this branch.
 
 This kickoff changes documentation only: it adds the Stage 2 contract draft and

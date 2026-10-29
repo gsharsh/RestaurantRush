@@ -2,11 +2,11 @@
 
 ## Status and baseline
 
-Prepared on 2026-10-29 from the [assignment brief](SC2002_Restaurant_Rush_Group_Assignment.docx), especially §§2–3, 4.2, 4.4 and 5, and the current Stage 1 implementation.
+Prepared on 2026-10-29 from the [assignment brief](../SC2002_Restaurant_Rush_Group_Assignment.docx), especially §§2–3, 4.2, 4.4 and 5, and the current Stage 1 implementation.
 
-The Stage 1 source baseline is commit `698a85a210ea5bc549ee9b49f328985eb758b5cc`. Its published `stage-1` tag was removed on 2026-10-29 while the cleanup is reviewed separately on `refactor/stage-1`; that cleanup has not been merged into this documentation branch. This documentation work is on branch `docs/stage-2`. The user has confirmed the move to Stage 2 and the Critic preference below. This is a design draft, not an implementation or test result. Other team-defined choices and continued ownership remain proposals until reviewed.
+The published Stage 1 baseline is tag `stage-1` at `1b9ebf92330316628010880245f98a67416aaef9`. The folder reorganisation and script fixes from `main` commit `1dadd0bbda58403d33afb2b7f7dd795dabdd8792` are merged into this branch. This documentation work is on `docs/stage-2`. The user has confirmed the move to Stage 2 and the Critic preference below. This is a design draft, not an implementation or test result. Other team-defined choices and continued ownership remain proposals until reviewed.
 
-The [Stage 1 contract](class-contracts.md) remains the baseline for lifecycle, state ownership, staff actions, failure handling and collaboration. Stage 2 extends customer rules and arrival construction. Stage 1 evidence remains available at the baseline commit.
+The [Stage 1 contract](stage-1-class-contracts.md) remains the baseline for lifecycle, state ownership, staff actions, failure handling and collaboration. Stage 2 extends customer rules and arrival construction. Stage 1 evidence remains available at its published tag and in `docs/testing/stage-1-tests.md`.
 
 ## Required scope
 
@@ -100,7 +100,7 @@ Customer-type labels would help players prioritise customers, but the brief does
 3. M4 registers the mixed arrival schedule and verifies it across all 18 turns. Run existing tests alongside the new ones; adjust assertions only where the intentionally changed arrival composition makes them obsolete.
 4. M5 records complete Stage 2 runs and coordinates UML and README updates. Each owner verifies their portion, and the team reviews the exact release candidate before tagging `stage-2`.
 
-Use focused feature branches from the current `main`, owner-reviewed pull requests and the existing AI-prompt/test evidence templates. Keep the Stage 1 cleanup on `refactor/stage-1` until review is complete. Do not recreate `stage-1` until the user explicitly approves Stage 1 completion and cleanup.
+Use focused feature branches from the current `main`, owner-reviewed pull requests and the existing AI-prompt/test evidence templates. Keep the published `stage-1` tag fixed while developing Stage 2.
 
 ## Acceptance and evidence checklist
 
@@ -115,9 +115,9 @@ These are planned checks, not completed results:
 - [ ] Verify staff substitution with the actual subtypes, a single shared Order instance, locked VIP prices and paid-only revenue/satisfaction totals.
 - [ ] Preserve invalid-action retries, one task per staff member, Waiter-before-Chef ordering, later-turn service/eating/payment and oldest-first single payment.
 - [ ] Compile with `./compile.sh --tests`, then execute each existing and new test runner separately. Record compiler/runtime versions and exact candidate SHA; compilation targeting Java 17 does not establish execution on a Java 17 runtime.
-- [ ] Record a mixed-customer victory run and defeat run through all 18 turns in `docs/testing/scenarios/stage-2-*.txt` / `.out`, with exact observed results in `docs/testing/stage-2-tests.md`. Both new types must actually appear; the victory evidence should demonstrate their ordering/pricing differences.
+- [ ] Record a mixed-customer victory run and defeat run through all 18 turns in `docs/testing/stage-2-testscipt/stage-2-*.txt` / `.out`, with exact observed results in `docs/testing/stage-2-tests.md`. Both new types must actually appear; the victory evidence should demonstrate their ordering/pricing differences.
 - [ ] Review source to ensure subtype behaviour is polymorphic and Stage 3 features are absent.
-- [ ] Update the shared Draw.io source/export to match implemented Stage 2 classes. Preserve Stage 1 scenario files as historical evidence; Stage 2 outputs will differ intentionally.
+- [ ] Add the Stage 2 Draw.io source/export under `docs/uml/stage-2-uml/` to match implemented Stage 2 classes. Preserve Stage 1 scenario files as historical evidence; Stage 2 outputs will differ intentionally.
 - [ ] Complete the README transition record with actual new/changed/deleted files, reasons and relevant implementation commit or compare links.
 - [ ] Review the candidate, verify it runs independently, then create and publish `stage-2` through the team's release process.
 

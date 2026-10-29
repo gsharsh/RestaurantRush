@@ -3,8 +3,8 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MAIN_SOURCE_DIR="$PROJECT_ROOT/src/main/java"
-TEST_SOURCE_DIR="$PROJECT_ROOT/src/test/java"
+MAIN_SOURCE_DIR="$PROJECT_ROOT/src"
+TEST_SOURCE_DIR="$PROJECT_ROOT/tests"
 CLASS_DIR="$PROJECT_ROOT/out/classes"
 SOURCE_LIST="$PROJECT_ROOT/out/sources.txt"
 
@@ -27,7 +27,7 @@ else
 fi
 
 if [[ ! -s "$SOURCE_LIST" ]]; then
-    echo "No Java source files were found. Add Stage 1 sources under src/main/java first." >&2
+    echo "No Java source files were found under src/." >&2
     exit 1
 fi
 

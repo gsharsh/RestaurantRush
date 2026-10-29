@@ -3,21 +3,20 @@
 RestaurantRush is the SC2002 Object-Oriented Design and Programming group assignment. The goal is to build a Java 17 command-line restaurant-management game in three cumulative, independently runnable stages.
 
 > **Current stage:** Stage 2 design preparation has begun; implementation has not
-> started. The Stage 1 source baseline is `698a85a`; its release tag was removed
-> for cleanup review. Do not recreate it without the user's explicit approval.
-> See the [Stage 2 contract draft](docs/stage-2-contracts.md).
+> started. Stage 1 remains published at `stage-1` (`1b9ebf9`). This branch includes
+> the folder reorganisation from `main` at `1dadd0b` and the Stage 2 contract draft.
 
 ## Required releases
 
 | Stage | Required addition | Git tag | Status |
 | --- | --- | --- | --- |
-| Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | Cleanup under review; release tag pending |
+| Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | Published at `1b9ebf9` |
 | Stage 2 | VIP and Critic customer behaviour implemented polymorphically | `stage-2` | Contract draft prepared; implementation not started |
 | Stage 3 | Host, ComboMeal and Happy Hour | `stage-3` | Not started |
 
 Each tag must point to a commit that compiles and runs independently. Stage 1 source must not contain Stage 2 or Stage 3 implementations, and Stage 2 source must not contain Stage 3 implementations.
 
-Development proceeds one stage at a time. The [Stage 1 class contract](docs/class-contracts.md) records the Stage 1 baseline. The [Stage 2 addendum](docs/stage-2-contracts.md) sets out the required customer extensions, proposed design choices, ownership and acceptance checks for team review.
+Development proceeds one stage at a time. The [Stage 1 contract](docs/class-contracts/stage-1-class-contracts.md) records the accepted gameplay baseline. The [Stage 2 addendum](docs/class-contracts/stage-2-class-contracts.md) sets out the required customer extensions, proposed choices, ownership and acceptance checks for team review.
 
 ## Repository structure
 
@@ -25,19 +24,26 @@ Development proceeds one stage at a time. The [Stage 1 class contract](docs/clas
 .
 ├── docs/
 │   ├── SC2002_Restaurant_Rush_Group_Assignment.docx # Assignment brief
-│   ├── class-contracts.md      # Stage 1 responsibilities, interfaces and workflow
-│   ├── stage-2-contracts.md    # Stage 2 contract draft and team handoffs
-│   ├── ai-prompts/             # One concise AI-use record per feature branch
-│   ├── testing/                # Stage test records and reproducible-run evidence
-│   └── uml/                    # Editable Draw.io sources and reviewed exports
-├── src/
-│   ├── main/java/restaurantrush/
-│   └── test/java/restaurantrush/
+│   ├── class-contracts/
+│   │   ├── stage-1-class-contracts.md
+│   │   └── stage-2-class-contracts.md
+│   ├── ai-prompts/             # Shared template and stage-specific prompt folders
+│   ├── testing/
+│   │   ├── TEST-TEMPLATE.md
+│   │   ├── stage-1-tests.md   # Stage 1 verification record
+│   │   ├── stage-1-testscript/ # Replay inputs and saved outputs
+│   │   └── stage-2-testscipt/  # Stage 2 replay folder
+│   └── uml/
+│       ├── stage-1-uml/        # Editable Draw.io source and PNG export
+│       └── stage-2-uml/
+├── src/restaurantrush/         # Production Java packages
+├── tests/restaurantrush/ # Java test packages
 ├── compile.sh
+├── test.sh
 └── run.sh
 ```
 
-The Stage 1 design and shared workflow are in [docs/class-contracts.md](docs/class-contracts.md). Begin Stage 2 with [docs/stage-2-contracts.md](docs/stage-2-contracts.md).
+The Stage 1 design and shared workflow are in [the Stage 1 contract](docs/class-contracts/stage-1-class-contracts.md). Begin Stage 2 with [the Stage 2 addendum](docs/class-contracts/stage-2-class-contracts.md).
 
 ## Prerequisites
 
@@ -68,22 +74,21 @@ Compile the current production sources:
 
 ### Running the tests
 
-`compile.sh --tests` compiles the tests but does not run them. Each test class is
-self-contained and exits nonzero on failure:
+Run all self-contained Java tests:
 
 ```bash
-./compile.sh --tests
-java -ea -cp out/classes restaurantrush.domain.MenuItemTest
-java -ea -cp out/classes restaurantrush.domain.OrderTest
-java -ea -cp out/classes restaurantrush.domain.CustomerTest
-java -ea -cp out/classes restaurantrush.domain.RegularCustomerTest
-java -ea -cp out/classes restaurantrush.domain.ActionResultTest
-java -ea -cp out/classes restaurantrush.domain.RestaurantStateTest
-java -ea -cp out/classes restaurantrush.staff.StaffTest
-java -ea -cp out/classes restaurantrush.control.TurnManagerTest
-java -ea -cp out/classes restaurantrush.view.ViewRecordsTest
-java -ea -cp out/classes restaurantrush.boundary.RestaurantCLITest
+./test.sh
 ```
+
+Run one test class:
+
+```bash
+./test.sh restaurantrush.control.GameControllerTest
+```
+
+`test.sh` compiles production and test sources, then runs the discovered
+`*Test.java` entry points with assertions enabled. Each exits nonzero on failure.
+`./compile.sh --tests` remains available for compilation without execution.
 
 | Test class | Owner | Responsibility |
 | --- | --- | --- |
@@ -94,25 +99,26 @@ java -ea -cp out/classes restaurantrush.boundary.RestaurantCLITest
 | `ActionResultTest` | M3 | Success/failure results and message validation |
 | `RestaurantStateTest` | M2 | Queue, seating, order registration, serving, payment order, abandonment and read-only views |
 | `StaffTest` | M3 | Waiter, Chef and Cashier actions, including substitution by another `Customer` subtype |
-| `TurnManagerTest` | M4 | Turn order, staff limits, arrivals, automatic events and turn guards |
+| `TurnManagerTest` | M4 | Turn phases, duplicate/premature call guards and failed-start preservation |
+| `GameControllerTest` | M4 | Action limits, failed-action preservation, arrival snapshots, lifecycle timing and victory boundaries |
 | `ViewRecordsTest` | M5 | Immutable snapshot and view records |
-| `RestaurantCLITest` | M5 | Command parsing, retries and displays |
+| `RestaurantCLITest` | M5 | Final-outcome display and rejection of unfinished/null snapshots |
 
 ### Reproducible victory and defeat runs
 
-The saved inputs in `docs/testing/scenarios/` replay a full 18-turn game. Compare
+The saved inputs in `docs/testing/stage-1-testscript/` replay a full 18-turn game. Compare
 the output with the saved `.out` file (no output from `diff` means identical):
 
 ```bash
 ./compile.sh
-java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/scenarios/stage-1-victory.txt | diff docs/testing/scenarios/stage-1-victory.out -
-java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/scenarios/stage-1-defeat.txt | diff docs/testing/scenarios/stage-1-defeat.out -
+java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-1-testscript/stage-1-victory.txt | diff docs/testing/stage-1-testscript/stage-1-victory.out -
+java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-1-testscript/stage-1-defeat.txt | diff docs/testing/stage-1-testscript/stage-1-defeat.out -
 ```
 
 The [Stage 1 test record](docs/testing/stage-1-tests.md) records the tested commit,
 Java version, commands and observed results. The shared
-[class contract](docs/class-contracts.md) describes the exact APIs and
-responsibilities, and `docs/ai-prompts/` holds the per-branch AI-prompt records.
+[class contract](docs/class-contracts/stage-1-class-contracts.md) describes the exact APIs and
+responsibilities, and `docs/ai-prompts/stage-1-prompts/` holds the Stage 1 per-branch AI-prompt records.
 
 ## Team ownership
 
@@ -141,9 +147,9 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 
 ## Development evidence
 
-- Create one prompt record from [docs/ai-prompts/TEMPLATE.md](docs/ai-prompts/TEMPLATE.md) for each AI-assisted branch.
+- Create one prompt record from [docs/ai-prompts/TEMPLATE.md](docs/ai-prompts/TEMPLATE.md) for each AI-assisted branch, in the corresponding stage's prompt folder.
 - Record observed tests using [docs/testing/TEST-TEMPLATE.md](docs/testing/TEST-TEMPLATE.md).
-- Evolve `docs/uml/class-diagram.drawio` and its reviewed export with each stage; the Stage 1 baseline commit preserves the earlier diagram.
+- Keep the Stage 1 diagram and export in `docs/uml/stage-1-uml/`; add the Stage 2 design under `docs/uml/stage-2-uml/` when implemented.
 - Before creating each stage tag, compile the candidate commit, run its tests and victory/defeat scenarios, and have another member review the evidence.
 - Keep tests under the same feature branch as the behaviour they verify, and record the observed result against the exact commit SHA.
 
@@ -155,18 +161,16 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 
 ## Stage 1 → Stage 2 transition
 
-The Stage 1 source baseline is
-[`698a85a`](https://github.com/gsharsh/RestaurantRush/commit/698a85a210ea5bc549ee9b49f328985eb758b5cc).
-The published `stage-1` tag was removed on 2026-10-29 while the documentation
-cleanup is reviewed separately on `refactor/stage-1`. Recreating the tag requires
-the user's explicit approval of Stage 1 completion and cleanup. This Stage 2 draft remains
-based on the source baseline; the cleanup has not been merged into this branch.
+The published `stage-1` tag identifies
+[`1b9ebf9`](https://github.com/gsharsh/RestaurantRush/commit/1b9ebf92330316628010880245f98a67416aaef9).
+The folder reorganisation and script fixes are recorded on `main` at
+[`1dadd0b`](https://github.com/gsharsh/RestaurantRush/commit/1dadd0bbda58403d33afb2b7f7dd795dabdd8792)
+and are merged into this documentation branch. The existing release tag is unchanged.
 
-This kickoff changes documentation only: it adds the Stage 2 contract draft and
-AI-use record, updates this README, and links the addendum from the Stage 1
-contract. No Java files have been changed or deleted for Stage 2. As implementation
-lands, record the actual new, changed and deleted files with reasons here and add
-the relevant implementation commits or comparison link, as required by brief §5.
+Stage 2 currently changes documentation only. The contract draft and AI-use
+record are in their stage-specific folders. No Java behaviour has been changed
+for Stage 2. As implementation lands, record the actual new, changed and deleted
+files, reasons and relevant commit or compare links here, as required by brief §5.
 
 ## Repository
 

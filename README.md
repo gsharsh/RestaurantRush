@@ -124,6 +124,8 @@ responsibilities, and `docs/ai-prompts/stage-1-prompts/` holds the Stage 1 per-b
 
 The table below records Stage 1 ownership. The [Stage 2 addendum](docs/class-contracts/stage-2-class-contracts.md#stage-2-handoffs-and-ownership) assigns VIP implementation to Harshith, Critic implementation to Vedavit, staff/payment regressions to Hunar, arrival/controller work to Viti, and CLI presentation/evidence to Devansh. Each member supplies their own UML details, with Devansh coordinating the diagram.
 
+Type labels are required in Stage 2: Harshith adds `public abstract String typeLabel()` to `Customer` and the Regular/VIP implementations, Vedavit adds the Critic implementation, and Devansh adds `String type` to `CustomerView` and displays it in the CLI, coordinating affected snapshots with Viti. The labels are `Regular`, `VIP` and `Critic`; the view copies `customer.typeLabel()` and the CLI uses `type()` without concrete-type checks.
+
 | Role | Stage 1 ownership | Principal types |
 | --- | --- | --- |
 | M1 | Customers and orders | `Customer`, `RegularCustomer`, `Order`, `MenuItem`, `CustomerStatus`, `OrderStatus` |
@@ -150,12 +152,13 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 - Create one prompt record from [docs/ai-prompts/TEMPLATE.md](docs/ai-prompts/TEMPLATE.md) for each AI-assisted branch, in the corresponding stage's prompt folder.
 - Record observed tests using [docs/testing/TEST-TEMPLATE.md](docs/testing/TEST-TEMPLATE.md).
 - Keep the Stage 1 diagram and export in `docs/uml/stage-1-uml/`; add the Stage 2 design under `docs/uml/stage-2-uml/` when implemented.
+- After Stage 3 is complete, annotate the final class diagram with encapsulation, polymorphism and composition examples required by brief §5. Also choose a scenario, assign ownership and complete the sequence diagram then; it must show a Stage 2 or Stage 3 behaviour, with VIP pricing as a possible scenario. These final diagram tasks are deferred until after Stage 3 and do not gate the Stage 2 release.
 - Before creating each stage tag, compile the candidate commit, run its tests and victory/defeat scenarios, and have another member review the evidence.
 - Keep tests under the same feature branch as the behaviour they verify, and record the observed result against the exact commit SHA.
 
 ## Decisions still open
 
-- Review the proposed Stage 2 VIP rounding policy, arrival mapping and optional type-label display. The ownership split and Critic preference are confirmed: the Critic chooses most preparation units, then higher price, then menu order.
+- Review the proposed Stage 2 VIP rounding policy and arrival mapping. The ownership split, required type labels and Critic preference are confirmed: the Critic chooses most preparation units, then higher price, then menu order.
 - Assign the Stage 2 release coordinator and evidence reviewer.
 - Confirm the submission deadline and lab-group archive name.
 

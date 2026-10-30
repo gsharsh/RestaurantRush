@@ -340,6 +340,11 @@ public final class GameControllerTest {
         }
 
         @Override
+        public String typeLabel() {
+            return "Quoted";
+        }
+
+        @Override
         public int waitingLossPerTurn() {
             return 1;
         }

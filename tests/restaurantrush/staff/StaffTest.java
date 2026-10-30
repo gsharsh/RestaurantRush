@@ -328,6 +328,11 @@ public final class StaffTest {
         }
 
         @Override
+        public String typeLabel() {
+            return "Discounted";
+        }
+
+        @Override
         public int waitingLossPerTurn() {
             return 5;
         }

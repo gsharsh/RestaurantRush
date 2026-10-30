@@ -2,6 +2,12 @@
 
 ## Document status
 
+**Stage transition — 2026-10-29:** Stage 1 is published at `stage-1` (`1b9ebf9`).
+The folder reorganisation from `main` (`1dadd0b`) is merged into this branch.
+This document remains the Stage 1 behaviour baseline. Use the
+[Stage 2 contract draft](stage-2-class-contracts.md) for the next stage's
+requirements, proposed extensions and team handoffs.
+
 This document is the team's working agreement for **Stage 1 only**. It defines the responsibilities, public interfaces, invariants, integration rules and evidence that the five members can implement against without waiting for one another.
 
 The assignment brief remains authoritative; if this document and the brief disagree, the team must correct this document before merging the affected implementation.
@@ -676,7 +682,7 @@ Use a self-contained Java test runner unless the team explicitly agrees to a dif
 
 Each owner writes focused tests for their area. Cross-subsystem scenarios are reviewed jointly; M5 coordinates the scripted end-to-end runs but is not solely responsible for integration quality.
 
-Maintain `docs/testing/stage-1-testscript/stage-1-tests.md` using the shared [test template](../testing/TEST-TEMPLATE.md). Keep the replay inputs and saved outputs in the same Stage 1 testing folder. Record:
+Maintain `docs/testing/stage-1-tests.md` using the shared [test template](../testing/TEST-TEMPLATE.md). Keep the replay inputs and saved outputs in the same Stage 1 testing folder. Record:
 
 - tester, reviewer, date, Java version and exact commit SHA;
 - the command or repeatable steps;
@@ -711,9 +717,9 @@ Do not store credentials, private information or entire chat transcripts. Link t
 
 ## 9. Stage 1 release baseline
 
-The published `stage-1` tag points to commit `1b9ebf92330316628010880245f98a67416aaef9`. The current folder reorganisation is uncommitted and is separate from that release. Keep the existing tag fixed when reviewing and committing the reorganisation.
+The published `stage-1` tag points to commit `1b9ebf92330316628010880245f98a67416aaef9`. The folder reorganisation is recorded in `main` commit `1dadd0b`; the existing tag is unchanged.
 
-Current build, test, scenario-replay and contribution instructions are in the [README](../../README.md). Observed results are in the [Stage 1 test record](../testing/stage-1-testscript/stage-1-tests.md).
+Current build, test, scenario-replay and contribution instructions are in the [README](../../README.md). Observed results are in the [Stage 1 test record](../testing/stage-1-tests.md).
 
 ## 10. Contract change process
 

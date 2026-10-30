@@ -6,7 +6,7 @@
 - **Scope at implementation:** Six contracted M1 production types and four self-contained class tests: MenuItemTest, OrderTest, CustomerTest and RegularCustomerTest. Standalone demo, generated HTML, separate M1 handoff and the four extra testing files were removed. Add no optional extras.
 
 Focused cross-owner test work on `fix/harshith` is retained in Git history.
-Current verification is in the [Stage 1 test record](../../testing/stage-1-testscript/stage-1-tests.md).
+Current verification is in the [Stage 1 test record](../../testing/stage-1-tests.md).
 
 Material excerpts below are verbatim; repeated specification text is omitted.
 The full shared APIs/invariants remain in [the Stage 1 class contract](../../class-contracts/stage-1-class-contracts.md).
@@ -14,7 +14,7 @@ All automated executions used Java/compiler 26.0.2 with Java 17 compilation targ
 no Java 17 runtime execution is claimed. “Test build” means `./compile.sh --tests`.
 Earlier references to “runner” mean the now-removed
 `java -ea -cp out/classes restaurantrush.domain.M1DomainTests` entry point.
-Current results and limits are in [the Stage 1 test record](../../testing/stage-1-testscript/stage-1-tests.md).
+Current results and limits are in [the Stage 1 test record](../../testing/stage-1-tests.md).
 The historical entries below use the original source and test paths,
 `src/main/java/restaurantrush/domain/` and `src/test/java/restaurantrush/domain/`.
 Their current locations are `src/restaurantrush/domain/` and `tests/restaurantrush/domain/`.

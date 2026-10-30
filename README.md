@@ -2,20 +2,21 @@
 
 RestaurantRush is the SC2002 Object-Oriented Design and Programming group assignment. The goal is to build a Java 17 command-line restaurant-management game in three cumulative, independently runnable stages.
 
-> **Current stage:** Stage 1 is published at `stage-1` (`1b9ebf9`). The current
-> folder reorganisation is uncommitted and leaves that release unchanged.
+> **Current stage:** Stage 2 design preparation has begun; implementation has not
+> started. Stage 1 remains published at `stage-1` (`1b9ebf9`). This branch includes
+> the folder reorganisation from `main` at `1dadd0b` and the Stage 2 contract draft.
 
 ## Required releases
 
 | Stage | Required addition | Git tag | Status |
 | --- | --- | --- | --- |
 | Stage 1 | Regular customers, menu, Waiter, Chef, Cashier, complete turn flow, victory and defeat | `stage-1` | Published at `1b9ebf9` |
-| Stage 2 | VIP and Critic customer behaviour implemented polymorphically | `stage-2` | Not started |
+| Stage 2 | VIP and Critic customer behaviour implemented polymorphically | `stage-2` | Contract draft prepared; implementation not started |
 | Stage 3 | Host, ComboMeal and Happy Hour | `stage-3` | Not started |
 
 Each tag must point to a commit that compiles and runs independently. Stage 1 source must not contain Stage 2 or Stage 3 implementations, and Stage 2 source must not contain Stage 3 implementations.
 
-Development proceeds one stage at a time. The current class contract defines only Stage 1; later stages extend that baseline and have their own runnable release tags.
+Development proceeds one stage at a time. The [Stage 1 contract](docs/class-contracts/stage-1-class-contracts.md) records the accepted gameplay baseline. The [Stage 2 addendum](docs/class-contracts/stage-2-class-contracts.md) sets out the required customer extensions, proposed choices, ownership and acceptance checks for team review.
 
 ## Repository structure
 
@@ -24,12 +25,14 @@ Development proceeds one stage at a time. The current class contract defines onl
 ├── docs/
 │   ├── SC2002_Restaurant_Rush_Group_Assignment.docx # Assignment brief
 │   ├── class-contracts/
-│   │   └── stage-1-class-contracts.md
+│   │   ├── stage-1-class-contracts.md
+│   │   └── stage-2-class-contracts.md
 │   ├── ai-prompts/             # Shared template and stage-specific prompt folders
 │   ├── testing/
 │   │   ├── TEST-TEMPLATE.md
-│   │   ├── stage-1-testscript/ # Test record, replay inputs and saved outputs
-│   │   └── stage-2-tests/
+│   │   ├── stage-1-tests.md   # Stage 1 verification record
+│   │   ├── stage-1-testscript/ # Replay inputs and saved outputs
+│   │   └── stage-2-testscript/  # Stage 2 replay folder
 │   └── uml/
 │       ├── stage-1-uml/        # Editable Draw.io source and PNG export
 │       └── stage-2-uml/
@@ -40,7 +43,7 @@ Development proceeds one stage at a time. The current class contract defines onl
 └── run.sh
 ```
 
-The Stage 1 design, ownership plan, Git workflow, testing process and evidence requirements are in [the Stage 1 class contract](docs/class-contracts/stage-1-class-contracts.md).
+The Stage 1 design and shared workflow are in [the Stage 1 contract](docs/class-contracts/stage-1-class-contracts.md). Begin Stage 2 with [the Stage 2 addendum](docs/class-contracts/stage-2-class-contracts.md).
 
 ## Prerequisites
 
@@ -112,14 +115,16 @@ java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-1
 java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-1-testscript/stage-1-defeat.txt | diff docs/testing/stage-1-testscript/stage-1-defeat.out -
 ```
 
-The [Stage 1 test record](docs/testing/stage-1-testscript/stage-1-tests.md) records the tested commit,
+The [Stage 1 test record](docs/testing/stage-1-tests.md) records the tested commit,
 Java version, commands and observed results. The shared
 [class contract](docs/class-contracts/stage-1-class-contracts.md) describes the exact APIs and
 responsibilities, and `docs/ai-prompts/stage-1-prompts/` holds the Stage 1 per-branch AI-prompt records.
 
 ## Team ownership
 
-The current ownership table applies to Stage 1 only. Later-stage ownership will be agreed after the team has completed and reviewed the Stage 1 design.
+The table below records Stage 1 ownership. The [Stage 2 addendum](docs/class-contracts/stage-2-class-contracts.md#stage-2-handoffs-and-ownership) assigns VIP implementation to Harshith, Critic implementation to Vedavit, staff/payment regressions to Hunar, arrival/controller work to Viti, and CLI presentation/evidence to Devansh. Each member supplies their own UML details, with Devansh coordinating the diagram.
+
+Type labels are required in Stage 2: Harshith adds `public abstract String typeLabel()` to `Customer` and the Regular/VIP implementations, Vedavit adds the Critic implementation, and Devansh adds `String type` to `CustomerView` and displays it in the CLI, coordinating affected snapshots with Viti. The labels are `Regular`, `VIP` and `Critic`; the view copies `customer.typeLabel()` and the CLI uses `type()` without concrete-type checks.
 
 | Role | Stage 1 ownership | Principal types |
 | --- | --- | --- |
@@ -146,14 +151,29 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 
 - Create one prompt record from [docs/ai-prompts/TEMPLATE.md](docs/ai-prompts/TEMPLATE.md) for each AI-assisted branch, in the corresponding stage's prompt folder.
 - Record observed tests using [docs/testing/TEST-TEMPLATE.md](docs/testing/TEST-TEMPLATE.md).
-- Maintain the Stage 1 class diagram as `docs/uml/stage-1-uml/class-diagram.drawio`, together with a reviewed PDF or PNG export. Later diagram work will be planned at the relevant stage.
-- Before creating `stage-1`, compile the candidate commit, run its tests and victory/defeat scenarios, and have another member review the evidence.
+- Keep the Stage 1 diagram and export in `docs/uml/stage-1-uml/`; add the Stage 2 design under `docs/uml/stage-2-uml/` when implemented.
+- After Stage 3 is complete, annotate the final class diagram with encapsulation, polymorphism and composition examples required by brief §5. Also choose a scenario, assign ownership and complete the sequence diagram then; it must show a Stage 2 or Stage 3 behaviour, with VIP pricing as a possible scenario. These final diagram tasks are deferred until after Stage 3 and do not gate the Stage 2 release.
+- Before creating each stage tag, compile the candidate commit, run its tests and victory/defeat scenarios, and have another member review the evidence.
 - Keep tests under the same feature branch as the behaviour they verify, and record the observed result against the exact commit SHA.
 
 ## Decisions still open
 
-- Review the current folder reorganisation while keeping the published `stage-1` tag fixed at `1b9ebf9`.
+- Review the proposed Stage 2 VIP rounding policy and arrival mapping. The ownership split, required type labels and Critic preference are confirmed: the Critic chooses most preparation units, then higher price, then menu order.
+- Assign the Stage 2 release coordinator and evidence reviewer.
 - Confirm the submission deadline and lab-group archive name.
+
+## Stage 1 → Stage 2 transition
+
+The published `stage-1` tag identifies
+[`1b9ebf9`](https://github.com/gsharsh/RestaurantRush/commit/1b9ebf92330316628010880245f98a67416aaef9).
+The folder reorganisation and script fixes are recorded on `main` at
+[`1dadd0b`](https://github.com/gsharsh/RestaurantRush/commit/1dadd0bbda58403d33afb2b7f7dd795dabdd8792)
+and are merged into this documentation branch. The existing release tag is unchanged.
+
+Stage 2 currently changes documentation only. The contract draft is in
+`docs/class-contracts/`. No Java behaviour has been changed
+for Stage 2. As implementation lands, record the actual new, changed and deleted
+files, reasons and relevant commit or compare links here, as required by brief §5.
 
 ## Repository
 

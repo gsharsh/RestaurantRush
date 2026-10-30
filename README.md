@@ -170,8 +170,8 @@ The folder reorganisation and script fixes are recorded on `main` at
 [`1dadd0b`](https://github.com/gsharsh/RestaurantRush/commit/1dadd0bbda58403d33afb2b7f7dd795dabdd8792)
 and are merged into this documentation branch. The existing release tag is unchanged.
 
-Stage 2 currently changes documentation only. The contract draft and AI-use
-record are in their stage-specific folders. No Java behaviour has been changed
+Stage 2 currently changes documentation only. The contract draft is in
+`docs/class-contracts/`. No Java behaviour has been changed
 for Stage 2. As implementation lands, record the actual new, changed and deleted
 files, reasons and relevant commit or compare links here, as required by brief §5.
 

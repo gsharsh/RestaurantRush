@@ -54,6 +54,7 @@ public final class ViewRecordsTest {
         Customer customer = new RegularCustomer(1);
         CustomerView view = CustomerView.from(customer, null);
         check(view.id() == 1, "customer ID copied");
+        check("Regular".equals(view.type()), "type label copied from Customer.typeLabel()");
         check(view.satisfaction() == 100, "new customer starts at 100");
         check(view.status() == CustomerStatus.WAITING, "new customer is WAITING");
         check(view.orderStatus() == null && view.itemName() == null && view.remainingUnits() == null,
@@ -93,21 +94,25 @@ public final class ViewRecordsTest {
 
     private static void testCustomerViewValidation() {
         expectIllegalArgument("zero customer ID",
-                () -> new CustomerView(0, 100, CustomerStatus.WAITING, null, null, null, null));
+                () -> new CustomerView(0, "Regular", 100, CustomerStatus.WAITING, null, null, null, null));
         expectIllegalArgument("satisfaction above 100",
-                () -> new CustomerView(1, 101, CustomerStatus.WAITING, null, null, null, null));
+                () -> new CustomerView(1, "Regular", 101, CustomerStatus.WAITING, null, null, null, null));
         expectIllegalArgument("negative satisfaction",
-                () -> new CustomerView(1, -1, CustomerStatus.WAITING, null, null, null, null));
-        expectIllegalArgument("null status", () -> new CustomerView(1, 100, null, null, null, null, null));
+                () -> new CustomerView(1, "Regular", -1, CustomerStatus.WAITING, null, null, null, null));
+        expectIllegalArgument("null status", () -> new CustomerView(1, "Regular", 100, null, null, null, null, null));
         expectIllegalArgument("order status without item",
-                () -> new CustomerView(1, 100, CustomerStatus.SEATED, OrderStatus.PLACED, null, 1, 1));
+                () -> new CustomerView(1, "Regular", 100, CustomerStatus.SEATED, OrderStatus.PLACED, null, 1, 1));
         expectIllegalArgument("negative remaining units",
-                () -> new CustomerView(1, 100, CustomerStatus.SEATED, OrderStatus.PLACED, "Salad", -1, 1));
+                () -> new CustomerView(1, "Regular", 100, CustomerStatus.SEATED, OrderStatus.PLACED, "Salad", -1, 1));
         expectIllegalArgument("blank item name",
-                () -> new CustomerView(1, 100, CustomerStatus.SEATED, OrderStatus.PLACED, " ", 1, 1));
+                () -> new CustomerView(1, "Regular", 100, CustomerStatus.SEATED, OrderStatus.PLACED, " ", 1, 1));
         expectIllegalArgument("zero table ID",
-                () -> new CustomerView(1, 100, CustomerStatus.SEATED, null, null, null, 0));
+                () -> new CustomerView(1, "Regular", 100, CustomerStatus.SEATED, null, null, null, 0));
         expectIllegalArgument("null customer", () -> CustomerView.from(null, null));
+        expectIllegalArgument("null type label",
+                () -> new CustomerView(1, null, 100, CustomerStatus.WAITING, null, null, null, null));
+        expectIllegalArgument("blank type label",
+                () -> new CustomerView(1, " ", 100, CustomerStatus.WAITING, null, null, null, null));
     }
 
     private static void testSnapshotCopiesLists() {

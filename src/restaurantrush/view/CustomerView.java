@@ -13,6 +13,8 @@ import restaurantrush.domain.OrderStatus;
  * {@link Customer} or {@link Order}.
  *
  * @param id             positive customer ID
+ * @param type           display label supplied by {@link Customer#typeLabel()}, e.g. "Regular",
+ *                       "VIP" or "Critic"; presentation data only, never used for game rules
  * @param satisfaction   current satisfaction, 0 to 100
  * @param status         customer lifecycle state
  * @param orderStatus    order state, or {@code null} before ordering
@@ -22,6 +24,7 @@ import restaurantrush.domain.OrderStatus;
  */
 public record CustomerView(
         int id,
+        String type,
         int satisfaction,
         CustomerStatus status,
         OrderStatus orderStatus,
@@ -32,6 +35,9 @@ public record CustomerView(
     public CustomerView {
         if (id <= 0) {
             throw new IllegalArgumentException("Customer ID must be positive: " + id);
+        }
+        if (type == null || type.isBlank()) {
+            throw new IllegalArgumentException("Customer type label must not be null or blank");
         }
         if (satisfaction < 0 || satisfaction > 100) {
             throw new IllegalArgumentException("Satisfaction must be 0 to 100: " + satisfaction);
@@ -68,10 +74,11 @@ public record CustomerView(
         }
         Order order = customer.getOrder();
         if (order == null) {
-            return new CustomerView(customer.getId(), customer.getSatisfaction(), customer.getStatus(),
-                    null, null, null, tableId);
+            return new CustomerView(customer.getId(), customer.typeLabel(), customer.getSatisfaction(),
+                    customer.getStatus(), null, null, null, tableId);
         }
-        return new CustomerView(customer.getId(), customer.getSatisfaction(), customer.getStatus(),
-                order.getStatus(), order.getItem().getName(), order.getRemainingUnits(), tableId);
+        return new CustomerView(customer.getId(), customer.typeLabel(), customer.getSatisfaction(),
+                customer.getStatus(), order.getStatus(), order.getItem().getName(),
+                order.getRemainingUnits(), tableId);
     }
 }

@@ -9,10 +9,13 @@ import java.util.Scanner;
 import restaurantrush.control.ArrivalSchedule;
 import restaurantrush.control.GameController;
 import restaurantrush.control.TurnManager;
+import restaurantrush.domain.CustomerStatus;
+import restaurantrush.domain.OrderStatus;
 import restaurantrush.domain.Restaurant;
 import restaurantrush.staff.Cashier;
 import restaurantrush.staff.Chef;
 import restaurantrush.staff.Waiter;
+import restaurantrush.view.CustomerView;
 import restaurantrush.view.GameSnapshot;
 import restaurantrush.view.TableView;
 
@@ -28,6 +31,7 @@ public final class RestaurantCLITest {
         testUnfinishedSnapshotsProduceNoOutput();
         testFinishedSnapshotsDisplayOutcomes();
         testNullSnapshotProducesNoOutput();
+        testStateDisplayShowsCustomerTypeLabels();
         System.out.println("RestaurantCLITest: PASS (" + (checks - before) + " checks)");
     }
 
@@ -79,6 +83,29 @@ public final class RestaurantCLITest {
             expectIllegalArgument("null outcome snapshot", () -> cli.displayOutcome(null, false));
             output.flush();
             check(bytes.size() == 0, "null snapshot must produce no output");
+        }
+    }
+
+    private static void testStateDisplayShowsCustomerTypeLabels() {
+        List<CustomerView> customers = List.of(
+                new CustomerView(1, "Regular", 84, CustomerStatus.SEATED, OrderStatus.READY, "Salad", 0, 1),
+                new CustomerView(2, "VIP", 100, CustomerStatus.WAITING, null, null, null, null),
+                new CustomerView(4, "Critic", 88, CustomerStatus.WAITING, null, null, null, null));
+        GameSnapshot snapshot = new GameSnapshot(10, 9, 900, 84.0, List.of(2, 4), customers,
+                List.of(new TableView(1, 1), new TableView(2, null)), true, false, 1, 1, 0);
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (Scanner input = new Scanner("");
+                PrintStream output = new PrintStream(bytes, true, StandardCharsets.UTF_8)) {
+            newCLI(input, output).displayState(snapshot);
+            output.flush();
+            String rendered = bytes.toString(StandardCharsets.UTF_8);
+            check(rendered.contains("Waiting queue: C2 (VIP), C4 (Critic)"),
+                    "queue shows each waiting customer's type label");
+            check(rendered.contains("Table 1: C1 (Regular)"), "occupied table shows its customer's type label");
+            check(rendered.contains("Table 2: free"), "free table is unchanged");
+            check(rendered.contains("C1 (Regular)  satisfaction 84"), "customer list shows Regular label");
+            check(rendered.contains("C2 (VIP)  satisfaction 100"), "customer list shows VIP label");
+            check(rendered.contains("C4 (Critic)  satisfaction 88"), "customer list shows Critic label");
         }
     }
 

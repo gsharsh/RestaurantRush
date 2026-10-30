@@ -81,7 +81,7 @@ public final class RestaurantCLI {
         output.println("Waiting queue: " + (snapshot.waitingCustomerIds().isEmpty()
                 ? "(empty)"
                 : snapshot.waitingCustomerIds().stream()
-                        .map(id -> "C" + id)
+                        .map(id -> "C" + id + typeSuffix(snapshot, id))
                         .collect(Collectors.joining(", "))));
 
         output.println("Tables:");
@@ -284,6 +284,7 @@ public final class RestaurantCLI {
     private static String describe(CustomerView customer) {
         StringBuilder line = new StringBuilder()
                 .append("C").append(customer.id())
+                .append(" (").append(customer.type()).append(")")
                 .append("  satisfaction ").append(customer.satisfaction())
                 .append("  ").append(customer.status());
         if (customer.tableId() != null) {
@@ -301,6 +302,15 @@ public final class RestaurantCLI {
             }
         }
         return line.toString();
+    }
+
+    /** Returns " (VIP)" etc. for a listed customer, or "" if the snapshot has no view for that ID. */
+    private static String typeSuffix(GameSnapshot snapshot, int customerId) {
+        return snapshot.customers().stream()
+                .filter(c -> c.id() == customerId)
+                .findFirst()
+                .map(c -> " (" + c.type() + ")")
+                .orElse("");
     }
 
     private static String formatMoney(int cents) {

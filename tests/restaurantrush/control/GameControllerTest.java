@@ -53,7 +53,7 @@ public final class GameControllerTest {
         f.controller.startTurn();
         GameSnapshot arrival = f.controller.getSnapshot();
         equal(List.of(1), arrival.waitingCustomerIds(), "arrival appears before manager choices");
-        equal(new CustomerView(1, 100, CustomerStatus.WAITING, null, null, null, null),
+        equal(new CustomerView(1, "Regular", 100, CustomerStatus.WAITING, null, null, null, null),
                 arrival.customers().get(0), "start snapshot includes fresh arrival");
         check(arrival.averagePaidSatisfaction() == null, "no paid average before payment");
         check(arrival.waiterAvailable() && !arrival.chefAvailable(), "Waiter chooses first");

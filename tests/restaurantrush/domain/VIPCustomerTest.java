@@ -3,7 +3,7 @@ package restaurantrush.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Offline VIP initial-state, presentation, selection and quotation rule checks. */
+/** Offline VIP initial-state, waiting-loss, presentation, selection and quotation checks. */
 public final class VIPCustomerTest {
     private static int checks;
 
@@ -14,6 +14,8 @@ public final class VIPCustomerTest {
         int before = checks;
         testConstruction();
         testDisplayAndWaitingLossRules();
+        testWaitingLossBounds();
+        testNoWaitingLossAfterDeparture();
         testCyclicSelection();
         testCustomReorderedAndImmutableMenus();
         testRuleValidation();
@@ -38,6 +40,44 @@ public final class VIPCustomerTest {
     private static void testDisplayAndWaitingLossRules() {
         Customer customer = new VIPCustomer(1);
         checkDisplayAndWaitingLoss(customer);
+    }
+
+    private static void testWaitingLossBounds() {
+        Customer waiting = new VIPCustomer(3);
+        Customer seated = new VIPCustomer(4);
+        seated.seat();
+        checkApplicableWaitingLoss(waiting, CustomerStatus.WAITING);
+        checkApplicableWaitingLoss(seated, CustomerStatus.SEATED);
+    }
+
+    private static void checkApplicableWaitingLoss(Customer customer, CustomerStatus expectedStatus) {
+        int id = customer.getId();
+        // These are unit-level loss calls, not game turns; the game remains 18 turns.
+        int[] expectedSatisfaction = {95, 90, 85, 80, 75, 70, 65, 60, 55, 50,
+                45, 40, 35, 30, 25, 20, 15, 10, 5, 0};
+        checkCustomer(customer, id, 100, expectedStatus, -1, -1, null);
+        for (int expected : expectedSatisfaction) {
+            customer.applyWaitingLoss();
+            checkCustomer(customer, id, expected, expectedStatus, -1, -1, null);
+            check(customer.getSatisfaction() >= 0 && customer.getSatisfaction() <= 100,
+                    "VIP satisfaction must remain within 0 to 100 after every loss call");
+        }
+        // The twentieth call reaches zero without automatic departure; further calls clamp there.
+        for (int count = 0; count < 3; count++) {
+            customer.applyWaitingLoss();
+            checkCustomer(customer, id, 0, expectedStatus, -1, -1, null);
+        }
+    }
+
+    private static void testNoWaitingLossAfterDeparture() {
+        Customer customer = new VIPCustomer(5);
+        customer.applyWaitingLoss();
+        checkCustomer(customer, 5, 95, CustomerStatus.WAITING, -1, -1, null);
+        customer.abandon();
+        for (int count = 0; count < 3; count++) {
+            customer.applyWaitingLoss();
+            checkCustomer(customer, 5, 95, CustomerStatus.LEFT, -1, -1, null);
+        }
     }
 
     private static void testCyclicSelection() {
@@ -117,6 +157,7 @@ public final class VIPCustomerTest {
     private static void testRulesPreserveExistingState() {
         Customer customer = new VIPCustomer(2);
         customer.applyWaitingLoss();
+        checkCustomer(customer, 2, 95, CustomerStatus.WAITING, -1, -1, null);
         customer.seat();
         MenuItem burger = new MenuItem("Burger", 1500, 1);
         Order order = new Order(2, burger, 1350);

@@ -168,3 +168,107 @@ Compiler and runtime were Java 26.0.2; compilation used `--release 17`. No Java 
 
 - None created for Prompt 2. Working-tree base: `5e86818543e698f06cbab45ed2474ace974f78fc` (Prompt 1's customer-type label API).
 - No commit, push, merge, pull request or tag mutation was performed by the assistant.
+
+## Prompt 3 — Customer substitution, lifecycle and collaboration
+
+**Prompt**
+
+> Continue my Stage 2 M1 work under the constraints established in Prompt 1.
+>
+> Demonstrate that RegularCustomer and VIPCustomer are substitutable Customer implementations through focused lifecycle and collaboration tests. Use actual objects and observable behaviour.
+>
+> Inspect existing coverage first. Extend VIPCustomerTest, CustomerTest, RegularCustomerTest or OrderTest only where the responsibility naturally belongs. Reuse useful coverage instead of duplicating every Stage 1 test. Do not introduce a demonstration application or another test harness.
+>
+> Use a mixed collection of Customer references or a shared helper accepting Customer. Supply independent expected outcomes for each instance.
+>
+> Demonstrate:
+> - Abstraction: tests and collaborators depend on Customer's public contract.
+> - Inheritance: both concrete types reuse Customer's final lifecycle methods.
+> - Encapsulation: private state changes only through guarded operations.
+> - Runtime polymorphism: the same base-typed calls dispatch labels, selection, quotation and waiting loss to the concrete object.
+> - Object collaboration: Customer retains the actual shared Order; Order retains the selected shared immutable MenuItem.
+>
+> Do not use casts, instanceof, getClass(), class-name switches or labels to select behaviour. The documented ID modulo inside menu selection remains intentional.
+>
+> Cover these lifecycle behaviours:
+>
+> 1. VIP waiting loss
+> - applyWaitingLoss() deducts 5 while WAITING and SEATED.
+> - Satisfaction clamps at zero and remains within 0–100.
+> - No loss occurs in EATING, READY_TO_PAY, PAID or LEFT.
+> - A VIP starting at 100 reaches zero after 20 applicable loss calls.
+> - Test this boundary at unit level. Do not extend the fixed 18-turn game or present it as an ordinary base-run VIP abandonment scenario.
+>
+> 2. Shared order and locked billing
+> - Customer chooses the existing MenuItem and supplies the quote.
+> - Construct Order with that quote and associate the same Order instance with the customer.
+> - Verify item/order identity and the locked discounted bill through preparation and lifecycle transitions.
+> - Exercise legal preparation, READY -> SERVED, later-turn eating completion and payment prerequisites.
+> - Confirm no post-service waiting loss.
+> - Verify representative rejected transitions preserve state.
+> - Preserve the agreed lifecycle guards; do not add a new order-status restriction to acceptOrder().
+>
+> 3. Abandonment
+> - An inherited abandon() call cancels a READY-but-unserved VIP order and retains the documented references.
+> - Reaching zero in applyWaitingLoss() does not itself abandon the customer.
+> - Restaurant remains responsible for automatic abandonment, queue/table cleanup and accounting.
+> - Do not claim that an entity-only test verifies table release or revenue totals.
+>
+> Inspect the existing pricing flow:
+>
+> ```text
+> Customer selection -> Customer quote -> locked Order bill
+> -> Restaurant payment accounting
+> ```
+>
+> Confirm that Waiter, Cashier and the controller do not calculate or reapply the VIP discount. Demonstrate the M1 portion with focused tests. Leave the complete staff/payment, table-release and totals regression matrix to M3.
+>
+> Keep production behaviour unchanged unless a focused test exposes a demonstrated M1 defect. Explain any necessary fix and its contract implications. Report defects outside my scope for owner review.
+>
+> Do not require CriticCustomer for my focused tests to compile. If M2's actual implementation is available, review its preference against the contract:
+> - Most preparation units first.
+> - Higher base price breaks preparation ties.
+> - Earliest supplied item wins a complete tie.
+> - Existing item identity and menu contents are preserved.
+> - Required validation, full-price quote, loss of 12 and "Critic" label are present.
+>
+> Report this as a review of the actual implementation. If unavailable, mark the review pending; do not implement a substitute.
+>
+> Run the affected focused tests. Finish with concrete source/test examples of OOP, actual results and remaining handoffs. Describe Customer–Order and Order–MenuItem accurately as associations; a stored reference alone does not prove strong UML composition.
+
+**What was used or rejected**
+
+Inspected existing coverage and reused the CustomerTest collaboration scenarios through shared helpers accepting Customer. The same calls exercise labels, selection, quotation, waiting loss and inherited final lifecycle methods for actual Regular and VIP objects, with independent expected bills (1800/1620 cents), loss rules (8/5) and satisfaction sequences (92, 84, 76 / 95, 90, 85). Existing Regular coverage was preserved.
+
+The shared scenarios verify exact Order/MenuItem identity and locked billing through preparation, service, later-turn eating completion and entity payment. Representative rejected service, payment, mismatched-order and replacement-order operations preserve customer/order state. VIP abandonment cancels a READY-but-unserved order while retaining the documented references. Customer–Order and Order–MenuItem are described as associations; no strong UML composition claim is made from stored references.
+
+Added focused VIP unit checks for actual five-point losses in WAITING and SEATED, the twentieth applicable call reaching zero, bounds and repeated zero clamping, no automatic departure at zero, and no loss after explicit departure. Shared collaboration checks cover no loss in EATING, READY_TO_PAY and PAID. The 20-call boundary is explicitly distinguished from the fixed 18-turn game; no base-run VIP abandonment claim is made.
+
+Source inspection confirmed Waiter passes the customer's quote into Order, Restaurant records the locked bill, and Cashier/controller do not calculate or reapply the VIP discount. These entity tests do not verify Restaurant's payer eligibility, automatic abandonment, table release or revenue totals. The complete mixed-customer staff/payment regression matrix remains M3's responsibility.
+
+No defect requiring a production or contract change was found. Production code, acceptOrder() guards, RegularCustomerTest and OrderTest were unchanged. No demonstration application, new harness, dependencies or teammate implementation was added. CriticCustomer was unavailable, so review of the actual M2 implementation remains pending; no substitute was introduced. M4 arrival integration, M5 view/CLI and shared UML/evidence coordination, M1 evidence/UML completion and owner reviews remain outstanding. General-price rounding remains a working assumption pending team review.
+
+**Files affected**
+
+- `tests/restaurantrush/domain/CustomerTest.java` — reused collaboration scenarios for Regular/VIP substitution and entity lifecycle checks
+- `tests/restaurantrush/domain/VIPCustomerTest.java` — added focused waiting-loss boundary and departure checks
+- This branch prompt record — Prompt 3 appended on request after implementation.
+
+**Human verification**
+
+Pending; automated results do not establish human approval. The following automated executions were observed on 2026-10-30 in the uncommitted working tree based on `afef6b6ded306759034407ecee458a5595d074de`; each command exited 0:
+
+| Command | Observed result |
+| --- | --- |
+| `./compile.sh --tests` | Production and test sources compiled successfully |
+| `java -ea -cp out/classes restaurantrush.domain.CustomerTest` | PASS — 2868 checks |
+| `java -ea -cp out/classes restaurantrush.domain.VIPCustomerTest` | PASS — 826 checks |
+| `java -ea -cp out/classes restaurantrush.domain.RegularCustomerTest` | PASS — 111 checks |
+| `java -ea -cp out/classes restaurantrush.domain.OrderTest` | PASS — 487 checks |
+
+Compiler and runtime were Java 26.0.2; compilation used `--release 17`. No Java 17 runtime execution, full-game verification, complete staff/payment regression matrix or exact implementation-commit verification is claimed. Final diff review found no production changes; `git diff --check` passed. The published `stage-1` tag was unchanged. The executions above occurred during implementation; this subsequent prompt-record edit did not rerun them.
+
+**Related commits**
+
+- None created for Prompt 3. Working-tree base: `afef6b6ded306759034407ecee458a5595d074de` (VIPCustomer rules and focused tests from Prompt 2).
+- No commit, push, merge, pull request or tag mutation was performed by the assistant.

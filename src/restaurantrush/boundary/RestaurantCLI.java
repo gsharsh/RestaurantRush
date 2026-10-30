@@ -87,7 +87,9 @@ public final class RestaurantCLI {
         output.println("Tables:");
         for (TableView table : snapshot.tables()) {
             output.println("  Table " + table.id() + ": "
-                    + (table.occupantId() == null ? "free" : "C" + table.occupantId()));
+                    + (table.occupantId() == null
+                            ? "free"
+                            : "C" + table.occupantId() + typeSuffix(snapshot, table.occupantId())));
         }
 
         output.println("Customers:");

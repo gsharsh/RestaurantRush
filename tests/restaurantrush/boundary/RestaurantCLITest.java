@@ -101,6 +101,8 @@ public final class RestaurantCLITest {
             String rendered = bytes.toString(StandardCharsets.UTF_8);
             check(rendered.contains("Waiting queue: C2 (VIP), C4 (Critic)"),
                     "queue shows each waiting customer's type label");
+            check(rendered.contains("Table 1: C1 (Regular)"), "occupied table shows its customer's type label");
+            check(rendered.contains("Table 2: free"), "free table is unchanged");
             check(rendered.contains("C1 (Regular)  satisfaction 84"), "customer list shows Regular label");
             check(rendered.contains("C2 (VIP)  satisfaction 100"), "customer list shows VIP label");
             check(rendered.contains("C4 (Critic)  satisfaction 88"), "customer list shows Critic label");

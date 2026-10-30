@@ -19,6 +19,14 @@ public final class RegularCustomer extends Customer {
     }
 
     /**
+     * @return the stable presentation label {@code "Regular"}
+     */
+    @Override
+    public String typeLabel() {
+        return "Regular";
+    }
+
+    /**
      * @return the Stage 1 loss of 8 satisfaction points per waiting turn
      */
     @Override

@@ -12,9 +12,15 @@ public final class RegularCustomerTest {
 
     public static void main(String[] args) {
         int before = checks;
+        testTypeLabelThroughCustomer();
         testRegularCustomerRules();
         testCustomerRuleValidation();
         System.out.println("RegularCustomerTest: PASS (" + (checks - before) + " checks)");
+    }
+
+    private static void testTypeLabelThroughCustomer() {
+        Customer customer = new RegularCustomer(1);
+        check("Regular".equals(customer.typeLabel()), "regular type label through Customer");
     }
 
     private static void testRegularCustomerRules() {

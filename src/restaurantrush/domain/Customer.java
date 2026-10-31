@@ -38,6 +38,14 @@ public abstract class Customer {
     }
 
     /**
+     * Returns a stable, non-null presentation label for this customer type.
+     * The label must not be used to select gameplay behaviour.
+     *
+     * @return the stable, non-null customer-type presentation label
+     */
+    public abstract String typeLabel();
+
+    /**
      * Supplies the customer-specific rule used by {@link #applyWaitingLoss()}.
      *
      * @return a nonnegative satisfaction loss per waiting turn

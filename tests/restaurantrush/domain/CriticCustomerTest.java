@@ -38,7 +38,7 @@ public final class CriticCustomerTest {
                 "choice does not depend on menu order");
         check(new CriticCustomer(1).quotePriceCents(new MenuItem("Free", 0, 1)) == 0,
                 "a zero price is quoted unchanged");
-        CriticCustomer critic = new CriticCustomer(1);
+        Customer critic = new CriticCustomer(1);
         check("Critic".equals(critic.typeLabel()), "type label is Critic");
         check(critic.waitingLossPerTurn() == 12, "waiting loss is 12");
     }

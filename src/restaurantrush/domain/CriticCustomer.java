@@ -8,6 +8,7 @@ public final class CriticCustomer extends Customer {
         super(id);
     }
 
+    @Override
     public String typeLabel() {
         return "Critic";
     }

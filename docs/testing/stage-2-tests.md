@@ -1,13 +1,5 @@
 # Stage 2 test record
 
-- **Status:** Partial — shared customer-type label API only; Stage 2 release checks remain pending.
-- **Tested commit:** Uncommitted working tree based on `550ae6f8b5dffc2c4b614df65153783f22b3a513`; no exact implementation-commit verification claimed.
-- **Branch:** `feature/stage-2-harshith`
-- **Tester:** Codex automated execution for Harshith (M1)
-- **Reviewer:** Pending; M4 (Viti) for QuotedCustomer and M3 (Hunar) for DiscountedCustomer compatibility edits.
-- **Date:** 2026-10-30
-- **Java version:** `java` and `javac` 26.0.2; scripts compile with `--release 17`. Execution on a Java 17 runtime was not tested.
-
 ## Mixed-customer victory and defeat scenarios (M5) — 2026-11-05
 
 - **Status:** Separate reproducible Stage 2 victory and defeat runs passed through the full CLI with Regular, VIP and Critic customers.
@@ -18,11 +10,20 @@
 
 | Test | Exact command | Expected outcome | Observed outcome | Result |
 | --- | --- | --- | --- | --- |
+| Build | `./compile.sh` | Production sources compile | `Compiled production sources`; exit 0 | PASS |
 | All test runners | `./test.sh` | Every existing and new Stage 2 test class passes | All 14 test classes passed, including `VIPCustomerTest`, `CriticCustomerTest` and `ArrivalScheduleTest` | PASS |
-| Victory run | `./run.sh < docs/testing/stage-2-testscript/stage-2-victory.txt > docs/testing/stage-2-testscript/stage-2-victory.out` | 18 turns; at least 4 paid, at least $45.00, paid average at least 60; VICTORY | 18 of 18 turns; 5 served; 4 paid; 0 unhappy departures; revenue $58.50; average 75.5; `VICTORY` | PASS |
-| Defeat run | `./run.sh < docs/testing/stage-2-testscript/stage-2-defeat.txt > docs/testing/stage-2-testscript/stage-2-defeat.out` | 18 turns with targets missed; DEFEAT | 18 of 18 turns; 0 served; 0 paid; 2 unhappy departures; revenue $0.00; average N/A; `DEFEAT` | PASS |
+| Victory run | `java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-2-testscript/stage-2-victory.txt > docs/testing/stage-2-testscript/stage-2-victory.out` | 18 turns; at least 4 paid, at least $45.00, paid average at least 60; VICTORY | 18 of 18 turns; 5 served; 4 paid; 0 unhappy departures; revenue $58.50; average 75.5; `VICTORY` | PASS |
+| Defeat run | `java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-2-testscript/stage-2-defeat.txt > docs/testing/stage-2-testscript/stage-2-defeat.out` | 18 turns with targets missed; DEFEAT | 18 of 18 turns; 0 served; 0 paid; 2 unhappy departures; revenue $0.00; average N/A; `DEFEAT` | PASS |
 
 Each input file holds exactly 36 commands (one Waiter command, then one Chef command, for each of the 18 turns). No command in either run was rejected. Arrivals follow the agreed mapping: customer 2 (turn 4) is VIP and customer 4 (turn 10) is Critic; the rest are Regular. Every customer is listed with its type label, e.g. `C2 (VIP)`, `C4 (Critic)`.
+
+The saved `.out` files contain only the game's own output. They are recorded by running the app directly after `./compile.sh`, rather than through `run.sh`, so they do not start with a machine-specific "Compiled production sources to …" path. To check a replay on any machine:
+
+```bash
+./compile.sh
+java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-2-testscript/stage-2-victory.txt | diff docs/testing/stage-2-testscript/stage-2-victory.out -
+java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-2-testscript/stage-2-defeat.txt | diff docs/testing/stage-2-testscript/stage-2-defeat.out -
+```
 
 **Victory plan and Stage 2 behaviour shown.**
 
@@ -38,7 +39,19 @@ Customer 6 (turn-16 arrival) is seated on turn 18 and cannot pay, as the brief e
 
 **Defeat plan.** The Waiter and Chef `wait` on every turn. Customer 1 (Regular, 8 per turn) leaves at the end of turn 13 and customer 4 (Critic, 12 per turn) leaves at the end of turn 18, nine turns after arriving. Customer 2 (VIP, 5 per turn) is still waiting at satisfaction 30 at the start of turn 18, showing the slower VIP loss.
 
-## Shared label API — Prompt 1
+## Historical label-API verification — 30 October 2026
+
+The material in this section records M1's earlier, partial verification of the shared type-label API, before VIP, Critic and the Stage 2 arrival schedule were merged. Its "pending" and "outstanding" statements describe that session only; current Stage 2 gameplay results are in the M5 section above.
+
+- **Status at that time:** Partial — shared customer-type label API only; Stage 2 release checks remain pending.
+- **Tested commit:** Uncommitted working tree based on `550ae6f8b5dffc2c4b614df65153783f22b3a513`; no exact implementation-commit verification claimed.
+- **Branch:** `feature/stage-2-harshith`
+- **Tester:** Codex automated execution for Harshith (M1)
+- **Reviewer:** Pending; M4 (Viti) for QuotedCustomer and M3 (Hunar) for DiscountedCustomer compatibility edits.
+- **Date:** 2026-10-30
+- **Java version:** `java` and `javac` 26.0.2; scripts compile with `--release 17`. Execution on a Java 17 runtime was not tested.
+
+### Shared label API — Prompt 1
 
 All executed commands below exited 0. Test classes are the existing self-contained runners; no new harness was added.
 
@@ -51,13 +64,11 @@ All executed commands below exited 0. Test classes are the existing self-contain
 | Controller compatibility | `java -ea -cp out/classes restaurantrush.control.GameControllerTest` | Existing QuotedCustomer behaviour and assertions retained | `GameControllerTest: PASS (753 checks)` | PASS |
 | Staff compatibility | `java -ea -cp out/classes restaurantrush.staff.StaffTest` | Existing DiscountedCustomer behaviour and assertions retained | `StaffTest: PASS (124 checks)` | PASS |
 
-## Reproducible scenarios
-
-Mixed-customer victory and defeat runs are recorded in the M5 section above. The note below refers to the earlier label-API verification.
+### Reproducible scenarios
 
 No new gameplay scenarios were run for this API-only change. Mixed-customer victory/defeat evidence remains with M5 after VIP/Critic and M4 arrival integration. The Stage 1 scenario files remain historical evidence.
 
-## Defects and limitations
+### Defects and limitations
 
 No failure was observed in the checks above. The remaining existing test runners and full-game scenarios were not executed in this prompt.
 
@@ -65,7 +76,7 @@ The only concrete Customer subclasses found were RegularCustomer, GameController
 
 This partial API compiles independently. VIP (`VIP`, M1), Critic (`Critic`, M2), M4 arrival/controller integration and M5 `CustomerView.type`/CLI consumption remain outstanding. UML coordination and the shared README transition record remain pending with M5; the source API is documented and the branch prompt record supplies M1's UML operation handoff. No Stage 2 release or mixed-customer validation is claimed.
 
-## Tag-gate review
+## Stage 2 tag-gate review
 
 - [ ] Exact implementation commit SHA verified
 - [ ] All required Stage 2 tests and victory/defeat scenarios executed

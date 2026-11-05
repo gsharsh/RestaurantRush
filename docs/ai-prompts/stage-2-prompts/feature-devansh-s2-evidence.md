@@ -25,6 +25,20 @@ The assistant (Claude) planned an 18-turn victory sequence using the agreed arri
 
 Ran `./test.sh` and both scenarios on my Mac at `d050b2d`: all 14 test classes passed, the victory run ended VICTORY (4 paid, $58.50, average 75.5) and the defeat run ended DEFEAT (0 paid, 2 departures). Checked the recorded values against the saved outputs.
 
+## Prompt 2
+
+**Prompt**
+
+> Apply M1's review: label the older test-record sections as historical, and remove the machine-specific compilation banner from the saved outputs.
+
+**What was used or rejected**
+
+The assistant moved M1's 30 October label-API notes under a "Historical label-API verification — 30 October 2026" heading with a one-line explanation, kept the release checklist as a current top-level section, and changed the recorded commands to compile once and run the app directly, with a `diff` replay check. The outputs were re-recorded that way.
+
+**Human verification**
+
+Re-recorded both outputs on my Mac and confirmed they start with the game's welcome line and still end in VICTORY and DEFEAT.
+
 **Related commits**
 
 - To be added after commit

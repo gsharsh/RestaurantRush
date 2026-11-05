@@ -169,13 +169,6 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 - Before creating each stage tag, compile the candidate commit, run its tests and victory/defeat scenarios, and have another member review the evidence.
 - Keep tests under the same feature branch as the behaviour they verify, and record the observed result against the exact commit SHA.
 
-## Remaining release and submission tasks
-
-- Record another team member's evidence review and class-owner confirmation. The automated audit is recorded separately from human sign-off.
-- Confirm the implemented working policy for fractional-cent VIP quotes: round the discounted total to the nearest cent, with half cents rounded up. The required base-menu discounts are exact. The six-arrival mapping is implemented and tested: Regular, VIP, Regular, Critic, Regular, Regular.
-- Commit the documentation update, verify the final candidate with `./test.sh` and the two replay checks above, and ensure the working tree is clean before creating and publishing `stage-2`.
-- Confirm the submission deadline and lab-group archive name.
-
 ## Stage 1 → Stage 2 transition
 
 The published `stage-1` tag identifies

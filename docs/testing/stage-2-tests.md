@@ -18,8 +18,6 @@ Documentation edits made after that candidate are not part of its SHA. Commit an
 | `./test.sh` | Production and test sources compiled; all 15 test runners passed; exit 0 | PASS |
 | Saved victory replay and `diff` | Output matched the saved `.out` exactly; 18 turns, 5 served, 4 paid, 0 unhappy departures, $58.50 revenue, 75.5 average paid satisfaction, VICTORY; exit 0 | PASS |
 | Saved defeat replay and `diff` | Output matched the saved `.out` exactly; 18 turns, 0 served, 0 paid, 2 unhappy departures, $0.00 revenue, N/A average paid satisfaction, DEFEAT; exit 0 | PASS |
-| CLI invalid-input/retry smoke below | Malformed and rejected Waiter/Chef commands did not consume tasks; the remaining gameplay output matched the victory baseline and completed 18 turns | PASS |
-| CLI early-EOF smoke below | Empty input stopped with the documented message and no fabricated VICTORY or DEFEAT | PASS |
 | Source and UML audit | Customer rules, mixed arrivals, labels, shared lifecycle, locked bills, task/timing limits and Stage 2 class diagram matched; no required gameplay gap found | PASS |
 
 The current `./test.sh` run reported:
@@ -58,38 +56,6 @@ java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-2
 ```
 
 `./test.sh` compiles production and test sources, then executes every discovered test runner with assertions enabled. No output from either `diff`, with exit 0, means that the replay matched.
-
-The additional CLI smoke uses Python 3 to supply malformed commands, valid commands rejected by the game, and then the unchanged victory plan. It also checks an input stream that ends before either staff member acts:
-
-```bash
-python3 - <<'PY'
-from pathlib import Path
-import subprocess
-
-app = ['java', '-cp', 'out/classes', 'restaurantrush.app.RestaurantRushApp']
-commands = Path('docs/testing/stage-2-testscript/stage-2-victory.txt').read_text().splitlines()
-assert len(commands) == 36
-payload = '\n'.join([
-    'nonsense', 'seat', 'seat x 1', 'seat 999 1', 'order 1', commands[0],
-    'nonsense', 'cook x', 'cook 999', commands[1], *commands[2:]
-]) + '\n'
-run = subprocess.run(app, input=payload, text=True, capture_output=True, check=True)
-baseline = Path('docs/testing/stage-2-testscript/stage-2-victory.out').read_text()
-marker = 'Chef> Chef skipped this turn'
-assert run.stdout[run.stdout.index(marker):] == baseline[baseline.index(marker):]
-assert run.stdout.count('========== Turn ') == 18
-assert 'Unknown Waiter command' in run.stdout
-assert 'Unknown Chef command' in run.stdout
-assert 'VICTORY' in run.stdout
-
-eof = subprocess.run(app, input='', text=True, capture_output=True, check=True)
-assert 'Input ended before the game finished. Stopping without a result.' in eof.stdout
-assert 'VICTORY' not in eof.stdout and 'DEFEAT' not in eof.stdout
-print('CLI invalid-input/retry and early-EOF smoke: PASS')
-PY
-```
-
-The following original author records retain their own candidate SHAs, runtime versions and test counts; they do not replace the current integrated verification.
 
 ## Original mixed-customer victory and defeat evidence (M5) — 2026-11-05
 

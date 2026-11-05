@@ -2,17 +2,19 @@ package restaurantrush.control;
 
 import restaurantrush.domain.Customer;
 import restaurantrush.domain.RegularCustomer;
+import restaurantrush.domain.VIPCustomer;
+import restaurantrush.domain.CriticCustomer;
 import java.util.Map;
 
 /**
- * Stateless Stage 1 arrival schedule.
- * Owns the deterministic arrival rule and constructs RegularCustomer instances.
+ * Stateless Stage 2 arrival schedule.
+ * Owns the deterministic arrival rule and constructs Customer instances of appropriate types.
  * Returns customers through the abstract Customer base type.
  *
  * OOP principles applied:
  * - Encapsulation: Static mapping is immutable, behavior hidden
  * - Single Responsibility: Only provides arrivals, doesn't track state
- * - Abstraction: Returns Customer, not concrete RegularCustomer
+ * - Polymorphism: Returns Customer, not concrete subtypes; dispatches type through polymorphic construction
  */
 public final class ArrivalSchedule {
     private static final Map<Integer, Integer> CUSTOMER_ID_BY_TURN = Map.ofEntries(
@@ -25,7 +27,7 @@ public final class ArrivalSchedule {
     );
 
     /**
-     * Construct the stateless Stage 1 schedule.
+     * Construct the stateless Stage 2 schedule.
      */
     public ArrivalSchedule() {
     }
@@ -34,7 +36,7 @@ public final class ArrivalSchedule {
      * Get the scheduled arrival for a turn.
      *
      * @param turn the turn number (1 to 18)
-     * @return a new RegularCustomer with the mapped ID, or null if no arrival scheduled
+     * @return a new Customer of the appropriate type for this turn, or null if no arrival scheduled
      * @throws IllegalArgumentException if turn is outside valid range
      */
     public Customer arrivalFor(int turn) {
@@ -43,6 +45,14 @@ public final class ArrivalSchedule {
         }
 
         Integer customerId = CUSTOMER_ID_BY_TURN.get(turn);
-        return customerId != null ? new RegularCustomer(customerId) : null;
+        if (customerId == null) {
+            return null;
+        }
+
+        return switch (turn) {
+            case 4 -> new VIPCustomer(customerId);
+            case 10 -> new CriticCustomer(customerId);
+            default -> new RegularCustomer(customerId);
+        };
     }
 }

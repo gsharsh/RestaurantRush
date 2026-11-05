@@ -1,6 +1,97 @@
 # Stage 2 test record
 
-## Mixed-customer victory and defeat scenarios (M5) — 2026-11-05
+## Current integrated verification — 2026-11-06
+
+- **Status:** Integrated automated checks passed; the final documentation commit, human release review and user-created `stage-2` tag remain pending.
+- **Implementation candidate:** [`97463b1ce1481806c5861047f7a16bb71b0674e2`](https://github.com/gsharsh/RestaurantRush/commit/97463b1ce1481806c5861047f7a16bb71b0674e2), checked out on `refactor/harshith`.
+- **Tester/reviewer:** Codex automated execution and source/UML review for Harshith (M1). Confirmation by another human team member remains pending; automated review does not establish that approval.
+- **Compiler/runtime:** `javac` and `java` 26.0.2 on macOS; the supplied scripts compile with `--release 17`. Execution on a Java 17 runtime has not been verified.
+- **Scope:** Integrated Regular, VIP and Critic behaviour, staff/payment regressions, six-arrival schedule, immutable views/type labels, full CLI victory/defeat runs and Stage 2 UML/source consistency. Host, ComboMeal and Happy Hour remain Stage 3 work.
+
+The earlier integrated audit ran on `f9e7408f550d10625f683c53c879b7ce239d564c`. The candidate above differs only by removing three obsolete `.gitkeep` files; production sources, tests and build/run scripts are identical. The checks below were rerun successfully against `97463b1` on 2026-11-06 (Asia/Singapore).
+
+Documentation edits made after that candidate are not part of its SHA. Commit and review these changes, then recheck the intended final release commit before creating `stage-2`.
+
+| Check | Observed result | Result |
+| --- | --- | --- |
+| `./compile.sh` | Production sources compiled; exit 0 | PASS |
+| `./test.sh` | Production and test sources compiled; all 15 test runners passed; exit 0 | PASS |
+| Saved victory replay and `diff` | Output matched the saved `.out` exactly; 18 turns, 5 served, 4 paid, 0 unhappy departures, $58.50 revenue, 75.5 average paid satisfaction, VICTORY; exit 0 | PASS |
+| Saved defeat replay and `diff` | Output matched the saved `.out` exactly; 18 turns, 0 served, 0 paid, 2 unhappy departures, $0.00 revenue, N/A average paid satisfaction, DEFEAT; exit 0 | PASS |
+| CLI invalid-input/retry smoke below | Malformed and rejected Waiter/Chef commands did not consume tasks; the remaining gameplay output matched the victory baseline and completed 18 turns | PASS |
+| CLI early-EOF smoke below | Empty input stopped with the documented message and no fabricated VICTORY or DEFEAT | PASS |
+| Source and UML audit | Customer rules, mixed arrivals, labels, shared lifecycle, locked bills, task/timing limits and Stage 2 class diagram matched; no required gameplay gap found | PASS |
+
+The current `./test.sh` run reported:
+
+| Test runner | Observed output |
+| --- | --- |
+| `RestaurantCLITest` | PASS, 22 checks |
+| `ArrivalScheduleTest` | PASS, 42 checks |
+| `GameControllerTest` | PASS, 753 checks |
+| `TurnManagerTest` | PASS, 780 checks |
+| `ActionResultTest` | PASS, 7 checks |
+| `CriticCustomerTest` | PASS, 55 checks |
+| `CustomerTest` | PASS, 2868 checks |
+| `MenuItemTest` | PASS, 25 checks |
+| `OrderTest` | PASS, 487 checks |
+| `RegularCustomerTest` | PASS, 111 checks |
+| `RestaurantStateTest` | 15 scenarios passed, 0 failed |
+| `VIPCustomerTest` | PASS, 826 checks |
+| `StaffMixedCustomerTest` | PASS, 141 checks |
+| `StaffTest` | PASS, 124 checks |
+| `ViewRecordsTest` | PASS, 49 checks |
+
+### Repeatable integrated checks
+
+Run from the repository root. `set -o pipefail` ensures a failed Java process cannot be hidden by a succeeding `diff`.
+
+```bash
+set -o pipefail
+java -version
+javac -version
+git rev-parse HEAD
+./compile.sh
+./test.sh
+java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-2-testscript/stage-2-victory.txt | diff -u docs/testing/stage-2-testscript/stage-2-victory.out -
+java -cp out/classes restaurantrush.app.RestaurantRushApp < docs/testing/stage-2-testscript/stage-2-defeat.txt | diff -u docs/testing/stage-2-testscript/stage-2-defeat.out -
+```
+
+`./test.sh` compiles production and test sources, then executes every discovered test runner with assertions enabled. No output from either `diff`, with exit 0, means that the replay matched.
+
+The additional CLI smoke uses Python 3 to supply malformed commands, valid commands rejected by the game, and then the unchanged victory plan. It also checks an input stream that ends before either staff member acts:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import subprocess
+
+app = ['java', '-cp', 'out/classes', 'restaurantrush.app.RestaurantRushApp']
+commands = Path('docs/testing/stage-2-testscript/stage-2-victory.txt').read_text().splitlines()
+assert len(commands) == 36
+payload = '\n'.join([
+    'nonsense', 'seat', 'seat x 1', 'seat 999 1', 'order 1', commands[0],
+    'nonsense', 'cook x', 'cook 999', commands[1], *commands[2:]
+]) + '\n'
+run = subprocess.run(app, input=payload, text=True, capture_output=True, check=True)
+baseline = Path('docs/testing/stage-2-testscript/stage-2-victory.out').read_text()
+marker = 'Chef> Chef skipped this turn'
+assert run.stdout[run.stdout.index(marker):] == baseline[baseline.index(marker):]
+assert run.stdout.count('========== Turn ') == 18
+assert 'Unknown Waiter command' in run.stdout
+assert 'Unknown Chef command' in run.stdout
+assert 'VICTORY' in run.stdout
+
+eof = subprocess.run(app, input='', text=True, capture_output=True, check=True)
+assert 'Input ended before the game finished. Stopping without a result.' in eof.stdout
+assert 'VICTORY' not in eof.stdout and 'DEFEAT' not in eof.stdout
+print('CLI invalid-input/retry and early-EOF smoke: PASS')
+PY
+```
+
+The following original author records retain their own candidate SHAs, runtime versions and test counts; they do not replace the current integrated verification.
+
+## Original mixed-customer victory and defeat evidence (M5) — 2026-11-05
 
 - **Status:** Separate reproducible Stage 2 victory and defeat runs passed through the full CLI with Regular, VIP and Critic customers.
 - **Tested commit:** `d050b2d` (`main` after M4's arrival schedule), with only the new scenario files added.
@@ -41,7 +132,7 @@ Customer 6 (turn-16 arrival) is seated on turn 18 and cannot pay, as the brief e
 
 ## Historical label-API verification — 30 October 2026
 
-The material in this section records M1's earlier, partial verification of the shared type-label API, before VIP, Critic and the Stage 2 arrival schedule were merged. Its "pending" and "outstanding" statements describe that session only; current Stage 2 gameplay results are in the M5 section above.
+The material in this section records M1's earlier, partial verification of the shared type-label API, before VIP, Critic and the Stage 2 arrival schedule were merged. Its "pending" and "outstanding" statements describe that session only; current Stage 2 verification is recorded at the top of this document, and the original M5 gameplay evidence is above.
 
 - **Status at that time:** Partial — shared customer-type label API only; Stage 2 release checks remain pending.
 - **Tested commit:** Uncommitted working tree based on `550ae6f8b5dffc2c4b614df65153783f22b3a513`; no exact implementation-commit verification claimed.
@@ -78,10 +169,11 @@ This partial API compiles independently. VIP (`VIP`, M1), Critic (`Critic`, M2),
 
 ## Stage 2 tag-gate review
 
-- [ ] Exact implementation commit SHA verified
-- [ ] All required Stage 2 tests and victory/defeat scenarios executed
+- [x] Exact implementation candidate SHA recorded above
+- [x] All required Stage 2 tests and victory/defeat scenarios executed against the implementation candidate
 - [ ] Another member reviewed the evidence and compatibility edits
-- [ ] Shared UML matches the implemented Stage 2 code
+- [x] Shared UML matches the implemented Stage 2 code in automated source/diagram review; human owner confirmation remains separate
+- [ ] Documentation changes committed and intended final release commit rechecked
 - [ ] Working tree is clean before tagging
 
-The published `stage-1` tag remains at `1b9ebf92330316628010880245f98a67416aaef9`. No commit, push, merge, pull request or tag operation was performed.
+The published `stage-1` tag remains at `1b9ebf92330316628010880245f98a67416aaef9`. This documentation update does not create or publish `stage-2`; the user will tag after the remaining release checks.

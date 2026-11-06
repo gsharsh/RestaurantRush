@@ -11,6 +11,7 @@ public final class CriticCustomerTest {
 
     public static void main(String[] args) {
         testBaseMenuChoiceAndPrice();
+        testComboMenuChoiceAndPrice();
         testPreferenceTieBreaking();
         testWaitingLossAndAbandonment();
         testNoLossAfterService();
@@ -41,6 +42,28 @@ public final class CriticCustomerTest {
         Customer critic = new CriticCustomer(1);
         check("Critic".equals(critic.typeLabel()), "type label is Critic");
         check(critic.waitingLossPerTurn() == 12, "waiting loss is 12");
+    }
+
+    private static void testComboMenuChoiceAndPrice() {
+        MenuItem salad = new MenuItem("Salad", 900, 1);
+        MenuItem burger = new MenuItem("Burger", 1500, 1);
+        MenuItem pasta = new MenuItem("Pasta", 1800, 2);
+        MenuItem combo = new ComboMeal("Salad + Pasta Combo", salad, pasta);
+        List<List<MenuItem>> menus = List.of(
+                new ArrayList<>(List.of(salad, burger, pasta, combo)),
+                new ArrayList<>(List.of(pasta, combo, burger, salad)));
+        Customer critic = new CriticCustomer(1);
+        for (List<MenuItem> menu : menus) {
+            List<MenuItem> original = new ArrayList<>(menu);
+            MenuItem chosen = critic.chooseMenuItem(menu);
+            check(chosen == combo, "critic chooses the three-unit combo over the two-unit Pasta");
+            check(critic.quotePriceCents(chosen) == 2430, "critic quotes the full combo price");
+            check(menu.size() == original.size(), "combo selection must preserve menu size");
+            for (int index = 0; index < original.size(); index++) {
+                check(menu.get(index) == original.get(index),
+                        "combo selection must preserve menu order and object identity at " + index);
+            }
+        }
     }
 
     private static void testPreferenceTieBreaking() {

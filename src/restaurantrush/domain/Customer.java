@@ -154,6 +154,24 @@ public abstract class Customer {
     }
 
     /**
+     * While {@code WAITING} or {@code SEATED}, adds satisfaction up to 100 using
+     * overflow-safe arithmetic, including when an attached order is ready.
+     * Other lifecycle states are unchanged; orders and timestamps are never changed.
+     * Collaborators decide when to request recovery.
+     *
+     * @param amount nonnegative satisfaction to restore; zero is valid
+     * @throws IllegalArgumentException if {@code amount} is negative, in any lifecycle state
+     */
+    public final void recoverWaitingSatisfaction(int amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("Recovery amount must be nonnegative.");
+        }
+        if (status == CustomerStatus.WAITING || status == CustomerStatus.SEATED) {
+            satisfaction = (int) Math.min(100L, (long) satisfaction + amount);
+        }
+    }
+
+    /**
      * Changes {@code READY_TO_PAY} to {@code PAID} after the associated order
      * has been marked {@code PAID}. Collaborators decide payment eligibility timing.
      *

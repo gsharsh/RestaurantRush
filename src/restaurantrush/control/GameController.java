@@ -225,6 +225,7 @@ public final class GameController {
             .map(TableView::from)
             .toList();
 
+        boolean hostAvailable = turnManager.canAssignHost();
         boolean waiterAvailable = turnManager.canAssignWaiter();
         boolean chefAvailable = turnManager.canAssignChef();
         int paidCount = restaurant.getPaidCount();
@@ -239,11 +240,14 @@ public final class GameController {
             waitingCustomerIds,
             customers,
             tables,
+            hostAvailable,
             waiterAvailable,
             chefAvailable,
             paidCount,
             servedCount,
-            abandonedCount
+            abandonedCount,
+            turnManager.getHappyHourTurnsRemaining(),
+            turnManager.hasHappyHourBeenActivated()
         );
     }
 

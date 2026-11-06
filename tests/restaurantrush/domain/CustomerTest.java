@@ -21,6 +21,9 @@ public final class CustomerTest {
         testCustomerTurnValidation();
         testFinishEatingNoOps();
         testWaitingLossBounds();
+        testWaitingSatisfactionRecovery();
+        testSeatedOrderSatisfactionRecovery();
+        testRecoveryExcludedLifecycleStates();
         testCustomerAbandonment();
         testM1CollaborationThroughPayment();
         testM1CollaborationAbandonment();
@@ -222,6 +225,128 @@ public final class CustomerTest {
         checkCustomer(seated, 3, 0, CustomerStatus.LEFT, -1, -1, order);
         checkOrder(order, 3, order.getItem(), OrderStatus.CANCELLED, 2, 1800, false, false);
         expectCustomerNoOp(seated, seated::applyWaitingLoss);
+    }
+
+    private static void testWaitingSatisfactionRecovery() {
+        checkWaitingSatisfactionRecovery(new RegularCustomer(3), 8);
+        checkWaitingSatisfactionRecovery(new VIPCustomer(3), 5);
+        checkWaitingSatisfactionRecovery(new CriticCustomer(3), 12);
+    }
+
+    private static void checkWaitingSatisfactionRecovery(Customer customer, int expectedLoss) {
+        checkRecoveryInputs(customer);
+        for (int count = 0; count < 3; count++) {
+            customer.applyWaitingLoss();
+        }
+        checkCustomer(customer, 3, 100 - 3 * expectedLoss, CustomerStatus.WAITING, -1, -1, null);
+        checkSatisfactionRecovery(customer, 5, 105 - 3 * expectedLoss);
+        checkSatisfactionRecovery(customer, 5, 110 - 3 * expectedLoss);
+        customer.applyWaitingLoss();
+        checkCustomer(customer, 3, 110 - 4 * expectedLoss, CustomerStatus.WAITING, -1, -1, null);
+        checkRecoveryInputs(customer);
+        // Starting above zero makes an overflowing int addition observable.
+        checkSatisfactionRecovery(customer, Integer.MAX_VALUE, 100);
+        checkSatisfactionRecovery(customer, 1, 100);
+
+        for (int count = 0; count < 20; count++) {
+            customer.applyWaitingLoss();
+        }
+        checkCustomer(customer, 3, 0, CustomerStatus.WAITING, -1, -1, null);
+        checkSatisfactionRecovery(customer, 15, 15);
+        customer.seat();
+        checkSatisfactionRecovery(customer, 5, 20);
+        checkRecoveryInputs(customer);
+        checkSatisfactionRecovery(customer, 80, 100);
+        customer.applyWaitingLoss();
+        checkCustomer(customer, 3, 100 - expectedLoss, CustomerStatus.SEATED, -1, -1, null);
+        checkSatisfactionRecovery(customer, Integer.MAX_VALUE, 100);
+        for (int count = 0; count < 20; count++) {
+            customer.applyWaitingLoss();
+        }
+        checkCustomer(customer, 3, 0, CustomerStatus.SEATED, -1, -1, null);
+        checkSatisfactionRecovery(customer, 15, 15);
+        customer.abandon();
+        checkExcludedRecovery(customer);
+    }
+
+    private static void testSeatedOrderSatisfactionRecovery() {
+        // Eligibility depends on the customer state, not the attached order state.
+        for (OrderStatus status : OrderStatus.values()) {
+            checkSeatedOrderSatisfactionRecovery(new RegularCustomer(3), status, 8);
+            checkSeatedOrderSatisfactionRecovery(new VIPCustomer(3), status, 5);
+            checkSeatedOrderSatisfactionRecovery(new CriticCustomer(3), status, 12);
+        }
+    }
+
+    private static void checkSeatedOrderSatisfactionRecovery(Customer customer, OrderStatus status,
+            int expectedLoss) {
+        customer.seat();
+        Order order = customerOrderInState(customer.getId(), status);
+        customer.acceptOrder(order);
+        Runnable orderUnchanged = snapshotOrder(order);
+        for (int count = 0; count < 3; count++) {
+            customer.applyWaitingLoss();
+        }
+        checkCustomer(customer, 3, 100 - 3 * expectedLoss, CustomerStatus.SEATED, -1, -1, order);
+        checkSatisfactionRecovery(customer, 15, 115 - 3 * expectedLoss);
+        checkRecoveryInputs(customer);
+        customer.applyWaitingLoss();
+        checkCustomer(customer, 3, 115 - 4 * expectedLoss, CustomerStatus.SEATED, -1, -1, order);
+        orderUnchanged.run();
+        customer.abandon();
+        checkExcludedRecovery(customer);
+    }
+
+    private static void testRecoveryExcludedLifecycleStates() {
+        checkRecoveryExcludedLifecycleStates(new RegularCustomer(3), 8);
+        checkRecoveryExcludedLifecycleStates(new VIPCustomer(3), 5);
+        checkRecoveryExcludedLifecycleStates(new CriticCustomer(3), 12);
+    }
+
+    private static void checkRecoveryExcludedLifecycleStates(Customer customer, int expectedLoss) {
+        customer.applyWaitingLoss();
+        customer.seat();
+        Order order = customerOrderInState(customer.getId(), OrderStatus.SERVED);
+        customer.acceptOrder(order);
+        customer.markServed(9);
+        checkCustomer(customer, 3, 100 - expectedLoss, CustomerStatus.EATING, 9, -1, order);
+        checkExcludedRecovery(customer);
+        customer.finishEating(10);
+        checkCustomer(customer, 3, 100 - expectedLoss, CustomerStatus.READY_TO_PAY, 9, 10, order);
+        checkExcludedRecovery(customer);
+        order.markPaid();
+        customer.markPaid();
+        checkCustomer(customer, 3, 100 - expectedLoss, CustomerStatus.PAID, 9, 10, order);
+        checkExcludedRecovery(customer);
+    }
+
+    private static void checkSatisfactionRecovery(Customer customer, int amount, int expectedSatisfaction) {
+        int id = customer.getId();
+        CustomerStatus status = customer.getStatus();
+        int servedTurn = customer.getServedTurn();
+        int readyToPayTurn = customer.getReadyToPayTurn();
+        Order order = customer.getOrder();
+        Runnable orderUnchanged = order == null ? () -> { } : snapshotOrder(order);
+        customer.recoverWaitingSatisfaction(amount);
+        checkCustomer(customer, id, expectedSatisfaction, status, servedTurn, readyToPayTurn, order);
+        orderUnchanged.run();
+    }
+
+    private static void checkRecoveryInputs(Customer customer) {
+        expectCustomerNoOp(customer, () -> customer.recoverWaitingSatisfaction(0));
+        expectUnchangedIllegalArgument("negative recovery in " + customer.getStatus(), customer,
+                () -> customer.recoverWaitingSatisfaction(-1));
+        expectUnchangedIllegalArgument("minimum integer recovery in " + customer.getStatus(), customer,
+                () -> customer.recoverWaitingSatisfaction(Integer.MIN_VALUE));
+    }
+
+    private static void checkExcludedRecovery(Customer customer) {
+        checkRecoveryInputs(customer);
+        int[] amounts = {1, 15, Integer.MAX_VALUE};
+        for (int amount : amounts) {
+            expectCustomerNoOp(customer, () -> customer.recoverWaitingSatisfaction(amount));
+        }
+        expectCustomerNoOp(customer, customer::applyWaitingLoss);
     }
 
     private static void testCustomerAbandonment() {

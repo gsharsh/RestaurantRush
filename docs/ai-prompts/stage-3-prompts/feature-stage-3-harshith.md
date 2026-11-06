@@ -49,3 +49,49 @@ Each command compiled production and test sources before executing the named tes
 
 - None created for Prompt 1. Working-tree base: `450e58df7d235d474cc667dd1c240119ec5772cd`.
 - No commit, push, merge, pull request or tag mutation was performed by the assistant.
+
+## Prompt 2 — Customer waiting-satisfaction recovery
+
+**Prompt**
+
+> Add `public final void recoverWaitingSatisfaction(int amount)` to `Customer`: reject negatives; recover only WAITING/SEATED customers; cap at 100 safely; leave other state unchanged.
+>
+> Extend `CustomerTest` using existing helpers. Cover all customer types, eligible order states including READY, excluded lifecycle states, zero, negatives, overflow and unchanged order/timestamp fields. Preserve normal waiting losses.
+>
+> Run `CustomerTest`, `RegularCustomerTest`, `VIPCustomerTest` and `CriticCustomerTest`. Report results. Leave Happy Hour policy and recovery timing to M2/M4. Stop here.
+
+**What was used or rejected**
+
+Added the final shared recovery method and focused Javadoc to `Customer`. Negative amounts throw `IllegalArgumentException` before checking lifecycle eligibility, including for excluded states. Only `WAITING` and `SEATED` customers recover, using `(int) Math.min(100L, (long) satisfaction + amount)` to cap safely at 100. Zero is valid; repeated recovery calls are allowed. Eligibility depends on customer status, so a seated customer with a READY order still qualifies. The method changes only satisfaction and leaves orders, timestamps and lifecycle state unchanged.
+
+Extended `CustomerTest` through helpers accepting actual Regular, VIP and Critic objects as `Customer` references. Reused `checkCustomer`, `snapshotOrder`, `expectCustomerNoOp`, `expectUnchangedIllegalArgument` and `customerOrderInState`. Coverage includes waiting and seated customers without orders, seated customers with every accepted order state, recovery from zero, repeated recovery, exact and excess capping, and `Integer.MAX_VALUE` recovery from positive satisfaction. Tests reject `-1` and `Integer.MIN_VALUE` and accept zero across all lifecycle states. EATING, READY_TO_PAY, PAID and LEFT remain unchanged, with attached orders and recorded timestamps checked through existing snapshots.
+
+Existing waiting-loss code and tests were preserved. New checks also apply normal waiting losses after recovery and verify the unchanged Regular/VIP/Critic losses of 8/5/12, including while food is READY. The implementation added no Happy Hour policy or turn-timing behavior.
+
+**M2/M4 handoff**
+
+The generic recovery API is available for integration. Happy Hour policy remains with M2 (Vedavit); recovery scheduling and once-per-active-turn enforcement remain with M4 (Viti) under the Stage 3 turn contract. Those integrations and their timing tests remain pending.
+
+**Files affected**
+
+- `src/restaurantrush/domain/Customer.java` — added recovery method and Javadoc
+- `tests/restaurantrush/domain/CustomerTest.java` — extended focused recovery coverage
+- This branch prompt record — Prompt 2 appended on request after implementation.
+
+**Human verification**
+
+Pending; automated results do not establish human approval. The following automated executions were observed on 2026-11-07 during recovery implementation; each command exited 0:
+
+| Command | Observed result |
+| --- | --- |
+| `./test.sh restaurantrush.domain.CustomerTest` | PASS — 7986 checks |
+| `./test.sh restaurantrush.domain.RegularCustomerTest` | PASS — 111 checks |
+| `./test.sh restaurantrush.domain.VIPCustomerTest` | PASS — 826 checks |
+| `./test.sh restaurantrush.domain.CriticCustomerTest` | PASS — 55 checks |
+
+Each command compiled production and test sources before executing the named test individually. Compiler and runtime were Java 26.0.2; compilation used `--release 17`. Execution on a Java 17 runtime and Happy Hour integration remain unverified. Final source/test diff review found no issues and `git diff --check` passed. These executions checked the uncommitted recovery changes; this subsequent prompt-record edit did not rerun them.
+
+**Related commits**
+
+- None created for Prompt 2. Recovery changes remain uncommitted against the current branch base `ebe0062e37ee85d0b677a65803b0a2de369a3dc7`.
+- No commit, push, merge, pull request or tag mutation was performed by the assistant.

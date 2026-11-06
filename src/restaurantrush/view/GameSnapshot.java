@@ -17,11 +17,15 @@ import java.util.List;
  * @param waitingCustomerIds      queued customer IDs in arrival order
  * @param customers               customers to display
  * @param tables                  tables in ID order
+ * @param hostAvailable           whether the Host choice is still open this turn
  * @param waiterAvailable         whether the Waiter choice is still open this turn
  * @param chefAvailable           whether the Chef choice is still open this turn
  * @param paidCount               customers who have paid
  * @param servedCount             dishes served
  * @param abandonedCount          customers who left unhappy
+ * @param happyHourTurnsRemaining Happy Hour turns left including the current one:
+ *                                2 on its activation turn, 1 on the next, otherwise 0
+ * @param happyHourUsed           whether Happy Hour has been activated this game
  */
 public record GameSnapshot(
         int turn,
@@ -31,14 +35,20 @@ public record GameSnapshot(
         List<Integer> waitingCustomerIds,
         List<CustomerView> customers,
         List<TableView> tables,
+        boolean hostAvailable,
         boolean waiterAvailable,
         boolean chefAvailable,
         int paidCount,
         int servedCount,
-        int abandonedCount) {
+        int abandonedCount,
+        int happyHourTurnsRemaining,
+        boolean happyHourUsed) {
 
     /** Turns in the base game. */
     private static final int FINAL_TURN = 18;
+
+    /** Happy Hour covers its activation turn and the next one. */
+    private static final int HAPPY_HOUR_TURNS = 2;
 
     public GameSnapshot {
         if (turn < 1 || turn > FINAL_TURN) {
@@ -63,6 +73,14 @@ public record GameSnapshot(
         if ((averagePaidSatisfaction == null) != (paidCount == 0)) {
             throw new IllegalArgumentException(
                     "Average paid satisfaction must be null exactly when no customer has paid");
+        }
+        if (happyHourTurnsRemaining < 0 || happyHourTurnsRemaining > HAPPY_HOUR_TURNS) {
+            throw new IllegalArgumentException(
+                    "Happy Hour turns remaining must be 0 to " + HAPPY_HOUR_TURNS + ": "
+                            + happyHourTurnsRemaining);
+        }
+        if (happyHourTurnsRemaining > 0 && !happyHourUsed) {
+            throw new IllegalArgumentException("Happy Hour cannot be active before it has been used");
         }
         waitingCustomerIds = List.copyOf(required(waitingCustomerIds, "waitingCustomerIds"));
         customers = List.copyOf(required(customers, "customers"));

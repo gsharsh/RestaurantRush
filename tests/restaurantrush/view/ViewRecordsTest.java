@@ -28,6 +28,7 @@ public final class ViewRecordsTest {
         testCustomerViewValidation();
         testSnapshotCopiesLists();
         testSnapshotValidation();
+        testSnapshotStage3Components();
         System.out.println("ViewRecordsTest: PASS (" + (checks - before) + " checks)");
     }
 
@@ -120,8 +121,8 @@ public final class ViewRecordsTest {
         List<CustomerView> customers = new ArrayList<>(
                 List.of(CustomerView.from(new RegularCustomer(1), null)));
         List<TableView> tables = new ArrayList<>(List.of(new TableView(1, null), new TableView(2, null)));
-        GameSnapshot snapshot = new GameSnapshot(1, 0, 0, null, waiting, customers, tables,
-                true, false, 0, 0, 0);
+        GameSnapshot snapshot = new GameSnapshot(1, 0, 0, null, waiting, customers, tables, false,
+                true, false, 0, 0, 0, 0, false);
 
         waiting.add(2);
         customers.clear();
@@ -138,26 +139,46 @@ public final class ViewRecordsTest {
     private static void testSnapshotValidation() {
         List<TableView> tables = List.of(new TableView(1, null), new TableView(2, null));
         expectIllegalArgument("turn 0",
-                () -> new GameSnapshot(0, 0, 0, null, List.of(), List.of(), tables, true, false, 0, 0, 0));
+                () -> new GameSnapshot(0, 0, 0, null, List.of(), List.of(), tables, false, true, false, 0, 0, 0, 0, false));
         expectIllegalArgument("turn 19",
-                () -> new GameSnapshot(19, 18, 0, null, List.of(), List.of(), tables, true, false, 0, 0, 0));
+                () -> new GameSnapshot(19, 18, 0, null, List.of(), List.of(), tables, false, true, false, 0, 0, 0, 0, false));
         expectIllegalArgument("negative revenue",
-                () -> new GameSnapshot(1, 0, -1, null, List.of(), List.of(), tables, true, false, 0, 0, 0));
+                () -> new GameSnapshot(1, 0, -1, null, List.of(), List.of(), tables, false, true, false, 0, 0, 0, 0, false));
         expectIllegalArgument("average without payments",
-                () -> new GameSnapshot(5, 4, 0, 80.0, List.of(), List.of(), tables, true, false, 0, 0, 0));
+                () -> new GameSnapshot(5, 4, 0, 80.0, List.of(), List.of(), tables, false, true, false, 0, 0, 0, 0, false));
         expectIllegalArgument("payments without average",
-                () -> new GameSnapshot(7, 6, 1800, null, List.of(), List.of(), tables, true, false, 1, 1, 0));
+                () -> new GameSnapshot(7, 6, 1800, null, List.of(), List.of(), tables, false, true, false, 1, 1, 0, 0, false));
         expectIllegalArgument("average above 100",
-                () -> new GameSnapshot(7, 6, 1800, 101.0, List.of(), List.of(), tables, true, false, 1, 1, 0));
+                () -> new GameSnapshot(7, 6, 1800, 101.0, List.of(), List.of(), tables, false, true, false, 1, 1, 0, 0, false));
         expectIllegalArgument("negative count",
-                () -> new GameSnapshot(1, 0, 0, null, List.of(), List.of(), tables, true, false, 0, -1, 0));
+                () -> new GameSnapshot(1, 0, 0, null, List.of(), List.of(), tables, false, true, false, 0, -1, 0, 0, false));
         expectIllegalArgument("null queue",
-                () -> new GameSnapshot(1, 0, 0, null, null, List.of(), tables, true, false, 0, 0, 0));
+                () -> new GameSnapshot(1, 0, 0, null, null, List.of(), tables, false, true, false, 0, 0, 0, 0, false));
 
-        GameSnapshot finished = new GameSnapshot(18, 18, 6300, 76.0, List.of(), List.of(), tables,
-                false, false, 4, 5, 1);
+        GameSnapshot finished = new GameSnapshot(18, 18, 6300, 76.0, List.of(), List.of(), tables, false,
+                false, false, 4, 5, 1, 0, false);
         check(finished.completedTurns() == 18 && finished.averagePaidSatisfaction() == 76.0,
                 "finished game snapshot accepted");
+    }
+
+    private static void testSnapshotStage3Components() {
+        List<TableView> tables = List.of(new TableView(1, null), new TableView(2, null));
+        GameSnapshot active = new GameSnapshot(5, 4, 0, null, List.of(), List.of(), tables,
+                true, false, false, 0, 0, 0, 2, true);
+        check(active.hostAvailable() && !active.waiterAvailable(), "Host availability is its own component");
+        check(active.happyHourTurnsRemaining() == 2 && active.happyHourUsed(), "Happy Hour components copied");
+        GameSnapshot expired = new GameSnapshot(7, 6, 0, null, List.of(), List.of(), tables,
+                true, false, false, 0, 0, 0, 0, true);
+        check(expired.happyHourTurnsRemaining() == 0 && expired.happyHourUsed(), "used but expired is valid");
+        expectIllegalArgument("3 Happy Hour turns remaining",
+                () -> new GameSnapshot(5, 4, 0, null, List.of(), List.of(), tables,
+                        true, false, false, 0, 0, 0, 3, true));
+        expectIllegalArgument("negative Happy Hour turns remaining",
+                () -> new GameSnapshot(5, 4, 0, null, List.of(), List.of(), tables,
+                        true, false, false, 0, 0, 0, -1, true));
+        expectIllegalArgument("active Happy Hour that was never used",
+                () -> new GameSnapshot(5, 4, 0, null, List.of(), List.of(), tables,
+                        true, false, false, 0, 0, 0, 1, false));
     }
 
     private static void expectIllegalArgument(String description, Runnable action) {

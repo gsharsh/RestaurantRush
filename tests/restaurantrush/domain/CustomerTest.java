@@ -546,40 +546,46 @@ public final class CustomerTest {
     }
 
     private static void testM1CollaborationThroughPayment() {
-        checkM1CollaborationThroughPayment(new RegularCustomer(3), "Regular", 1800, 8,
-                new int[] {92, 84, 76});
-        checkM1CollaborationThroughPayment(new VIPCustomer(6), "VIP", 1620, 5,
-                new int[] {95, 90, 85});
+        checkM1CollaborationThroughPayment(new RegularCustomer(4), "Regular", 2430, 8,
+                new int[] {92, 84, 76, 68}, 83);
+        checkM1CollaborationThroughPayment(new VIPCustomer(8), "VIP", 2187, 5,
+                new int[] {95, 90, 85, 80}, 95);
+        checkM1CollaborationThroughPayment(new CriticCustomer(4), "Critic", 2430, 12,
+                new int[] {88, 76, 64, 52}, 67);
     }
 
     private static void checkM1CollaborationThroughPayment(Customer customer, String expectedLabel,
-            int expectedBill, int expectedLoss, int[] expectedSatisfaction) {
-        List<MenuItem> menu = agreedMenuFixture();
+            int expectedBill, int expectedLoss, int[] expectedSatisfaction, int expectedRecoveredSatisfaction) {
+        // Reuse the collaboration scenario for three-unit combos; the earlier
+        // customer lifecycle test retains the two-unit Pasta scenario.
+        List<MenuItem> menu = comboMenuFixture();
         Runnable menuUnchanged = snapshotMenu(menu);
         int id = customer.getId();
         check(expectedLabel.equals(customer.typeLabel()), "customer label through the shared contract");
         check(customer.waitingLossPerTurn() == expectedLoss, "waiting-loss rule through the shared contract");
         customer.seat();
         MenuItem selected = customer.chooseMenuItem(menu);
-        check(selected == menu.get(2), "collaboration must use the shared Pasta offering");
+        check(selected == menu.get(3), "collaboration must use the shared combo offering");
         int quote = customer.quotePriceCents(selected);
         check(quote == expectedBill, "collaboration must use the customer's quoted bill");
         Order order = new Order(id, selected, quote);
         customer.acceptOrder(order);
         checkCustomer(customer, id, 100, CustomerStatus.SEATED, -1, -1, order);
-        checkOrder(order, id, selected, OrderStatus.PLACED, 2, expectedBill, true, false);
+        checkOrder(order, id, selected, OrderStatus.PLACED, 3, expectedBill, true, false);
 
+        for (int prepared = 1; prepared <= 3; prepared++) {
+            customer.applyWaitingLoss();
+            order.prepareOneUnit();
+            checkCustomer(customer, id, expectedSatisfaction[prepared - 1], CustomerStatus.SEATED, -1, -1, order);
+            checkOrder(order, id, selected, prepared == 3 ? OrderStatus.READY : OrderStatus.PREPARING,
+                    3 - prepared, expectedBill, prepared < 3, prepared == 3);
+        }
         customer.applyWaitingLoss();
-        order.prepareOneUnit();
-        checkCustomer(customer, id, expectedSatisfaction[0], CustomerStatus.SEATED, -1, -1, order);
-        checkOrder(order, id, selected, OrderStatus.PREPARING, 1, expectedBill, true, false);
-        customer.applyWaitingLoss();
-        order.prepareOneUnit();
-        checkCustomer(customer, id, expectedSatisfaction[1], CustomerStatus.SEATED, -1, -1, order);
+        checkCustomer(customer, id, expectedSatisfaction[3], CustomerStatus.SEATED, -1, -1, order);
         checkOrder(order, id, selected, OrderStatus.READY, 0, expectedBill, false, true);
-        customer.applyWaitingLoss();
-        int servedSatisfaction = expectedSatisfaction[2];
-        checkCustomer(customer, id, servedSatisfaction, CustomerStatus.SEATED, -1, -1, order);
+        // Explicit entity recovery while READY; active-turn scheduling belongs to M4.
+        checkSatisfactionRecovery(customer, 15, expectedRecoveredSatisfaction);
+        int servedSatisfaction = expectedRecoveredSatisfaction;
         checkOrder(order, id, selected, OrderStatus.READY, 0, expectedBill, false, true);
         expectUnchangedIllegalState("collaboration customer service before order service", customer,
                 () -> customer.markServed(9));
@@ -610,14 +616,18 @@ public final class CustomerTest {
     }
 
     private static void testM1CollaborationAbandonment() {
-        List<MenuItem> menu = agreedMenuFixture();
+        List<MenuItem> menu = comboMenuFixture();
         Runnable menuUnchanged = snapshotMenu(menu);
-        OrderStatus[] sources = {OrderStatus.PLACED, OrderStatus.PREPARING, OrderStatus.READY};
+        OrderStatus[] sources = {
+            OrderStatus.PLACED, OrderStatus.PREPARING, OrderStatus.PREPARING, OrderStatus.READY
+        };
         for (int prepared = 0; prepared < sources.length; prepared++) {
-            checkM1CollaborationAbandonment(new RegularCustomer(6), menu, prepared, sources[prepared], 92, 1800);
+            checkM1CollaborationAbandonment(new RegularCustomer(4), menu, prepared, sources[prepared], 92, 2430);
             menuUnchanged.run();
         }
-        checkM1CollaborationAbandonment(new VIPCustomer(3), menu, 2, OrderStatus.READY, 95, 1620);
+        checkM1CollaborationAbandonment(new VIPCustomer(8), menu, 3, OrderStatus.READY, 95, 2187);
+        menuUnchanged.run();
+        checkM1CollaborationAbandonment(new CriticCustomer(4), menu, 3, OrderStatus.READY, 88, 2430);
         menuUnchanged.run();
     }
 
@@ -626,7 +636,7 @@ public final class CustomerTest {
         int id = customer.getId();
         customer.seat();
         MenuItem selected = customer.chooseMenuItem(menu);
-        check(selected == menu.get(2), "abandonment must retain the selected shared offering");
+        check(selected == menu.get(3), "abandonment must retain the selected shared combo");
         int quote = customer.quotePriceCents(selected);
         check(quote == expectedBill, "abandonment must retain the customer's quoted bill");
         Order order = new Order(id, selected, quote);
@@ -636,13 +646,14 @@ public final class CustomerTest {
         }
         customer.applyWaitingLoss();
         checkCustomer(customer, id, expectedSatisfaction, CustomerStatus.SEATED, -1, -1, order);
-        checkOrder(order, id, selected, expectedStatus, 2 - prepared, expectedBill,
-                prepared < 2, prepared == 2);
+        checkOrder(order, id, selected, expectedStatus, 3 - prepared, expectedBill,
+                prepared < 3, prepared == 3);
         // Explicit entity departure; Restaurant's automatic zero-satisfaction cleanup is separate.
         customer.abandon();
         checkCustomer(customer, id, expectedSatisfaction, CustomerStatus.LEFT, -1, -1, order);
-        checkOrder(order, id, selected, OrderStatus.CANCELLED, 2 - prepared, expectedBill, false, false);
+        checkOrder(order, id, selected, OrderStatus.CANCELLED, 3 - prepared, expectedBill, false, false);
         expectCustomerNoOp(customer, customer::applyWaitingLoss);
+        expectCustomerNoOp(customer, () -> customer.recoverWaitingSatisfaction(15));
         expectUnchangedIllegalState("collaboration preparation after abandonment", customer, order::prepareOneUnit);
     }
 
@@ -685,6 +696,12 @@ public final class CustomerTest {
                 new MenuItem("Salad", 900, 1),
                 new MenuItem("Burger", 1500, 1),
                 new MenuItem("Pasta", 1800, 2)));
+    }
+
+    private static List<MenuItem> comboMenuFixture() {
+        List<MenuItem> menu = agreedMenuFixture();
+        menu.add(new ComboMeal("Salad + Pasta Combo", menu.get(0), menu.get(2)));
+        return menu;
     }
 
     private static Runnable snapshotMenu(List<MenuItem> menu) {

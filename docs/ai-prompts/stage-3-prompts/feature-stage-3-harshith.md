@@ -95,3 +95,54 @@ Each command compiled production and test sources before executing the named tes
 
 - None created for Prompt 2. Recovery changes remain uncommitted against the current branch base `ebe0062e37ee85d0b677a65803b0a2de369a3dc7`.
 - No commit, push, merge, pull request or tag mutation was performed by the assistant.
+
+## Prompt 3 — Combo selection and shared-order collaboration
+
+**Prompt**
+
+> Extend existing domain tests to verify combo selection through a local four-item menu, Regular/VIP cycling, Critic preference, and quotes of 2430/2187 cents.
+>
+> Verify one shared combo order completes three preparation units and retains its locked bill through service/payment. Check recovery before service and abandonment/cancellation preservation without duplicating earlier tests.
+>
+> Review the Happy Hour pricing handoff if its real implementation exists; otherwise mark it pending. Run affected tests, then `./test.sh`. Report findings without implementing teammate features. Stop here.
+
+**What was used or rejected**
+
+Extended the existing Regular, VIP and Critic tests with local menus containing Salad, Burger, Pasta and a `ComboMeal` built from the same Salad/Pasta instances. Regular and VIP tests verify two complete four-item cycles for IDs 1–8, original selected-item identity and unchanged menu/customer state. Literal quote expectations are 2430 cents for Regular and 2187 cents for VIP. The real Critic implementation selects the three-unit combo over the two-unit Pasta in both canonical and reordered local menus, retaining the selected instance and quoting 2430 cents. Existing base-menu rule assertions remain intact.
+
+Reused the existing `CustomerTest` collaboration helpers for Regular, VIP and Critic combo scenarios. They verify one shared `Order` and selected `MenuItem`, preparation progress 3 → 2 → 1 → 0, READY recovery of 15 before service, and the original locked quote through service, later-turn eating completion and payment. Existing snapshots check that recovery preserves order state, references and timestamps. The earlier two-unit customer lifecycle scenario remains; no separate lifecycle test harness was added.
+
+Extended the existing abandonment scenarios to combo preparation counts 0, 1, 2 and 3, including READY-but-unserved orders. Cancellation preserves item/order identity, remaining units and the locked bill. Recovery after departure is a no-op. Generic validation, arithmetic-boundary and recovery-state tests from earlier prompts were reused rather than duplicated. No domain defect requiring a production change was found; only the four existing domain test files changed during this task.
+
+**Happy Hour pricing handoff review**
+
+The real `HappyHour` implementation was absent from the current source, so its pricing review and integration tests remain pending. Source inspection confirmed the existing path: Waiter asks the customer to select and quote an item, constructs the locked-bill `Order`, and registers that shared instance; Cashier/Restaurant payment uses `order.getBillCents()` without repricing.
+
+The future real Happy Hour handoff must apply the customer discount before the active-policy discount: combined component price 2700 → combo 2430 → VIP quote 2187 → Happy Hour quote 1750 cents, then lock that final bill. This sequence is the expected contract behavior, not an observed Happy Hour result. No substitute policy was implemented. Restaurant combo registration remains with M2, and recovery timing remains with M4; local fixtures do not establish those integrations or full Stage 3 gameplay.
+
+**Files affected**
+
+- `tests/restaurantrush/domain/RegularCustomerTest.java` — local four-item cycling and combo quote
+- `tests/restaurantrush/domain/VIPCustomerTest.java` — local four-item cycling and discounted combo quote
+- `tests/restaurantrush/domain/CriticCustomerTest.java` — combo preference, quote and menu preservation
+- `tests/restaurantrush/domain/CustomerTest.java` — shared combo order, recovery and cancellation collaboration
+- This branch prompt record — Prompt 3 appended on request after implementation.
+
+**Human verification**
+
+Pending; automated results do not establish human approval. The following automated executions were observed on 2026-11-07, in the order listed; each command exited 0:
+
+| Command | Observed result |
+| --- | --- |
+| `./test.sh restaurantrush.domain.CustomerTest` | PASS — 8664 checks |
+| `./test.sh restaurantrush.domain.RegularCustomerTest` | PASS — 191 checks |
+| `./test.sh restaurantrush.domain.VIPCustomerTest` | PASS — 930 checks |
+| `./test.sh restaurantrush.domain.CriticCustomerTest` | PASS — 69 checks |
+| `./test.sh` | PASS — all 16 test classes; RestaurantStateTest reported 15 passed, 0 failed |
+
+Each command compiled production and test sources before execution. Compiler and runtime were Java 26.0.2; compilation used `--release 17`. Execution on a Java 17 runtime and full Stage 3 integration remain unverified. Final diff review found no material issues and `git diff --check` passed. These executions checked the uncommitted test changes; this subsequent prompt-record edit did not rerun them.
+
+**Related commits**
+
+- None created for Prompt 3. Test changes remain uncommitted against the current branch base `4379ca3d961c6cfd29a044754d5e1d429766da66`.
+- No commit, push, merge, pull request or tag mutation was performed by the assistant.

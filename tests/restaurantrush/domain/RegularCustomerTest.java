@@ -14,6 +14,7 @@ public final class RegularCustomerTest {
         int before = checks;
         testTypeLabelThroughCustomer();
         testRegularCustomerRules();
+        testComboMenuSelectionAndQuote();
         testCustomerRuleValidation();
         System.out.println("RegularCustomerTest: PASS (" + (checks - before) + " checks)");
     }
@@ -49,6 +50,29 @@ public final class RegularCustomerTest {
         check(maximumIdCustomer.chooseMenuItem(menu) == salad, "maximum positive ID selection");
         check(laterCustomer.quotePriceCents(new MenuItem("Salad", 0, 1)) == 0,
                 "zero menu price must be quoted unchanged");
+    }
+
+    private static void testComboMenuSelectionAndQuote() {
+        MenuItem salad = new MenuItem("Salad", 900, 1);
+        MenuItem burger = new MenuItem("Burger", 1500, 1);
+        MenuItem pasta = new MenuItem("Pasta", 1800, 2);
+        MenuItem combo = new ComboMeal("Salad + Pasta Combo", salad, pasta);
+        List<MenuItem> menu = new ArrayList<>(List.of(salad, burger, pasta, combo));
+        MenuItem[] expectedSelections = {salad, burger, pasta, combo, salad, burger, pasta, combo};
+        for (int id = 1; id <= expectedSelections.length; id++) {
+            Customer customer = new RegularCustomer(id);
+            Runnable unchanged = snapshotCustomer(customer);
+            check(customer.chooseMenuItem(menu) == expectedSelections[id - 1],
+                    "four-item menu selection identity for regular customer " + id);
+            unchanged.run();
+            check(menu.size() == 4 && menu.get(0) == salad && menu.get(1) == burger
+                    && menu.get(2) == pasta && menu.get(3) == combo,
+                    "selection must preserve the four-item menu and its object identities");
+        }
+        Customer customer = new RegularCustomer(4);
+        Runnable unchanged = snapshotCustomer(customer);
+        check(customer.quotePriceCents(combo) == 2430, "regular customer quotes the full combo price");
+        unchanged.run();
     }
 
     private static void testCustomerRuleValidation() {

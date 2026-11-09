@@ -6,9 +6,11 @@ import restaurantrush.boundary.RestaurantCLI;
 import restaurantrush.control.ArrivalSchedule;
 import restaurantrush.control.GameController;
 import restaurantrush.control.TurnManager;
+import restaurantrush.domain.HappyHour;
 import restaurantrush.domain.Restaurant;
 import restaurantrush.staff.Cashier;
 import restaurantrush.staff.Chef;
+import restaurantrush.staff.Host;
 import restaurantrush.staff.Waiter;
 
 /**
@@ -24,10 +26,12 @@ public final class RestaurantRushApp {
         Restaurant restaurant = new Restaurant();
         ArrivalSchedule arrivals = new ArrivalSchedule();
         Cashier cashier = new Cashier();
-        TurnManager turnManager = new TurnManager(cashier, arrivals);
-        Waiter waiter = new Waiter();
+        HappyHour happyHour = new HappyHour();
+        TurnManager turnManager = new TurnManager(cashier, arrivals, happyHour);
+        Waiter waiter = new Waiter(happyHour);
         Chef chef = new Chef();
-        GameController controller = new GameController(restaurant, turnManager, waiter, chef);
+        Host host = new Host();
+        GameController controller = new GameController(restaurant, turnManager, host, waiter, chef);
 
         RestaurantCLI cli = new RestaurantCLI(controller, new Scanner(System.in), System.out);
         cli.run();

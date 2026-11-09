@@ -10,10 +10,12 @@ import restaurantrush.control.ArrivalSchedule;
 import restaurantrush.control.GameController;
 import restaurantrush.control.TurnManager;
 import restaurantrush.domain.CustomerStatus;
+import restaurantrush.domain.HappyHour;
 import restaurantrush.domain.OrderStatus;
 import restaurantrush.domain.Restaurant;
 import restaurantrush.staff.Cashier;
 import restaurantrush.staff.Chef;
+import restaurantrush.staff.Host;
 import restaurantrush.staff.Waiter;
 import restaurantrush.view.CustomerView;
 import restaurantrush.view.GameSnapshot;
@@ -58,7 +60,7 @@ public final class RestaurantCLITest {
             GameSnapshot snapshot = victory
                     ? new GameSnapshot(18, 18, 6300, 76.0, List.of(), List.of(),
                             List.of(new TableView(1, null), new TableView(2, null)),
-                            false, false, 4, 5, 1)
+                            false, false, false, 4, 5, 1, 0, false)
                     : emptySnapshot(18, 18);
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             try (Scanner input = new Scanner("");
@@ -92,7 +94,7 @@ public final class RestaurantCLITest {
                 new CustomerView(2, "VIP", 100, CustomerStatus.WAITING, null, null, null, null),
                 new CustomerView(4, "Critic", 88, CustomerStatus.WAITING, null, null, null, null));
         GameSnapshot snapshot = new GameSnapshot(10, 9, 900, 84.0, List.of(2, 4), customers,
-                List.of(new TableView(1, 1), new TableView(2, null)), true, false, 1, 1, 0);
+                List.of(new TableView(1, 1), new TableView(2, null)), true, false, false, 1, 1, 0, 0, false);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try (Scanner input = new Scanner("");
                 PrintStream output = new PrintStream(bytes, true, StandardCharsets.UTF_8)) {
@@ -113,17 +115,19 @@ public final class RestaurantCLITest {
         Restaurant restaurant = new Restaurant();
         ArrivalSchedule arrivals = new ArrivalSchedule();
         Cashier cashier = new Cashier();
-        TurnManager turnManager = new TurnManager(cashier, arrivals);
-        Waiter waiter = new Waiter();
+        HappyHour happyHour = new HappyHour();
+        TurnManager turnManager = new TurnManager(cashier, arrivals, happyHour);
+        Waiter waiter = new Waiter(happyHour);
         Chef chef = new Chef();
-        GameController controller = new GameController(restaurant, turnManager, waiter, chef);
+        Host host = new Host();
+        GameController controller = new GameController(restaurant, turnManager, host, waiter, chef);
         return new RestaurantCLI(controller, input, output);
     }
 
     private static GameSnapshot emptySnapshot(int turn, int completedTurns) {
         return new GameSnapshot(turn, completedTurns, 0, null, List.of(), List.of(),
                 List.of(new TableView(1, null), new TableView(2, null)),
-                false, false, 0, 0, 0);
+                false, false, false, 0, 0, 0, 0, false);
     }
 
     private static void expectIllegalArgument(String description, Runnable action) {

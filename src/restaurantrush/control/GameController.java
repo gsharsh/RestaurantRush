@@ -2,6 +2,7 @@ package restaurantrush.control;
 
 import restaurantrush.domain.ActionResult;
 import restaurantrush.domain.Restaurant;
+import restaurantrush.staff.Host;
 import restaurantrush.staff.Waiter;
 import restaurantrush.staff.Chef;
 import restaurantrush.view.GameSnapshot;
@@ -14,7 +15,7 @@ import java.util.List;
  *
  * OOP principles applied:
  * - Encapsulation: Private fields, controlled public interface
- * - Composition: Has-a relationships with dependencies (Restaurant, TurnManager, Waiter, Chef)
+ * - Composition: Has-a relationships with dependencies (Restaurant, TurnManager, Host, Waiter, Chef)
  * - Delegation: Forwards domain operations to specialists, doesn't duplicate logic
  * - Single Responsibility: Orchestrates flow, validates staff availability, not domain rules
  * - Dependency Injection: All collaborators provided via constructor
@@ -24,6 +25,7 @@ import java.util.List;
 public final class GameController {
     private final Restaurant restaurant;
     private final TurnManager turnManager;
+    private final Host host;
     private final Waiter waiter;
     private final Chef chef;
 
@@ -32,16 +34,20 @@ public final class GameController {
      *
      * @param restaurant non-null shared domain state
      * @param turnManager non-null sole turn-phase authority
+     * @param host non-null host service
      * @param waiter non-null waiter service
      * @param chef non-null chef service
      * @throws IllegalArgumentException if any parameter is null
      */
-    public GameController(Restaurant restaurant, TurnManager turnManager, Waiter waiter, Chef chef) {
+    public GameController(Restaurant restaurant, TurnManager turnManager, Host host, Waiter waiter, Chef chef) {
         if (restaurant == null) {
             throw new IllegalArgumentException("restaurant must not be null");
         }
         if (turnManager == null) {
             throw new IllegalArgumentException("turnManager must not be null");
+        }
+        if (host == null) {
+            throw new IllegalArgumentException("host must not be null");
         }
         if (waiter == null) {
             throw new IllegalArgumentException("waiter must not be null");
@@ -51,22 +57,64 @@ public final class GameController {
         }
         this.restaurant = restaurant;
         this.turnManager = turnManager;
+        this.host = host;
         this.waiter = waiter;
         this.chef = chef;
     }
 
     /**
-     * Start a new turn by delegating to TurnManager.
+     * Start a new turn by delegating to TurnManager with Happy Hour activation decision.
      * Must be called before CLI displays the turn.
      *
+     * @param activateHappyHour true to attempt Happy Hour activation this turn
      * @throws IllegalStateException if turn cannot be started (already started, finished, or other lifecycle violation)
      */
-    public void startTurn() {
-        turnManager.beginTurn(restaurant);
+    public ActionResult startTurn(boolean activateHappyHour) {
+        try {
+            turnManager.beginTurn(restaurant, activateHappyHour);
+            return ActionResult.ok("Turn started");
+        } catch (IllegalStateException e) {
+            return ActionResult.fail(e.getMessage());
+        }
     }
 
     /**
-     * Attempt to seat a customer.
+     * Attempt to seat a customer using the Host.
+     * Fails if Host choice is unavailable; otherwise delegates and records the choice only on success.
+     *
+     * @param customerId the customer to seat
+     * @param tableId the table to seat them at
+     * @return ActionResult indicating success/failure
+     */
+    public ActionResult seatCustomerWithHost(int customerId, int tableId) {
+        if (!turnManager.canAssignHost()) {
+            return ActionResult.fail("Host choice is unavailable this turn");
+        }
+
+        ActionResult result = host.seat(restaurant, customerId, tableId);
+        if (result.success()) {
+            turnManager.recordHostTask();
+        }
+        return result;
+    }
+
+    /**
+     * Consume the Host choice without taking action.
+     * Fails without mutation if choice is unavailable.
+     *
+     * @return ActionResult indicating success/failure
+     */
+    public ActionResult waitHost() {
+        if (!turnManager.canAssignHost()) {
+            return ActionResult.fail("Host choice is unavailable this turn");
+        }
+
+        turnManager.recordHostTask();
+        return ActionResult.ok("Host skipped this turn");
+    }
+
+    /**
+     * Attempt to seat a customer using the Waiter.
      * Fails if Waiter choice is unavailable; otherwise delegates and records the choice only on success.
      *
      * @param customerId the customer to seat
@@ -87,7 +135,7 @@ public final class GameController {
 
     /**
      * Attempt to take a customer's order.
-     * Fails if Waiter choice is unavailable; otherwise delegates and records the choice only on success.
+     * Fails if Waiter choice is unavailable; otherwise delegates with current turn and records the choice only on success.
      *
      * @param customerId the customer to take order from
      * @return ActionResult indicating success/failure
@@ -97,7 +145,7 @@ public final class GameController {
             return ActionResult.fail("Waiter choice is unavailable this turn");
         }
 
-        ActionResult result = waiter.takeOrder(restaurant, customerId);
+        ActionResult result = waiter.takeOrder(restaurant, customerId, turnManager.getCurrentTurn());
         if (result.success()) {
             turnManager.recordWaiterTask();
         }
@@ -231,6 +279,8 @@ public final class GameController {
         int paidCount = restaurant.getPaidCount();
         int servedCount = restaurant.getServedCount();
         int abandonedCount = restaurant.getAbandonedCount();
+        int happyHourTurnsRemaining = turnManager.getHappyHourTurnsRemaining();
+        boolean happyHourUsed = turnManager.hasHappyHourBeenActivated();
 
         return new GameSnapshot(
             turn,
@@ -246,8 +296,8 @@ public final class GameController {
             paidCount,
             servedCount,
             abandonedCount,
-            turnManager.getHappyHourTurnsRemaining(),
-            turnManager.hasHappyHourBeenActivated()
+            happyHourTurnsRemaining,
+            happyHourUsed
         );
     }
 

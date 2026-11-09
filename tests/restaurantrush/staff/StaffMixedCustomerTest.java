@@ -62,8 +62,8 @@ public final class StaffMixedCustomerTest {
         other.addArrival(critic);
         seatAndOrder(waiter, other, 4, 1);
         Order criticOrder = critic.getOrder();
-        check(criticOrder.getItem().getName().equals("Pasta"), "Critic chooses the most-prep item");
-        check(criticOrder.getBillCents() == 1800, "Critic pays full Pasta price");
+        check(criticOrder.getItem().getName().equals("Salad + Pasta Combo"), "Critic chooses the most-prep item");
+        check(criticOrder.getBillCents() == 2430, "Critic pays full combo price");
         check(criticOrder.getStatus() == OrderStatus.PLACED, "new orders start PLACED");
     }
 
@@ -84,7 +84,7 @@ public final class StaffMixedCustomerTest {
         check(vip.getSatisfaction() == 95 && critic.getSatisfaction() == 88, "type-specific loss");
 
         cook(chef, restaurant, 2, 1);
-        cook(chef, restaurant, 4, 2);
+        cook(chef, restaurant, 4, 3);
         check(restaurant.getRevenueCents() == 0 && restaurant.getPaidCount() == 0,
                 "nothing counts before payment");
         expectOk(waiter.serve(restaurant, 2, 3));
@@ -98,7 +98,7 @@ public final class StaffMixedCustomerTest {
         check(restaurant.getPaidSatisfactionTotal() == 95, "VIP satisfaction recorded at payment");
         check(restaurant.findTableForCustomer(2) == null, "VIP table released");
         check(cashier.collectOne(restaurant, 6), "Critic pays next turn");
-        check(restaurant.getRevenueCents() == 1350 + 1800, "revenue sums the locked bills");
+        check(restaurant.getRevenueCents() == 1350 + 2430, "revenue sums the locked bills");
         check(restaurant.getPaidCount() == 2, "two payments");
         check(restaurant.getPaidSatisfactionTotal() == 95 + 88, "satisfaction total");
         check(restaurant.getAveragePaidSatisfaction() == (95 + 88) / 2.0, "average at payment");
@@ -190,9 +190,9 @@ public final class StaffMixedCustomerTest {
         restaurant.addArrival(vip);
 
         seatAndOrder(waiter, restaurant, 4, 1);
-        cook(chef, restaurant, 4, 2);
+        cook(chef, restaurant, 4, 3);
         Order criticOrder = critic.getOrder();
-        check(criticOrder.getStatus() == OrderStatus.READY, "Critic's Pasta is READY but unserved");
+        check(criticOrder.getStatus() == OrderStatus.READY, "Critic's combo is READY but unserved");
         for (int turn = 0; turn < 9; turn++) {
             critic.applyWaitingLoss();
         }
@@ -232,7 +232,7 @@ public final class StaffMixedCustomerTest {
 
         seatAndOrder(waiter, restaurant, 4, 1);
         seatAndOrder(waiter, restaurant, 2, 2);
-        cook(chef, restaurant, 4, 2);
+        cook(chef, restaurant, 4, 3);
         cook(chef, restaurant, 2, 1);
         expectOk(waiter.serve(restaurant, 4, 3));
         expectOk(waiter.serve(restaurant, 2, 3));
@@ -245,7 +245,7 @@ public final class StaffMixedCustomerTest {
         check(critic.getStatus() == CustomerStatus.READY_TO_PAY, "Critic waits");
         check(!cashier.collectOne(restaurant, 5), "only one payment per turn");
         check(cashier.collectOne(restaurant, 6), "Critic pays next turn");
-        check(restaurant.getRevenueCents() == 1350 + 1800, "locked bills collected");
+        check(restaurant.getRevenueCents() == 1350 + 2430, "locked bills collected");
     }
 
     private static void testStaffTimingRulesWithMixedCustomers() {

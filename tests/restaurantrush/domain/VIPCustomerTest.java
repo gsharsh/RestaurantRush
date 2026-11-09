@@ -17,6 +17,7 @@ public final class VIPCustomerTest {
         testWaitingLossBounds();
         testNoWaitingLossAfterDeparture();
         testCyclicSelection();
+        testComboMenuSelectionAndQuote();
         testCustomReorderedAndImmutableMenus();
         testRuleValidation();
         testBaseMenuQuotes();
@@ -92,6 +93,21 @@ public final class VIPCustomerTest {
             Customer customer = new VIPCustomer(ids[index]);
             checkSelection(customer, menu, expected[index]);
         }
+    }
+
+    private static void testComboMenuSelectionAndQuote() {
+        MenuItem salad = new MenuItem("Salad", 900, 1);
+        MenuItem burger = new MenuItem("Burger", 1500, 1);
+        MenuItem pasta = new MenuItem("Pasta", 1800, 2);
+        MenuItem combo = new ComboMeal("Salad + Pasta Combo", salad, pasta);
+        List<MenuItem> menu = new ArrayList<>(List.of(salad, burger, pasta, combo));
+        MenuItem[] expectedSelections = {salad, burger, pasta, combo, salad, burger, pasta, combo};
+        for (int id = 1; id <= expectedSelections.length; id++) {
+            Customer customer = new VIPCustomer(id);
+            checkSelection(customer, menu, expectedSelections[id - 1]);
+        }
+        Customer customer = new VIPCustomer(4);
+        checkQuote(customer, combo, 2187);
     }
 
     private static void testCustomReorderedAndImmutableMenus() {

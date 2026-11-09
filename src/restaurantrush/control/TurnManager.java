@@ -1,5 +1,6 @@
 package restaurantrush.control;
 
+import restaurantrush.domain.HappyHour;
 import restaurantrush.domain.Restaurant;
 import restaurantrush.staff.Cashier;
 
@@ -17,6 +18,7 @@ public final class TurnManager {
 
     private int currentTurn;
     private int completedTurns;
+    private boolean hostTaskUsed;
     private boolean waiterTaskUsed;
     private boolean chefTaskUsed;
     private boolean turnStarted;
@@ -25,26 +27,33 @@ public final class TurnManager {
 
     private final Cashier cashier;
     private final ArrivalSchedule arrivals;
+    private final HappyHour happyHour;
 
     /**
      * Constructs a new TurnManager.
      *
      * @param cashier non-null automatic payment handler
      * @param arrivals non-null customer arrival schedule
-     * @throws IllegalArgumentException if either parameter is null
+     * @param happyHour non-null shared Happy Hour policy
+     * @throws IllegalArgumentException if any parameter is null
      */
-    public TurnManager(Cashier cashier, ArrivalSchedule arrivals) {
+    public TurnManager(Cashier cashier, ArrivalSchedule arrivals, HappyHour happyHour) {
         if (cashier == null) {
             throw new IllegalArgumentException("cashier must not be null");
         }
         if (arrivals == null) {
             throw new IllegalArgumentException("arrivals must not be null");
         }
+        if (happyHour == null) {
+            throw new IllegalArgumentException("happyHour must not be null");
+        }
         this.cashier = cashier;
         this.arrivals = arrivals;
+        this.happyHour = happyHour;
 
         this.currentTurn = 1;
         this.completedTurns = 0;
+        this.hostTaskUsed = false;
         this.waiterTaskUsed = false;
         this.chefTaskUsed = false;
         this.turnStarted = false;
@@ -53,19 +62,25 @@ public final class TurnManager {
     }
 
     /**
-     * Begin a new turn after successfully adding any scheduled arrival.
-     * A rejected arrival leaves the turn state unchanged.
+     * Begin a new turn after attempting to activate Happy Hour, adding any scheduled arrival,
+     * and recovering waiting/seated customer satisfaction if Happy Hour is active.
+     * A rejected arrival or failed activation leaves the turn state unchanged.
      *
      * @param restaurant non-null domain state
+     * @param activateHappyHour true to attempt activation this turn
      * @throws IllegalArgumentException if restaurant is null
-     * @throws IllegalStateException if turn already started, or game is finished
+     * @throws IllegalStateException if turn already started, finished, or Happy Hour already activated
      */
-    public void beginTurn(Restaurant restaurant) {
+    public void beginTurn(Restaurant restaurant, boolean activateHappyHour) {
         if (restaurant == null) {
             throw new IllegalArgumentException("restaurant must not be null");
         }
         if (turnStarted || finished) {
             throw new IllegalStateException("cannot begin turn: already started or finished");
+        }
+
+        if (activateHappyHour && happyHour.hasBeenActivated()) {
+            throw new IllegalStateException("Happy Hour has already been activated");
         }
 
         // Add scheduled arrival if any
@@ -74,19 +89,41 @@ public final class TurnManager {
             restaurant.addArrival(arrival);
         }
 
+        // Attempt activation before marking turn as started
+        if (activateHappyHour) {
+            happyHour.activate(currentTurn);
+        }
+
         turnStarted = true;
+        hostTaskUsed = false;
         waiterTaskUsed = false;
         chefTaskUsed = false;
         turnResolved = false;
+
+        // Apply customer recovery if Happy Hour is now active
+        if (happyHour.remainingTurns(currentTurn) > 0) {
+            for (var customer : restaurant.getActiveCustomers()) {
+                customer.recoverWaitingSatisfaction(15);
+            }
+        }
+    }
+
+    /**
+     * Check if the Host choice is available this turn.
+     *
+     * @return true only if turn is active, unresolved, and Host choice unused
+     */
+    public boolean canAssignHost() {
+        return turnStarted && !turnResolved && !hostTaskUsed;
     }
 
     /**
      * Check if the Waiter choice is available this turn.
      *
-     * @return true only if turn is active, unresolved, and Waiter choice unused
+     * @return true only if Host has acted and Waiter choice is unused
      */
     public boolean canAssignWaiter() {
-        return turnStarted && !turnResolved && !waiterTaskUsed;
+        return turnStarted && !turnResolved && hostTaskUsed && !waiterTaskUsed;
     }
 
     /**
@@ -96,6 +133,18 @@ public final class TurnManager {
      */
     public boolean canAssignChef() {
         return turnStarted && !turnResolved && waiterTaskUsed && !chefTaskUsed;
+    }
+
+    /**
+     * Record that the Host choice was used.
+     *
+     * @throws IllegalStateException if Host choice is not available
+     */
+    public void recordHostTask() {
+        if (!canAssignHost()) {
+            throw new IllegalStateException("cannot record Host task: not available");
+        }
+        hostTaskUsed = true;
     }
 
     /**
@@ -136,7 +185,7 @@ public final class TurnManager {
         if (!turnStarted || turnResolved) {
             throw new IllegalStateException("cannot resolve turn: not started or already resolved");
         }
-        if (!waiterTaskUsed || !chefTaskUsed) {
+        if (!hostTaskUsed || !waiterTaskUsed || !chefTaskUsed) {
             throw new IllegalStateException("cannot resolve turn: tasks not completed");
         }
 
@@ -204,5 +253,27 @@ public final class TurnManager {
      */
     public boolean isFinished() {
         return finished;
+    }
+
+    /**
+     * Check if Happy Hour has been activated at any point.
+     *
+     * @return true if Happy Hour was activated, false otherwise
+     */
+    public boolean hasHappyHourBeenActivated() {
+        return happyHour.hasBeenActivated();
+    }
+
+    /**
+     * Get the remaining turns of Happy Hour on the current turn.
+     * Returns 0 once the game is finished.
+     *
+     * @return 2 on activation turn, 1 on next turn, 0 otherwise
+     */
+    public int getHappyHourTurnsRemaining() {
+        if (finished) {
+            return 0;
+        }
+        return happyHour.remainingTurns(currentTurn);
     }
 }

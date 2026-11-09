@@ -120,9 +120,10 @@ public final class CriticCustomerTest {
         restaurant.seat(1, 1);
         MenuItem item = critic.chooseMenuItem(restaurant.getMenu());
         restaurant.registerOrder(1, new Order(1, item, critic.quotePriceCents(item)));
-        critic.getOrder().prepareOneUnit();
-        critic.getOrder().prepareOneUnit();
-        restaurant.serve(1, 3);
+        while (critic.getOrder().canPrepare()) {
+            critic.getOrder().prepareOneUnit();
+        }
+        restaurant.serve(1, 4);
         int before = critic.getSatisfaction();
         critic.applyWaitingLoss();
         check(critic.getSatisfaction() == before, "no loss while eating");
@@ -135,19 +136,20 @@ public final class CriticCustomerTest {
         check(restaurant.seat(4, 2).success(), "seat");
         critic.applyWaitingLoss();
         MenuItem item = critic.chooseMenuItem(restaurant.getMenu());
-        check(item.getName().equals("Pasta"), "the Critic orders Pasta from the real menu");
+        check(item == restaurant.getMenu().get(3), "the Critic orders the combo from the real menu");
+        check(item.getPreparationUnits() == 3 && item.getPriceCents() == 2430, "combo takes 3 units and costs 2430");
         Order order = new Order(4, item, critic.quotePriceCents(item));
         check(restaurant.registerOrder(4, order).success(), "order registered");
-        order.prepareOneUnit();
-        critic.applyWaitingLoss();
-        order.prepareOneUnit();
-        critic.applyWaitingLoss();
-        check(critic.getSatisfaction() == 64, "three waiting turns at 12 each");
-        check(restaurant.serve(4, 4).success(), "served once READY");
-        critic.finishEating(5);
-        check(restaurant.recordPayment(critic, 6), "paid on the following turn");
-        check(restaurant.getRevenueCents() == 1800, "full Pasta price added to revenue");
-        check(restaurant.getPaidSatisfactionTotal() == 64, "satisfaction recorded at payment");
+        for (int unit = 0; unit < 3; unit++) {
+            order.prepareOneUnit();
+            critic.applyWaitingLoss();
+        }
+        check(critic.getSatisfaction() == 52, "four waiting turns at 12 each");
+        check(restaurant.serve(4, 5).success(), "served once READY");
+        critic.finishEating(6);
+        check(restaurant.recordPayment(critic, 7), "paid on the following turn");
+        check(restaurant.getRevenueCents() == 2430, "full combo price added to revenue");
+        check(restaurant.getPaidSatisfactionTotal() == 52, "satisfaction recorded at payment");
         check(restaurant.findTable(2).isAvailable(), "table freed after payment");
     }
 

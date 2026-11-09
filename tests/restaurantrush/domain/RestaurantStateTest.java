@@ -13,7 +13,7 @@ public final class RestaurantStateTest {
     public static void main(String[] args) {
         run("Table starts free and validates its ID", RestaurantStateTest::tableBasics);
         run("Table rejects double assign and empty release", RestaurantStateTest::tableGuards);
-        run("Restaurant starts with 2 tables, 3-item menu, zero totals", RestaurantStateTest::initialState);
+        run("Restaurant starts with 2 tables, 4-item menu with combo, zero totals", RestaurantStateTest::initialState);
         run("addArrival keeps queue order and rejects duplicates", RestaurantStateTest::arrivals);
         run("seat moves customer from queue to table", RestaurantStateTest::seatSuccess);
         run("invalid seat requests change nothing", RestaurantStateTest::seatFailuresPreserveState);
@@ -59,10 +59,15 @@ public final class RestaurantStateTest {
         check(r.getTables().size() == 2, "two tables");
         check(r.getTables().get(0).getId() == 1 && r.getTables().get(1).getId() == 2, "table IDs 1, 2");
         List<MenuItem> menu = r.getMenu();
-        check(menu.size() == 3, "three menu items");
+        check(menu.size() == 4, "four menu items");
         checkItem(menu.get(0), "Salad", 900, 1);
         checkItem(menu.get(1), "Burger", 1500, 1);
         checkItem(menu.get(2), "Pasta", 1800, 2);
+        checkItem(menu.get(3), "Salad + Pasta Combo", 2430, 3);
+        check(menu.get(3) instanceof ComboMeal combo
+                && combo.getFirst() == menu.get(0) && combo.getSecond() == menu.get(2),
+                "combo reuses the menu's own Salad and Pasta objects");
+        check(r.getMenu() == menu || r.getMenu().equals(menu), "menu is stable across calls");
         check(r.getRevenueCents() == 0 && r.getPaidCount() == 0 && r.getServedCount() == 0
                 && r.getAbandonedCount() == 0, "zero totals");
         check(r.getAveragePaidSatisfaction() == 0.0, "average is 0.0 before payments");

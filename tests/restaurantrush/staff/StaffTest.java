@@ -183,11 +183,13 @@ public final class StaffTest {
         expectOk(waiter.seat(restaurant, 1, 1));
         expectOk(waiter.takeOrder(restaurant, 1));
         Order order = special.getOrder();
-        check(order.getItem() == restaurant.getMenu().get(2), "subtype's own food choice is used");
+        check(order.getItem() == restaurant.getMenu().get(restaurant.getMenu().size() - 1),
+                "subtype's own food choice is used");
         check(order.getBillCents() == order.getItem().getPriceCents() / 2,
                 "subtype's own price is locked into the order");
-        expectOk(chef.prepareOneUnit(order));
-        expectOk(chef.prepareOneUnit(order));
+        while (order.canPrepare()) {
+            expectOk(chef.prepareOneUnit(order));
+        }
         expectOk(waiter.serve(restaurant, 1, 2));
         special.finishEating(3);
         check(cashier.collectOne(restaurant, 4), "cashier pays the subtype");

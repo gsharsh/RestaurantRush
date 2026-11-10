@@ -7,12 +7,14 @@ import java.util.function.Supplier;
 import restaurantrush.domain.ActionResult;
 import restaurantrush.domain.Customer;
 import restaurantrush.domain.CustomerStatus;
+import restaurantrush.domain.HappyHour;
 import restaurantrush.domain.MenuItem;
 import restaurantrush.domain.Order;
 import restaurantrush.domain.OrderStatus;
 import restaurantrush.domain.Restaurant;
 import restaurantrush.staff.Cashier;
 import restaurantrush.staff.Chef;
+import restaurantrush.staff.Host;
 import restaurantrush.staff.Waiter;
 import restaurantrush.view.CustomerView;
 import restaurantrush.view.GameSnapshot;
@@ -35,10 +37,11 @@ public final class GameControllerTest {
 
     private static void testConstructorNulls() {
         Fixture f = new Fixture();
-        expectIllegalArgument(() -> new GameController(null, f.manager, f.waiter, f.chef));
-        expectIllegalArgument(() -> new GameController(f.restaurant, null, f.waiter, f.chef));
-        expectIllegalArgument(() -> new GameController(f.restaurant, f.manager, null, f.chef));
-        expectIllegalArgument(() -> new GameController(f.restaurant, f.manager, f.waiter, null));
+        expectIllegalArgument(() -> new GameController(null, f.manager, f.host, f.waiter, f.chef));
+        expectIllegalArgument(() -> new GameController(f.restaurant, null, f.host, f.waiter, f.chef));
+        expectIllegalArgument(() -> new GameController(f.restaurant, f.manager, null, f.waiter, f.chef));
+        expectIllegalArgument(() -> new GameController(f.restaurant, f.manager, f.host, null, f.chef));
+        expectIllegalArgument(() -> new GameController(f.restaurant, f.manager, f.host, f.waiter, null));
     }
 
     private static void testActionsRetriesAndStaffLimits() {
@@ -50,16 +53,23 @@ public final class GameControllerTest {
         failedUnchanged(f, f.controller::waitWaiter, "Waiter wait before start");
         failedUnchanged(f, f.controller::waitChef, "Chef wait before start");
 
-        f.controller.startTurn();
+        ActionResult turnStart = f.controller.startTurn(false);
+        check(turnStart.success(), "startTurn succeeded");
         GameSnapshot arrival = f.controller.getSnapshot();
         equal(List.of(1), arrival.waitingCustomerIds(), "arrival appears before manager choices");
         equal(new CustomerView(1, "Regular", 100, CustomerStatus.WAITING, null, null, null, null),
                 arrival.customers().get(0), "start snapshot includes fresh arrival");
         check(arrival.averagePaidSatisfaction() == null, "no paid average before payment");
-        check(arrival.waiterAvailable() && !arrival.chefAvailable(), "Waiter chooses first");
+        check(arrival.hostAvailable() && !arrival.waiterAvailable() && !arrival.chefAvailable(), "Host chooses first");
 
-        failedUnchanged(f, () -> f.controller.prepareOrder(1), "Chef cannot act before Waiter");
-        failedUnchanged(f, f.controller::waitChef, "Chef cannot wait before Waiter");
+        failedUnchanged(f, () -> f.controller.seatCustomer(99, 1), "Waiter cannot act before Host");
+        failedUnchanged(f, () -> f.controller.takeOrder(1), "Waiter cannot act before Host");
+        failedUnchanged(f, () -> f.controller.serveOrder(1), "Waiter cannot act before Host");
+        failedUnchanged(f, f.controller::waitWaiter, "Waiter cannot act before Host");
+        failedUnchanged(f, () -> f.controller.prepareOrder(1), "Chef cannot act before Host");
+        failedUnchanged(f, f.controller::waitChef, "Chef cannot act before Host");
+        succeeded(f.controller.waitHost(), "Host can wait");
+        check(!f.manager.canAssignHost() && f.manager.canAssignWaiter() && !f.manager.canAssignChef(), "wait Host consumes Host choice");
         failedUnchanged(f, () -> f.controller.seatCustomer(99, 1), "unknown customer");
         failedUnchanged(f, () -> f.controller.seatCustomer(1, 99), "unknown table");
         failedUnchanged(f, () -> f.controller.takeOrder(99), "unknown ordering customer");
@@ -67,7 +77,7 @@ public final class GameControllerTest {
         failedUnchanged(f, () -> f.controller.serveOrder(99), "unknown service customer");
         failedUnchanged(f, () -> f.controller.serveOrder(1), "queued customer cannot be served");
         succeeded(f.controller.seatCustomer(1, 1), "valid seat after failed attempts");
-        check(!f.manager.canAssignWaiter() && f.manager.canAssignChef(), "seat consumes only Waiter");
+        check(!f.manager.canAssignHost() && !f.manager.canAssignWaiter() && f.manager.canAssignChef(), "seat consumes only Waiter");
         rejectWaiterChoices(f);
         failedUnchanged(f, () -> f.controller.prepareOrder(99), "unknown cooking customer");
         failedUnchanged(f, () -> f.controller.prepareOrder(1), "customer has no order");
@@ -77,7 +87,8 @@ public final class GameControllerTest {
         equal(92, f.restaurant.findCustomer(1).getSatisfaction(), "one end-of-turn waiting penalty");
         equal(1, f.controller.getSnapshot().completedTurns(), "one completed turn");
 
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host waits");
         failedUnchanged(f, () -> f.controller.seatCustomer(1, 2), "cannot seat twice");
         failedUnchanged(f, () -> f.controller.serveOrder(1), "no order to serve");
         succeeded(f.controller.takeOrder(1), "valid order after failed attempts");
@@ -88,7 +99,8 @@ public final class GameControllerTest {
         f.controller.finishTurn();
         equal(84, f.restaurant.findCustomer(1).getSatisfaction(), "READY but unserved still loses satisfaction");
 
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host waits");
         failedUnchanged(f, () -> f.controller.takeOrder(1), "duplicate order");
         succeeded(f.controller.serveOrder(1), "serve on a later turn");
         rejectWaiterChoices(f);
@@ -97,7 +109,8 @@ public final class GameControllerTest {
         f.controller.finishTurn();
         equal(CustomerStatus.EATING, f.restaurant.findCustomer(1).getStatus(), "no same-turn eating completion");
 
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host waits");
         failedUnchanged(f, () -> f.controller.seatCustomer(2, 1), "occupied table");
         succeeded(f.controller.seatCustomer(2, 2), "valid free table remains selectable");
         succeeded(f.controller.waitChef(), "Chef waits");
@@ -117,7 +130,9 @@ public final class GameControllerTest {
 
     private static void testWaitConsumesBothChoices() {
         Fixture f = new Fixture();
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host explicitly waits");
+        check(f.manager.canAssignWaiter(), "Host wait unlocks Waiter");
         succeeded(f.controller.waitWaiter(), "Waiter explicitly waits");
         rejectWaiterChoices(f);
         check(f.manager.canAssignChef(), "Waiter wait unlocks Chef");
@@ -125,18 +140,21 @@ public final class GameControllerTest {
         rejectChefChoices(f, 1);
         equal(100, f.restaurant.findCustomer(1).getSatisfaction(), "choices do not resolve a turn");
         f.controller.finishTurn();
-        equal(92, f.restaurant.findCustomer(1).getSatisfaction(), "resolution happens once after both waits");
+        equal(92, f.restaurant.findCustomer(1).getSatisfaction(), "resolution happens once after all waits");
 
         // A READY order is a legal domain object, but an invalid Chef target.
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host waits");
         succeeded(f.controller.seatCustomer(1, 1), "seat on turn two");
         succeeded(f.controller.waitChef(), "no order yet");
         f.controller.finishTurn();
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host waits");
         succeeded(f.controller.takeOrder(1), "order on turn three");
         succeeded(f.controller.prepareOrder(1), "finish Salad");
         f.controller.finishTurn();
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host waits");
         succeeded(f.controller.waitWaiter(), "leave READY order unserved");
         failedUnchanged(f, () -> f.controller.prepareOrder(1), "READY order cannot be cooked again");
         succeeded(f.controller.waitChef(), "READY rejection preserves Chef choice");
@@ -148,15 +166,17 @@ public final class GameControllerTest {
         for (int turn = 1; turn < 7; turn++) {
             waitTurn(f);
         }
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
         Customer pastaCustomer = f.restaurant.findCustomer(3);
         equal(100, pastaCustomer.getSatisfaction(), "turn-seven arrival starts at 100");
+        succeeded(f.controller.waitHost(), "Host waits");
         succeeded(f.controller.seatCustomer(3, 1), "seat Pasta customer");
         succeeded(f.controller.waitChef(), "no order yet");
         f.controller.finishTurn();
         equal(92, pastaCustomer.getSatisfaction(), "arrival/seat turn loses eight");
 
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host waits");
         succeeded(f.controller.takeOrder(3), "customer chooses Pasta by its own rule");
         succeeded(f.controller.prepareOrder(3), "first Pasta preparation unit");
         Order order = pastaCustomer.getOrder();
@@ -166,7 +186,8 @@ public final class GameControllerTest {
         f.controller.finishTurn();
         equal(84, pastaCustomer.getSatisfaction(), "order turn loses eight");
 
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host waits");
         failedUnchanged(f, () -> f.controller.serveOrder(3), "PREPARING cannot be served");
         succeeded(f.controller.waitWaiter(), "Waiter waits before final cooking unit");
         succeeded(f.controller.prepareOrder(3), "second unit makes Pasta READY");
@@ -175,7 +196,8 @@ public final class GameControllerTest {
         f.controller.finishTurn();
         equal(76, pastaCustomer.getSatisfaction(), "READY turn still loses eight");
 
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host waits");
         succeeded(f.controller.serveOrder(3), "serve Pasta on turn ten");
         succeeded(f.controller.waitChef(), "Chef waits after service");
         f.controller.finishTurn();
@@ -249,9 +271,10 @@ public final class GameControllerTest {
                 description + ": exact unrounded average setup");
         check(!f.controller.isVictory(), description + ": totals alone cannot end an unstarted game");
         for (int turn = 1; turn <= 18; turn++) {
-            f.controller.startTurn();
+            succeeded(f.controller.startTurn(false), "startTurn");
             check(!f.controller.isFinished() && !f.controller.isVictory(),
                     description + ": game remains active until final resolution");
+            succeeded(f.controller.waitHost(), "threshold run Host wait");
             succeeded(f.controller.waitWaiter(), "threshold run Waiter wait");
             succeeded(f.controller.waitChef(), "threshold run Chef wait");
             f.controller.finishTurn();
@@ -262,7 +285,8 @@ public final class GameControllerTest {
     }
 
     private static void waitTurn(Fixture f) {
-        f.controller.startTurn();
+        succeeded(f.controller.startTurn(false), "startTurn");
+        succeeded(f.controller.waitHost(), "Host waits");
         succeeded(f.controller.waitWaiter(), "Waiter waits");
         succeeded(f.controller.waitChef(), "Chef waits");
         f.controller.finishTurn();
@@ -315,10 +339,12 @@ public final class GameControllerTest {
 
     private static final class Fixture {
         private final Restaurant restaurant = new Restaurant();
-        private final Waiter waiter = new Waiter();
+        private final HappyHour happyHour = new HappyHour();
+        private final Waiter waiter = new Waiter(happyHour);
         private final Chef chef = new Chef();
-        private final TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule());
-        private final GameController controller = new GameController(restaurant, manager, waiter, chef);
+        private final Host host = new Host();
+        private final TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule(), happyHour);
+        private final GameController controller = new GameController(restaurant, manager, host, waiter, chef);
     }
 
     private record State(GameSnapshot snapshot, List<Customer> customerIdentities, List<Order> orderIdentities,

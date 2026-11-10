@@ -9,19 +9,22 @@ import java.util.List;
  * <p>Every list is copied with {@link List#copyOf}, so neither the caller nor
  * later turns can change a snapshot once it exists.
  *
- * @param turn                    current or last turn, 1 to 18
- * @param completedTurns          turns fully finished, 0 to 18
- * @param revenueCents            revenue from successful payments, in cents
- * @param averagePaidSatisfaction average satisfaction recorded at payment, or
- *                                {@code null} before anyone has paid
- * @param waitingCustomerIds      queued customer IDs in arrival order
- * @param customers               customers to display
- * @param tables                  tables in ID order
- * @param waiterAvailable         whether the Waiter choice is still open this turn
- * @param chefAvailable           whether the Chef choice is still open this turn
- * @param paidCount               customers who have paid
- * @param servedCount             dishes served
- * @param abandonedCount          customers who left unhappy
+ * @param turn                      current or last turn, 1 to 18
+ * @param completedTurns            turns fully finished, 0 to 18
+ * @param revenueCents              revenue from successful payments, in cents
+ * @param averagePaidSatisfaction   average satisfaction recorded at payment, or
+ *                                  {@code null} before anyone has paid
+ * @param waitingCustomerIds        queued customer IDs in arrival order
+ * @param customers                 customers to display
+ * @param tables                    tables in ID order
+ * @param hostAvailable             whether the Host choice is still open this turn
+ * @param waiterAvailable           whether the Waiter choice is still open this turn
+ * @param chefAvailable             whether the Chef choice is still open this turn
+ * @param paidCount                 customers who have paid
+ * @param servedCount               dishes served
+ * @param abandonedCount            customers who left unhappy
+ * @param happyHourTurnsRemaining   remaining active turns of Happy Hour (0, 1, or 2)
+ * @param happyHourUsed             whether Happy Hour has been activated
  */
 public record GameSnapshot(
         int turn,
@@ -31,11 +34,14 @@ public record GameSnapshot(
         List<Integer> waitingCustomerIds,
         List<CustomerView> customers,
         List<TableView> tables,
+        boolean hostAvailable,
         boolean waiterAvailable,
         boolean chefAvailable,
         int paidCount,
         int servedCount,
-        int abandonedCount) {
+        int abandonedCount,
+        int happyHourTurnsRemaining,
+        boolean happyHourUsed) {
 
     /** Turns in the base game. */
     private static final int FINAL_TURN = 18;
@@ -63,6 +69,10 @@ public record GameSnapshot(
         if ((averagePaidSatisfaction == null) != (paidCount == 0)) {
             throw new IllegalArgumentException(
                     "Average paid satisfaction must be null exactly when no customer has paid");
+        }
+        if (happyHourTurnsRemaining < 0 || happyHourTurnsRemaining > 2) {
+            throw new IllegalArgumentException(
+                    "Happy Hour remaining turns must be 0 to 2: " + happyHourTurnsRemaining);
         }
         waitingCustomerIds = List.copyOf(required(waitingCustomerIds, "waitingCustomerIds"));
         customers = List.copyOf(required(customers, "customers"));

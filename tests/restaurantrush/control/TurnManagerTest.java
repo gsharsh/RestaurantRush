@@ -5,6 +5,7 @@ import java.util.List;
 
 import restaurantrush.domain.Customer;
 import restaurantrush.domain.CustomerStatus;
+import restaurantrush.domain.HappyHour;
 import restaurantrush.domain.MenuItem;
 import restaurantrush.domain.RegularCustomer;
 import restaurantrush.domain.Restaurant;
@@ -38,10 +39,10 @@ public final class TurnManagerTest {
         restaurant.addArrival(existing);
         List<Table> tablesBefore = restaurant.getTables();
         List<MenuItem> menuBefore = restaurant.getMenu();
-        TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule());
-        checkManager(manager, 1, 0, false, false, false);
+        TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule(), new HappyHour());
+        checkManager(manager, 1, 0, false, false, false, false);
 
-        expectIllegalArgument(() -> manager.beginTurn(restaurant));
+        expectIllegalArgument(() -> manager.beginTurn(restaurant, false));
         check(restaurant.getCustomers().equals(List.of(existing)), "failed start must preserve customer history");
         check(restaurant.getWaitingQueue().equals(List.of(existing)), "failed start must preserve the queue");
         check(restaurant.getActiveCustomers().equals(List.of(existing)), "failed start must preserve active customers");
@@ -63,11 +64,11 @@ public final class TurnManagerTest {
                 "failed start must preserve zero totals");
         check(restaurant.getPaidSatisfactionTotal() == 0 && restaurant.getAveragePaidSatisfaction() == 0.0,
                 "failed start must preserve paid satisfaction totals");
-        checkManager(manager, 1, 0, false, false, false);
+        checkManager(manager, 1, 0, false, false, false, false);
 
         Restaurant retry = new Restaurant();
-        manager.beginTurn(retry);
-        checkManager(manager, 1, 0, false, true, false);
+        manager.beginTurn(retry, false);
+        checkManager(manager, 1, 0, false, true, false, false);
         Customer arrival = retry.findCustomer(1);
         check(arrival != null && arrival != existing, "retry must add the scheduled arrival to the fresh restaurant");
         check(retry.getCustomers().equals(List.of(arrival))
@@ -77,15 +78,16 @@ public final class TurnManagerTest {
 
     private static void testRepeatedFinalAdvance() {
         Restaurant restaurant = new Restaurant();
-        TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule());
+        TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule(), new HappyHour());
         for (int turn = 1; turn <= 18; turn++) {
-            manager.beginTurn(restaurant);
+            manager.beginTurn(restaurant, false);
+            manager.recordHostTask();
             manager.recordWaiterTask();
             manager.recordChefTask();
             manager.resolveTurn(restaurant);
             manager.advanceTurn();
         }
-        checkManager(manager, 18, 18, true, false, false);
+        checkManager(manager, 18, 18, true, false, false, false);
         for (int attempt = 0; attempt < 2; attempt++) {
             boolean rejected = false;
             try {
@@ -93,19 +95,19 @@ public final class TurnManagerTest {
             } catch (IllegalStateException expected) {
                 rejected = true;
             }
-            checkManager(manager, 18, 18, true, false, false);
+            checkManager(manager, 18, 18, true, false, false, false);
             check(rejected, "advanceTurn after completion must throw IllegalStateException");
         }
     }
 
     private static void testNormalTurnProgression() {
         Restaurant restaurant = new Restaurant();
-        TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule());
+        TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule(), new HappyHour());
         List<Integer> arrivalTurns = new ArrayList<>();
         for (int turn = 1; turn <= 18; turn++) {
-            checkManager(manager, turn, turn - 1, false, false, false);
+            checkManager(manager, turn, turn - 1, false, false, false, false);
             int arrivedBefore = restaurant.getCustomers().size();
-            manager.beginTurn(restaurant);
+            manager.beginTurn(restaurant, false);
             if (restaurant.getCustomers().size() > arrivedBefore) {
                 arrivalTurns.add(turn);
                 Customer arrival = restaurant.getCustomers().get(arrivedBefore);
@@ -114,22 +116,24 @@ public final class TurnManagerTest {
             }
             check(restaurant.getCustomers().size() == (turn - 1) / 3 + 1,
                     "exact cumulative arrival count on turn " + turn);
-            checkManager(manager, turn, turn - 1, false, true, false);
+            checkManager(manager, turn, turn - 1, false, true, false, false);
+            manager.recordHostTask();
+            checkManager(manager, turn, turn - 1, false, false, true, false);
             manager.recordWaiterTask();
-            checkManager(manager, turn, turn - 1, false, false, true);
+            checkManager(manager, turn, turn - 1, false, false, false, true);
             manager.recordChefTask();
-            checkManager(manager, turn, turn - 1, false, false, false);
+            checkManager(manager, turn, turn - 1, false, false, false, false);
             manager.resolveTurn(restaurant);
-            checkManager(manager, turn, turn - 1, false, false, false);
+            checkManager(manager, turn, turn - 1, false, false, false, false);
             check(!manager.isFinished(), "even final resolution needs advancement before completion");
             manager.advanceTurn();
-            checkManager(manager, Math.min(turn + 1, 18), turn, turn == 18, false, false);
+            checkManager(manager, Math.min(turn + 1, 18), turn, turn == 18, false, false, false);
             expectIllegalState(manager::recordWaiterTask);
             expectIllegalState(manager::recordChefTask);
             expectIllegalState(() -> manager.resolveTurn(restaurant));
         }
-        expectIllegalState(() -> manager.beginTurn(restaurant));
-        checkManager(manager, 18, 18, true, false, false);
+        expectIllegalState(() -> manager.beginTurn(restaurant, false));
+        checkManager(manager, 18, 18, true, false, false, false);
         check(arrivalTurns.equals(List.of(1, 4, 7, 10, 13, 16)), "exact six arrival turns");
         check(restaurant.getCustomers().stream().map(Customer::getId).toList()
                 .equals(List.of(1, 2, 3, 4, 5, 6)), "six stable customer identities");
@@ -140,82 +144,89 @@ public final class TurnManagerTest {
 
     private static void testActiveTurnGuards() {
         Restaurant restaurant = new Restaurant();
-        TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule());
+        TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule(), new HappyHour());
         expectIllegalState(manager::recordWaiterTask);
         expectIllegalState(manager::recordChefTask);
         expectIllegalState(manager::advanceTurn);
         expectIllegalState(() -> manager.resolveTurn(restaurant));
-        checkManager(manager, 1, 0, false, false, false);
+        checkManager(manager, 1, 0, false, false, false, false);
         check(restaurant.getCustomers().isEmpty(), "pre-start misuse adds no arrival");
 
-        manager.beginTurn(restaurant);
+        manager.beginTurn(restaurant, false);
         Customer arrival = restaurant.findCustomer(1);
-        expectIllegalState(() -> manager.beginTurn(restaurant));
+        expectIllegalState(() -> manager.beginTurn(restaurant, false));
+        expectIllegalState(manager::recordWaiterTask);
         expectIllegalState(manager::recordChefTask);
         expectIllegalState(() -> manager.resolveTurn(restaurant));
         expectIllegalState(manager::advanceTurn);
-        checkManager(manager, 1, 0, false, true, false);
+        checkManager(manager, 1, 0, false, true, false, false);
         check(restaurant.getCustomers().equals(List.of(arrival))
                 && restaurant.getWaitingQueue().equals(List.of(arrival)), "duplicate start adds no arrival");
         check(arrival.getSatisfaction() == 100, "premature resolution applies no waiting penalty");
 
+        manager.recordHostTask();
+        checkManager(manager, 1, 0, false, false, true, false);
+        expectIllegalState(manager::recordHostTask);
         manager.recordWaiterTask();
         expectIllegalState(manager::recordWaiterTask);
         expectIllegalState(() -> manager.resolveTurn(restaurant));
         expectIllegalState(manager::advanceTurn);
-        checkManager(manager, 1, 0, false, false, true);
+        checkManager(manager, 1, 0, false, false, false, true);
         check(arrival.getSatisfaction() == 100, "Waiter choice alone cannot resolve turn");
 
         manager.recordChefTask();
         expectIllegalState(manager::recordChefTask);
         expectIllegalState(manager::recordWaiterTask);
         expectIllegalState(manager::advanceTurn);
-        checkManager(manager, 1, 0, false, false, false);
+        checkManager(manager, 1, 0, false, false, false, false);
         manager.resolveTurn(restaurant);
         check(arrival.getSatisfaction() == 92, "first resolution applies exactly one penalty");
         expectIllegalState(() -> manager.resolveTurn(restaurant));
-        expectIllegalState(() -> manager.beginTurn(restaurant));
+        expectIllegalState(() -> manager.beginTurn(restaurant, false));
         expectIllegalState(manager::recordWaiterTask);
         expectIllegalState(manager::recordChefTask);
-        checkManager(manager, 1, 0, false, false, false);
+        checkManager(manager, 1, 0, false, false, false, false);
         check(arrival.getSatisfaction() == 92 && restaurant.getPaidCount() == 0
                 && restaurant.getRevenueCents() == 0 && restaurant.getAbandonedCount() == 0,
                 "duplicate resolution changes no penalty, payment or departure total");
         manager.advanceTurn();
         expectIllegalState(manager::advanceTurn);
-        checkManager(manager, 2, 1, false, false, false);
-        manager.beginTurn(restaurant);
-        checkManager(manager, 2, 1, false, true, false);
+        checkManager(manager, 2, 1, false, false, false, false);
+        manager.beginTurn(restaurant, false);
+        checkManager(manager, 2, 1, false, true, false, false);
     }
 
     private static void testNullValidation() {
-        expectIllegalArgument(() -> new TurnManager(null, new ArrivalSchedule()));
-        expectIllegalArgument(() -> new TurnManager(new Cashier(), null));
+        expectIllegalArgument(() -> new TurnManager(null, new ArrivalSchedule(), new HappyHour()));
+        expectIllegalArgument(() -> new TurnManager(new Cashier(), null, new HappyHour()));
+        expectIllegalArgument(() -> new TurnManager(new Cashier(), new ArrivalSchedule(), null));
         Restaurant restaurant = new Restaurant();
-        TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule());
-        expectIllegalArgument(() -> manager.beginTurn(null));
+        TurnManager manager = new TurnManager(new Cashier(), new ArrivalSchedule(), new HappyHour());
+        expectIllegalArgument(() -> manager.beginTurn(null, false));
         expectIllegalArgument(() -> manager.resolveTurn(null));
-        checkManager(manager, 1, 0, false, false, false);
-        manager.beginTurn(restaurant);
-        expectIllegalArgument(() -> manager.beginTurn(null));
+        checkManager(manager, 1, 0, false, false, false, false);
+        manager.beginTurn(restaurant, false);
+        expectIllegalArgument(() -> manager.beginTurn(null, false));
         expectIllegalArgument(() -> manager.resolveTurn(null));
-        checkManager(manager, 1, 0, false, true, false);
+        checkManager(manager, 1, 0, false, true, false, false);
+        manager.recordHostTask();
         manager.recordWaiterTask();
         manager.recordChefTask();
         expectIllegalArgument(() -> manager.resolveTurn(null));
-        checkManager(manager, 1, 0, false, false, false);
+        checkManager(manager, 1, 0, false, false, false, false);
         check(restaurant.findCustomer(1).getSatisfaction() == 100, "null resolution applies no automatic events");
         manager.resolveTurn(restaurant);
         check(restaurant.findCustomer(1).getSatisfaction() == 92, "valid resolution remains possible after null request");
     }
 
     private static void checkManager(TurnManager manager, int turn, int completedTurns,
-            boolean finished, boolean waiterAvailable, boolean chefAvailable) {
+            boolean finished, boolean hostAvailable, boolean waiterAvailable, boolean chefAvailable) {
         check(manager.getCurrentTurn() == turn,
                 "current turn: expected " + turn + ", got " + manager.getCurrentTurn());
         check(manager.getCompletedTurns() == completedTurns,
                 "completed turns: expected " + completedTurns + ", got " + manager.getCompletedTurns());
         check(manager.isFinished() == finished, "finished: expected " + finished);
+        check(manager.canAssignHost() == hostAvailable, "Host availability: expected " + hostAvailable);
         check(manager.canAssignWaiter() == waiterAvailable, "Waiter availability: expected " + waiterAvailable);
         check(manager.canAssignChef() == chefAvailable, "Chef availability: expected " + chefAvailable);
     }

@@ -34,10 +34,10 @@ public final class Restaurant {
         this.customers = new ArrayList<>();
         this.orders = new ArrayList<>();
         this.tables = List.of(new Table(1), new Table(2));
-        this.menu = List.of(
-                new MenuItem("Salad", 900, 1),
-                new MenuItem("Burger", 1500, 1),
-                new MenuItem("Pasta", 1800, 2));
+        MenuItem salad = new MenuItem("Salad", 900, 1);
+        MenuItem burger = new MenuItem("Burger", 1500, 1);
+        MenuItem pasta = new MenuItem("Pasta", 1800, 2);
+        this.menu = List.of(salad, burger, pasta, new ComboMeal("Salad + Pasta Combo", salad, pasta));
         this.revenueCents = 0;
         this.servedCount = 0;
         this.abandonedCount = 0;

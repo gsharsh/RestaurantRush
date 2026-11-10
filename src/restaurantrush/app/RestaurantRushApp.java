@@ -15,7 +15,9 @@ import restaurantrush.staff.Waiter;
 
 /**
  * Entry point. Builds exactly one instance of each game object, wires them
- * together and hands control to the CLI.
+ * together and hands control to the CLI. The single {@link HappyHour} policy
+ * is shared by the TurnManager (activation, duration, recovery) and the
+ * Waiter (order pricing), so both always see the same state.
  */
 public final class RestaurantRushApp {
 
@@ -28,9 +30,9 @@ public final class RestaurantRushApp {
         Cashier cashier = new Cashier();
         HappyHour happyHour = new HappyHour();
         TurnManager turnManager = new TurnManager(cashier, arrivals, happyHour);
+        Host host = new Host();
         Waiter waiter = new Waiter(happyHour);
         Chef chef = new Chef();
-        Host host = new Host();
         GameController controller = new GameController(restaurant, turnManager, host, waiter, chef);
 
         RestaurantCLI cli = new RestaurantCLI(controller, new Scanner(System.in), System.out);

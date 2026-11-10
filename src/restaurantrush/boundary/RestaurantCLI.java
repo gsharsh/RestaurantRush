@@ -25,6 +25,12 @@ import restaurantrush.view.TableView;
  */
 public final class RestaurantCLI {
 
+    private static final String HAPPY_HOUR_HELP = String.join(System.lineSeparator(),
+            "Happy Hour (once per game, lasts this turn and the next):",
+            "  on    activate it now: 20% off new orders, waiting customers recover 15",
+            "  skip  start the turn without it",
+            "  help  show these commands");
+
     private static final String HOST_HELP = String.join(System.lineSeparator(),
             "Host commands:",
             "  seat <customerId> <tableId>  seat a queued customer at a free table",
@@ -63,15 +69,9 @@ public final class RestaurantCLI {
     public void run() {
         output.println("Welcome to Restaurant Rush! Type 'help' at any prompt to see the commands.");
         while (!controller.isFinished()) {
-            Boolean activateHappyHour = readHappyHourChoice();
-            if (activateHappyHour == null) {
+            if (!startTurnWithHappyHourChoice()) {
                 output.println();
                 output.println("Input ended before the game finished. Stopping without a result.");
-                return;
-            }
-            ActionResult turnResult = controller.startTurn(activateHappyHour);
-            if (!turnResult.success()) {
-                output.println("Cannot start turn: " + turnResult.message());
                 return;
             }
             displayState(controller.getSnapshot());
@@ -108,6 +108,14 @@ public final class RestaurantCLI {
                             : "C" + table.occupantId() + typeSuffix(snapshot, table.occupantId())));
         }
 
+        if (snapshot.happyHourTurnsRemaining() > 0) {
+            output.println("Happy Hour: ACTIVE, " + snapshot.happyHourTurnsRemaining()
+                    + (snapshot.happyHourTurnsRemaining() == 1 ? " turn" : " turns")
+                    + " left including this one (20% off new orders)");
+        } else {
+            output.println("Happy Hour: " + (snapshot.happyHourUsed() ? "used" : "not used yet"));
+        }
+
         output.println("Customers:");
         if (snapshot.customers().isEmpty()) {
             output.println("  (none)");
@@ -116,13 +124,14 @@ public final class RestaurantCLI {
             output.println("  " + describe(customer));
         }
 
+        String host = snapshot.hostAvailable() ? "available" : "used";
         String waiter = snapshot.waiterAvailable() ? "available"
                 : snapshot.hostAvailable() ? "available after the Host" : "used";
         String chef = snapshot.chefAvailable() ? "available"
-                : snapshot.waiterAvailable() ? "available after the Waiter" : "used";
-        output.println("Staff: Host " + (snapshot.hostAvailable() ? "available" : "used")
-                + ", Waiter " + waiter
-                + ", Chef " + chef + ", Cashier automatic (one payment per turn)");
+                : snapshot.hostAvailable() || snapshot.waiterAvailable()
+                        ? "available after the Waiter" : "used";
+        output.println("Staff: Host " + host + ", Waiter " + waiter + ", Chef " + chef
+                + ", Cashier automatic (one payment per turn)");
     }
 
     /**
@@ -151,33 +160,56 @@ public final class RestaurantCLI {
     // Reading manager choices
     // ------------------------------------------------------------------
 
-    /** Reads Happy Hour activation choice. Returns null if input ends, true for 'on', false for 'skip'. */
-    private Boolean readHappyHourChoice() {
+    /**
+     * Starts the next turn. While Happy Hour is still unused, first asks whether
+     * to activate it, retrying malformed or rejected answers without starting
+     * the turn twice. Returns false if input ends before the turn starts.
+     */
+    private boolean startTurnWithHappyHourChoice() {
+        if (controller.getSnapshot().happyHourUsed()) {
+            ActionResult result = controller.startTurn(false);
+            if (!result.success()) {
+                throw new IllegalStateException("Turn could not start: " + result.message());
+            }
+            return true;
+        }
+        output.println();
+        output.println("Turn " + controller.getSnapshot().turn()
+                + ": Happy Hour is available. Type 'on' to activate it or 'skip'.");
         while (true) {
             String[] words = prompt("Happy Hour> ");
             if (words == null) {
-                return null;
+                return false;
             }
             if (words.length == 0) {
                 continue;
             }
+            if (words.length != 1) {
+                printUsage("on | skip");
+                continue;
+            }
+            ActionResult result;
             switch (words[0]) {
+                case "help":
+                    output.println(HAPPY_HOUR_HELP);
+                    continue;
                 case "on":
-                    if (words.length != 1) {
-                        printUsage("on");
-                        continue;
-                    }
-                    return true;
+                    result = controller.startTurn(true);
+                    break;
                 case "skip":
-                    if (words.length != 1) {
-                        printUsage("skip");
-                        continue;
-                    }
-                    return false;
+                    result = controller.startTurn(false);
+                    break;
                 default:
-                    output.println("Unknown Happy Hour choice '" + words[0] + "'. Use 'on' or 'skip'.");
+                    output.println("Unknown Happy Hour choice '" + words[0] + "'. Type 'on', 'skip' or 'help'.");
                     continue;
             }
+            if (result.success()) {
+                if (words[0].equals("on")) {
+                    output.println(result.message());
+                }
+                return true;
+            }
+            output.println("Not allowed: " + result.message());
         }
     }
 

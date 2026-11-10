@@ -34,6 +34,7 @@ public final class RestaurantCLITest {
         testFinishedSnapshotsDisplayOutcomes();
         testNullSnapshotProducesNoOutput();
         testStateDisplayShowsCustomerTypeLabels();
+        testStateDisplayShowsHostAndHappyHour();
         System.out.println("RestaurantCLITest: PASS (" + (checks - before) + " checks)");
     }
 
@@ -59,8 +60,8 @@ public final class RestaurantCLITest {
         for (boolean victory : new boolean[] {true, false}) {
             GameSnapshot snapshot = victory
                     ? new GameSnapshot(18, 18, 6300, 76.0, List.of(), List.of(),
-                            List.of(new TableView(1, null), new TableView(2, null)),
-                            false, false, false, 4, 5, 1, 0, false)
+                            List.of(new TableView(1, null), new TableView(2, null)), false,
+                            false, false, 4, 5, 1, 0, false)
                     : emptySnapshot(18, 18);
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             try (Scanner input = new Scanner("");
@@ -94,7 +95,7 @@ public final class RestaurantCLITest {
                 new CustomerView(2, "VIP", 100, CustomerStatus.WAITING, null, null, null, null),
                 new CustomerView(4, "Critic", 88, CustomerStatus.WAITING, null, null, null, null));
         GameSnapshot snapshot = new GameSnapshot(10, 9, 900, 84.0, List.of(2, 4), customers,
-                List.of(new TableView(1, 1), new TableView(2, null)), true, false, false, 1, 1, 0, 0, false);
+                List.of(new TableView(1, 1), new TableView(2, null)), false, true, false, 1, 1, 0, 0, false);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try (Scanner input = new Scanner("");
                 PrintStream output = new PrintStream(bytes, true, StandardCharsets.UTF_8)) {
@@ -111,6 +112,39 @@ public final class RestaurantCLITest {
         }
     }
 
+    private static void testStateDisplayShowsHostAndHappyHour() {
+        List<TableView> tables = List.of(new TableView(1, null), new TableView(2, null));
+        checkDisplay(new GameSnapshot(5, 4, 0, null, List.of(), List.of(), tables,
+                        true, false, false, 0, 0, 0, 2, true),
+                "Happy Hour: ACTIVE, 2 turns left including this one (20% off new orders)",
+                "Staff: Host available, Waiter available after the Host, Chef available after the Waiter");
+        checkDisplay(new GameSnapshot(6, 5, 0, null, List.of(), List.of(), tables,
+                        false, true, false, 0, 0, 0, 1, true),
+                "Happy Hour: ACTIVE, 1 turn left including this one",
+                "Staff: Host used, Waiter available, Chef available after the Waiter");
+        checkDisplay(new GameSnapshot(7, 6, 0, null, List.of(), List.of(), tables,
+                        false, false, true, 0, 0, 0, 0, true),
+                "Happy Hour: used",
+                "Staff: Host used, Waiter used, Chef available");
+        checkDisplay(new GameSnapshot(1, 0, 0, null, List.of(), List.of(), tables,
+                        true, false, false, 0, 0, 0, 0, false),
+                "Happy Hour: not used yet",
+                "Staff: Host available");
+    }
+
+    private static void checkDisplay(GameSnapshot snapshot, String... expected) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (Scanner input = new Scanner("");
+                PrintStream output = new PrintStream(bytes, true, StandardCharsets.UTF_8)) {
+            newCLI(input, output).displayState(snapshot);
+            output.flush();
+            String rendered = bytes.toString(StandardCharsets.UTF_8);
+            for (String fragment : expected) {
+                check(rendered.contains(fragment), "display should contain: " + fragment);
+            }
+        }
+    }
+
     private static RestaurantCLI newCLI(Scanner input, PrintStream output) {
         Restaurant restaurant = new Restaurant();
         ArrivalSchedule arrivals = new ArrivalSchedule();
@@ -119,15 +153,14 @@ public final class RestaurantCLITest {
         TurnManager turnManager = new TurnManager(cashier, arrivals, happyHour);
         Waiter waiter = new Waiter(happyHour);
         Chef chef = new Chef();
-        Host host = new Host();
-        GameController controller = new GameController(restaurant, turnManager, host, waiter, chef);
+        GameController controller = new GameController(restaurant, turnManager, new Host(), waiter, chef);
         return new RestaurantCLI(controller, input, output);
     }
 
     private static GameSnapshot emptySnapshot(int turn, int completedTurns) {
         return new GameSnapshot(turn, completedTurns, 0, null, List.of(), List.of(),
-                List.of(new TableView(1, null), new TableView(2, null)),
-                false, false, false, 0, 0, 0, 0, false);
+                List.of(new TableView(1, null), new TableView(2, null)), false,
+                false, false, 0, 0, 0, 0, false);
     }
 
     private static void expectIllegalArgument(String description, Runnable action) {

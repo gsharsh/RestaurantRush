@@ -3,7 +3,7 @@
 - **Branch:** `feature/devansh-s3-evidence`
 - **Member:** Devansh Poddar (M5)
 - **Stage:** Stage 3 (final class diagram)
-- **Related pull request:** To be added
+- **Related pull request:** The `feature/devansh-s3-evidence` pull request into `main`
 
 ## Prompt 1
 
@@ -30,8 +30,8 @@ The assistant (Claude) copied the Stage 2 diagram and applied the Stage 3 change
 
 **Human verification**
 
-To do: open in draw.io, tidy any crowded lines, check each class against the source, export the PNG and ask owners to confirm their classes on the PR.
+Opened the diagram in draw.io on my Mac, checked that no line crosses a class, compared each class's members with the source at `5c583fb` and exported `class-diagram.png` at 200%. Each owner is asked to confirm their classes on the pull request.
 
 **Related commits**
 
-- To be added after commit
+- `7d83758` Add Stage 3 sequence diagram and final class diagram with OOP annotations

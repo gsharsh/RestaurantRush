@@ -1,0 +1,353 @@
+@startuml
+' PlantUML 1.2026.10. Canonical editable sequence source.
+' Chosen execution: stage-3-victory.txt, Happy Hour ON on turn 4.
+' All method arrows use production Java APIs; routine lookups and returns are omitted.
+!ifdef CONTINUOUS
+ignore newpage
+!endif
+skinparam style strictuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 17
+skinparam dpi 180
+skinparam BoxPadding 8
+skinparam maxMessageSize 240
+skinparam NoteBackgroundColor white
+skinparam NoteFontSize 15
+skinparam sequenceMessageAlign left
+skinparam sequenceDividerBackgroundColor white
+hide footbox
+autonumber "<b>0.</b>"
+!ifdef CONTINUOUS
+title RestaurantRush - VIP C2 during Happy Hour
+!else
+title RestaurantRush - VIP C2 during Happy Hour (1/3)
+!endif
+footer RestaurantRush Stage 3 - Happy Hour ON on turn 4
+
+actor Manager as M
+boundary "cli:RestaurantCLI" as CLI
+control "gc:GameController" as GC
+control "tm:TurnManager" as TM
+participant "arr:ArrivalSchedule" as Arr
+participant "hh:HappyHour" as HH
+entity "r:Restaurant" as R
+entity "host:Host" as Host
+entity "waiter:Waiter" as W
+entity "chef:Chef" as Chef
+entity "cashier:Cashier" as Cash
+entity "c2:VIPCustomer" as C2
+entity "o2:Order" as O2
+entity "t2:Table" as T2
+
+== Turn 4 - manager choice, arrival, order and READY ==
+note over M, GC: Turns 1-3 complete; Happy Hour unused; table 2 free.
+activate CLI
+M -> CLI : Happy Hour> on
+' @java GameController.startTurn/1
+CLI -> GC : startTurn(true)
+activate GC
+' @java TurnManager.beginTurn/2
+GC -> TM : beginTurn(r, true)
+activate TM
+' @java ArrivalSchedule.arrivalFor/1
+TM -> Arr : arrivalFor(4)
+activate Arr
+create C2
+' @java VIPCustomer.VIPCustomer/1
+Arr -> C2 : new VIPCustomer(2)
+C2 --> Arr : c2 {WAITING, satisfaction 100}
+Arr --> TM : c2
+deactivate Arr
+' @java Restaurant.addArrival/1
+TM -> R : addArrival(c2)
+activate R
+deactivate R
+opt activateHappyHour == true
+  ' @java HappyHour.activate/1
+  TM -> HH : activate(4)
+  activate HH
+  deactivate HH
+end
+deactivate TM
+deactivate GC
+
+M -> CLI : Host> seat 2 2
+' @java GameController.seatCustomerWithHost/2
+CLI -> GC : seatCustomerWithHost(2, 2)
+activate GC
+' @java Host.seat/3
+GC -> Host : seat(r, 2, 2)
+activate Host
+' @java Restaurant.seat/2
+Host -> R : seat(2, 2)
+activate R
+' @java Table.assign/1
+R -> T2 : assign(c2)
+activate T2
+deactivate T2
+' @java Customer.seat/0
+R -> C2 : seat() {SEATED}
+activate C2
+deactivate C2
+deactivate R
+deactivate Host
+deactivate GC
+
+M -> CLI : Waiter> order 2
+' @java GameController.takeOrder/1
+CLI -> GC : takeOrder(2)
+activate GC
+' @java Waiter.takeOrder/3
+GC -> W : takeOrder(r, 2, 4)
+activate W
+' @java Customer.chooseMenuItem/1
+W -> C2 : chooseMenuItem(r.getMenu())
+activate C2
+C2 --> W : burger {1500 cents, 1 prep unit}
+deactivate C2
+' @java Customer.quotePriceCents/1
+W -> C2 : quotePriceCents(burger)
+activate C2
+C2 --> W : 1350 cents {VIP discount}
+deactivate C2
+' @java HappyHour.quotePriceCents/2
+W -> HH : quotePriceCents(1350, 4)
+activate HH
+HH --> W : 1080 cents
+deactivate HH
+note over W, HH: Manager choice changes the bill:\nwithout Happy Hour $13.50; chosen ON $10.80.
+create O2
+' @java Order.Order/3
+W -> O2 : new Order(2, burger, 1080)
+O2 --> W : o2 {PLACED; bill locked}
+' @java Restaurant.registerOrder/2
+W -> R : registerOrder(2, o2)
+activate R
+' @java Customer.acceptOrder/1
+R -> C2 : acceptOrder(o2)
+activate C2
+deactivate C2
+deactivate R
+deactivate W
+deactivate GC
+
+M -> CLI : Chef> cook 2
+' @java GameController.prepareOrder/1
+CLI -> GC : prepareOrder(2)
+activate GC
+' @java Chef.prepareOneUnit/1
+GC -> Chef : prepareOneUnit(o2)
+activate Chef
+' @java Order.prepareOneUnit/0
+Chef -> O2 : prepareOneUnit()
+activate O2
+note right of O2: [canPrepare()]\n1 -> 0 units; READY
+deactivate O2
+Chef --> GC : ActionResult.ok("Burger is READY to serve.")
+deactivate Chef
+deactivate GC
+' @java GameController.finishTurn/0
+CLI -> GC : finishTurn()
+activate GC
+' @java TurnManager.resolveTurn/1
+GC -> TM : resolveTurn(r)
+activate TM
+' @java Customer.applyWaitingLoss/0
+TM -> C2 : applyWaitingLoss() {100 -> 95}
+activate C2
+deactivate C2
+deactivate TM
+' @java TurnManager.advanceTurn/0
+GC -> TM : advanceTurn()
+activate TM
+deactivate TM
+deactivate GC
+
+newpage RestaurantRush - C2 service and eating (2/3)
+!ifndef CONTINUOUS
+note over C2: c2:VIPCustomer (continued)
+& note over O2: o2:Order (continued)
+!endif
+== Turn 5 - recover satisfaction and serve the READY order ==
+' @java GameController.startTurn/1
+CLI -> GC : startTurn(false)
+activate GC
+' @java TurnManager.beginTurn/2
+GC -> TM : beginTurn(r, false)
+activate TM
+opt Happy Hour active on turn 5
+  ' @java Customer.recoverWaitingSatisfaction/1
+  TM -> C2 : recoverWaitingSatisfaction(15)\n{95 -> 100}
+  activate C2
+  deactivate C2
+end
+deactivate TM
+deactivate GC
+M -> CLI : Host> wait
+' @java GameController.waitHost/0
+CLI -> GC : waitHost()
+activate GC
+deactivate GC
+M -> CLI : Waiter> serve 2
+' @java GameController.serveOrder/1
+CLI -> GC : serveOrder(2)
+activate GC
+' @java Waiter.serve/3
+GC -> W : serve(r, 2, 5)
+activate W
+' @java Restaurant.serve/2
+W -> R : serve(2, 5)
+activate R
+note over R, O2: [C2 SEATED and registered Order READY]
+' @java Order.markServed/0
+R -> O2 : markServed() {SERVED}
+activate O2
+deactivate O2
+' @java Customer.markServed/1
+R -> C2 : markServed(5)\n{EATING; servedTurn = 5}
+activate C2
+deactivate C2
+deactivate R
+deactivate W
+deactivate GC
+M -> CLI : Chef> wait
+' @java GameController.waitChef/0
+CLI -> GC : waitChef()
+activate GC
+deactivate GC
+' @java GameController.finishTurn/0
+CLI -> GC : finishTurn()
+activate GC
+' @java TurnManager.resolveTurn/1
+GC -> TM : resolveTurn(r)
+activate TM
+' @java Customer.finishEating/1
+TM -> C2 : finishEating(5)
+activate C2
+note right of C2: [5 < 5] false:\nstays EATING
+deactivate C2
+deactivate TM
+' @java TurnManager.advanceTurn/0
+GC -> TM : advanceTurn()
+activate TM
+deactivate TM
+deactivate GC
+
+== Turn 6 - one full turn of eating completes ==
+note over CLI, TM: Turn 6 starts; Host, Waiter and Chef all wait.
+' @java GameController.finishTurn/0
+CLI -> GC : finishTurn()
+activate GC
+' @java TurnManager.resolveTurn/1
+GC -> TM : resolveTurn(r)
+activate TM
+loop each active customer (C2 shown)
+  ' @java Customer.finishEating/1
+  TM -> C2 : finishEating(6)
+  activate C2
+  note right of C2: [EATING and servedTurn 5 < 6]\nREADY_TO_PAY; readyToPayTurn = 6
+  deactivate C2
+end
+' @java Cashier.collectOne/2
+TM -> Cash : collectOne(r, 6)
+activate Cash
+' @java Restaurant.oldestEligiblePayer/1
+Cash -> R : oldestEligiblePayer(6)
+activate R
+R --> Cash : null {[readyToPayTurn < 6] false}
+deactivate R
+Cash --> TM : false {no payment}
+deactivate Cash
+deactivate TM
+' @java TurnManager.advanceTurn/0
+GC -> TM : advanceTurn()
+activate TM
+deactivate TM
+deactivate GC
+
+newpage RestaurantRush - C2 payment and final result (3/3)
+!ifndef CONTINUOUS
+note over C2: c2:VIPCustomer (continued)
+& note over O2: o2:Order (continued)
+!endif
+== Turn 7 - automatic payment and table release ==
+note over CLI, TM: Turn 7 starts; C3 arrives. Host seats C3,\nWaiter takes C3's order, Chef cooks. All choices complete.
+' @java GameController.finishTurn/0
+CLI -> GC : finishTurn()
+activate GC
+' @java TurnManager.resolveTurn/1
+GC -> TM : resolveTurn(r)
+activate TM
+' @java Cashier.collectOne/2
+TM -> Cash : collectOne(r, 7)
+activate Cash
+' @java Restaurant.oldestEligiblePayer/1
+Cash -> R : oldestEligiblePayer(7)
+activate R
+R --> Cash : c2 {[readyToPayTurn 6 < 7] true}
+deactivate R
+' @java Restaurant.recordPayment/2
+Cash -> R : recordPayment(c2, 7)
+activate R
+' @java Order.markPaid/0
+R -> O2 : markPaid() {PAID}
+activate O2
+deactivate O2
+' @java Customer.markPaid/0
+R -> C2 : markPaid() {PAID}
+activate C2
+deactivate C2
+' @java Table.release/0
+R -> T2 : release() {table 2 free}
+activate T2
+deactivate T2
+note over R, C2: Add the locked 1080-cent bill to revenue;\nrecord C2's paid satisfaction of 100.
+R --> Cash : true
+deactivate R
+Cash --> TM : true {one payment this turn}
+deactivate Cash
+deactivate TM
+' @java TurnManager.advanceTurn/0
+GC -> TM : advanceTurn()
+activate TM
+deactivate TM
+deactivate GC
+
+== Turns 8-18 - continue the game ==
+loop remaining turns while !controller.isFinished()
+  ' @java GameController.startTurn/1
+  CLI -> GC : startTurn(false)
+  activate GC
+  deactivate GC
+  ref over M, Chef: Host, Waiter, Chef choices in the same order as above
+  ' @java GameController.finishTurn/0
+  CLI -> GC : finishTurn()\n{resolve automatic events, then advance}
+  activate GC
+  deactivate GC
+end
+
+== After turn 18 - result check ==
+' @java GameController.getSnapshot/0
+CLI -> GC : getSnapshot()
+activate GC
+GC --> CLI : snapshot {5 paid; $71.10; average 84.8}
+deactivate GC
+' @java GameController.isVictory/0
+CLI -> GC : isVictory()
+activate GC
+note over GC, TM: [paid >= 4 AND revenue >= 4500 cents\nAND average paid satisfaction >= 60]
+GC --> CLI : victory = true
+deactivate GC
+' @java RestaurantCLI.displayOutcome/2
+CLI -> CLI : displayOutcome(snapshot, victory)
+activate CLI
+alt victory == true (chosen execution)
+  CLI -> M : VICTORY and final statistics
+else victory == false
+  CLI -> M : DEFEAT and final statistics
+end
+deactivate CLI
+deactivate CLI
+@enduml

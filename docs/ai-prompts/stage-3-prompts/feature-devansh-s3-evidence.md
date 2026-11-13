@@ -20,7 +20,7 @@ The assistant (Claude) planned the 18-turn victory input so Happy Hour is switch
 - `docs/testing/stage-3-testscript/stage-3-victory.txt` / `.out`
 - `docs/testing/stage-3-testscript/stage-3-defeat.txt` / `.out`
 - `docs/testing/stage-3-tests.md`
-- `docs/uml/stage-3-uml/sequence-diagram.drawio` (and its PNG export)
+- `docs/uml/stage-3-uml/sequence-diagram.drawio` (first draft; Harshith replaced it with the PlantUML version in `36226e0`)
 
 **Human verification**
 

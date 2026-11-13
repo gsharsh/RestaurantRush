@@ -156,10 +156,10 @@
           <mxGeometry height="118" width="620.0" y="108" as="geometry" />
         </mxCell>
         <mxCell id="snapshot" parent="1" style="html=1;fontFamily=Arial;fontColor=#253342;strokeColor=#778491;strokeWidth=1;swimlane;startSize=50;horizontal=1;collapsible=0;container=1;recursiveResize=0;fillColor=#EBEAF5;swimlaneFillColor=#FFFFFF;align=center;verticalAlign=middle;fontSize=12;whiteSpace=wrap;" value="&lt;span style=&quot;font-size:10px&quot;&gt;«record»&lt;/span&gt;&lt;br&gt;&lt;b&gt;GameSnapshot&lt;/b&gt;" vertex="1">
-          <mxGeometry height="308" width="620" x="3580" y="560" as="geometry" />
+          <mxGeometry height="368" width="620" x="3580" y="560" as="geometry" />
         </mxCell>
-        <mxCell id="snapshot_attributes" parent="snapshot" style="html=1;fontFamily=Arial;fontColor=#253342;strokeColor=#778491;strokeWidth=1;rounded=0;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingTop=9;spacingLeft=12;fontSize=12;whiteSpace=wrap;" value="&lt;div style=&quot;line-height:20px&quot;&gt;- turn: int {readOnly}&lt;br&gt;- completedTurns: int {readOnly}&lt;br&gt;- revenueCents: int {readOnly}&lt;br&gt;- averagePaidSatisfaction: Double [0..1] {readOnly}&lt;br&gt;- waitingCustomerIds: List&amp;lt;Integer&amp;gt; {readOnly}&lt;br&gt;- customers: List&amp;lt;CustomerView&amp;gt; {readOnly}&lt;br&gt;- tables: List&amp;lt;TableView&amp;gt; {readOnly}&lt;br&gt;- waiterAvailable: boolean {readOnly}&lt;br&gt;- chefAvailable: boolean {readOnly}&lt;br&gt;- paidCount: int {readOnly}&lt;br&gt;- servedCount: int {readOnly}&lt;br&gt;- abandonedCount: int {readOnly}&lt;/div&gt;" vertex="1">
-          <mxGeometry height="258" width="620.0" y="50" as="geometry" />
+        <mxCell id="snapshot_attributes" parent="snapshot" style="html=1;fontFamily=Arial;fontColor=#253342;strokeColor=#778491;strokeWidth=1;rounded=0;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingTop=9;spacingLeft=12;fontSize=12;whiteSpace=wrap;" value="&lt;div style=&quot;line-height:20px&quot;&gt;- turn: int {readOnly}&lt;br&gt;- completedTurns: int {readOnly}&lt;br&gt;- revenueCents: int {readOnly}&lt;br&gt;- averagePaidSatisfaction: Double [0..1] {readOnly}&lt;br&gt;- waitingCustomerIds: List&amp;lt;Integer&amp;gt; {readOnly}&lt;br&gt;- customers: List&amp;lt;CustomerView&amp;gt; {readOnly}&lt;br&gt;- tables: List&amp;lt;TableView&amp;gt; {readOnly}&lt;br&gt;- hostAvailable: boolean {readOnly}&lt;br&gt;- waiterAvailable: boolean {readOnly}&lt;br&gt;- chefAvailable: boolean {readOnly}&lt;br&gt;- paidCount: int {readOnly}&lt;br&gt;- servedCount: int {readOnly}&lt;br&gt;- abandonedCount: int {readOnly}&lt;br&gt;- happyHourTurnsRemaining: int {readOnly}&lt;br&gt;- happyHourUsed: boolean {readOnly}&lt;/div&gt;" vertex="1">
+          <mxGeometry height="318" width="620.0" y="50" as="geometry" />
         </mxCell>
         <mxCell id="cview" parent="1" style="html=1;fontFamily=Arial;fontColor=#253342;strokeColor=#778491;strokeWidth=1;swimlane;startSize=50;horizontal=1;collapsible=0;container=1;recursiveResize=0;fillColor=#EBEAF5;swimlaneFillColor=#FFFFFF;align=center;verticalAlign=middle;fontSize=12;whiteSpace=wrap;" value="&lt;span style=&quot;font-size:10px&quot;&gt;«record»&lt;/span&gt;&lt;br&gt;&lt;b&gt;CustomerView&lt;/b&gt;" vertex="1">
           <mxGeometry height="266" width="620" x="3580" y="1010" as="geometry" />
@@ -244,7 +244,7 @@
         <mxCell id="R_O_o" parent="1" style="html=1;whiteSpace=wrap;rounded=0;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=12;fontColor=#253342;align=center;verticalAlign=middle;" value="0..*" vertex="1">
           <mxGeometry height="22" width="54" x="2177" y="1220" as="geometry" />
         </mxCell>
-        <mxCell id="assoc_R_Menu" edge="1" parent="1" source="restaurant" style="html=1;strokeColor=#83929F;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;rounded=0;jumpStyle=arc;jumpSize=8;startArrow=none;endArrow=none;exitX=0.83;exitY=1;entryX=0.33;entryY=0;" target="menu" value="">
+        <mxCell id="assoc_R_Menu" edge="1" parent="1" source="restaurant" style="html=1;strokeColor=#83929F;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;rounded=0;jumpStyle=arc;jumpSize=8;startArrow=diamond;startFill=1;startSize=13;endArrow=none;exitX=0.83;exitY=1;entryX=0.33;entryY=0;" target="menu" value="">
           <mxGeometry as="geometry" relative="1">
             <Array as="points">
               <mxPoint x="2011.1" y="1100" />
@@ -312,7 +312,7 @@
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
         <mxCell id="S_CV_s" parent="1" style="html=1;whiteSpace=wrap;rounded=0;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=12;fontColor=#253342;align=center;verticalAlign=middle;" value="1" vertex="1">
-          <mxGeometry height="22" width="24" x="3736" y="883" as="geometry" />
+          <mxGeometry height="22" width="24" x="3736" y="943" as="geometry" />
         </mxCell>
         <mxCell id="S_CV_cv" parent="1" style="html=1;whiteSpace=wrap;rounded=0;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=12;fontColor=#253342;align=center;verticalAlign=middle;" value="0..*" vertex="1">
           <mxGeometry height="22" width="55" x="3714" y="980" as="geometry" />
@@ -320,13 +320,13 @@
         <mxCell id="assoc_snap_tv" edge="1" parent="1" source="snapshot" style="html=1;strokeColor=#83929F;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;rounded=0;jumpStyle=arc;jumpSize=8;startArrow=none;endArrow=none;exitX=1;exitY=0.7;entryX=1;entryY=0.25;" target="tview" value="">
           <mxGeometry as="geometry" relative="1">
             <Array as="points">
-              <mxPoint x="4298" y="775.6" />
+              <mxPoint x="4298" y="817.6" />
               <mxPoint x="4298" y="1436.5" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="S_TV_s" parent="1" style="html=1;whiteSpace=wrap;rounded=0;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=12;fontColor=#253342;align=center;verticalAlign=middle;" value="1" vertex="1">
-          <mxGeometry height="22" width="25" x="4213" y="756" as="geometry" />
+          <mxGeometry height="22" width="25" x="4213" y="798" as="geometry" />
         </mxCell>
         <mxCell id="S_TV_tv" parent="1" style="html=1;whiteSpace=wrap;rounded=0;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=12;fontColor=#253342;align=center;verticalAlign=middle;" value="2" vertex="1">
           <mxGeometry height="22" width="25" x="4213" y="1408" as="geometry" />
@@ -437,7 +437,12 @@
         </mxCell>
         <mxCell id="dep_ctrl_host" edge="1" parent="1" source="controller" style="html=1;strokeColor=#83929F;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;rounded=0;jumpStyle=arc;jumpSize=8;startArrow=none;endArrow=none;exitX=1;exitY=0.97;entryX=0.5;entryY=0;" target="host" value="">
           <mxGeometry as="geometry" relative="1">
-            </mxGeometry>
+            <Array as="points">
+              <mxPoint x="1375" y="701.42" />
+              <mxPoint x="1375" y="1740" />
+              <mxPoint x="2211" y="1740" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="dep_host_rest" edge="1" parent="1" source="host" style="html=1;strokeColor=#83929F;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;rounded=0;jumpStyle=arc;jumpSize=8;endArrow=none;startArrow=none;dashed=1;dashPattern=6 5;endArrow=open;endFill=0;endSize=11;exitX=0.15;exitY=0;entryX=0.876;entryY=1;" target="restaurant" value="">
           <mxGeometry relative="1" x="0.074" as="geometry" />
@@ -467,10 +472,10 @@
         <mxCell id="note_encapsulation" value="&lt;b&gt;Encapsulation&lt;/b&gt;&lt;br&gt;Every field is private, most are final, and there are no public setters. State only changes through methods that check the rules first, e.g. &lt;i&gt;Order.prepareOneUnit()&lt;/i&gt;, &lt;i&gt;Customer.markServed()&lt;/i&gt;, &lt;i&gt;HappyHour.activate()&lt;/i&gt; (once per game). &lt;i&gt;Restaurant&lt;/i&gt; hands out &lt;i&gt;List.copyOf(...)&lt;/i&gt; views, and &lt;i&gt;GameSnapshot&lt;/i&gt;, &lt;i&gt;CustomerView&lt;/i&gt; and &lt;i&gt;TableView&lt;/i&gt; are immutable records, so the CLI can't change game state." style="shape=note;whiteSpace=wrap;html=1;size=16;align=left;verticalAlign=top;spacing=10;fillColor=#FFF9C4;strokeColor=#C9B037;fontFamily=Arial;fontSize=13;fontColor=#253342;" vertex="1" parent="1">
           <mxGeometry x="110" y="2206" width="1320" height="170" as="geometry" />
         </mxCell>
-        <mxCell id="note_polymorphism" value="&lt;b&gt;Polymorphism&lt;/b&gt;&lt;br&gt;&lt;i&gt;TurnManager&lt;/i&gt;, &lt;i&gt;Restaurant&lt;/i&gt;, &lt;i&gt;Table&lt;/i&gt; and the staff only use the abstract &lt;i&gt;Customer&lt;/i&gt;. Its final lifecycle methods call the abstract rules &lt;i&gt;waitingLossPerTurn()&lt;/i&gt;, &lt;i&gt;chooseMenuItem()&lt;/i&gt;, &lt;i&gt;quotePriceCents()&lt;/i&gt; and &lt;i&gt;typeLabel()&lt;/i&gt;, which &lt;i&gt;RegularCustomer&lt;/i&gt;, &lt;i&gt;VIPCustomer&lt;/i&gt; and &lt;i&gt;CriticCustomer&lt;/i&gt; override. &lt;i&gt;ComboMeal&lt;/i&gt; is a &lt;i&gt;MenuItem&lt;/i&gt;, so Order, Chef and pricing handle a combo without any type checks." style="shape=note;whiteSpace=wrap;html=1;size=16;align=left;verticalAlign=top;spacing=10;fillColor=#FFF9C4;strokeColor=#C9B037;fontFamily=Arial;fontSize=13;fontColor=#253342;" vertex="1" parent="1">
+        <mxCell id="note_polymorphism" value="&lt;b&gt;Polymorphism&lt;/b&gt;&lt;br&gt;&lt;i&gt;Customer.applyWaitingLoss()&lt;/i&gt; calls the overridden &lt;i&gt;waitingLossPerTurn()&lt;/i&gt;. &lt;i&gt;Waiter&lt;/i&gt; calls &lt;i&gt;chooseMenuItem()&lt;/i&gt; and &lt;i&gt;quotePriceCents()&lt;/i&gt; through &lt;i&gt;Customer&lt;/i&gt;; &lt;i&gt;CustomerView&lt;/i&gt; calls &lt;i&gt;typeLabel()&lt;/i&gt;. &lt;i&gt;RegularCustomer&lt;/i&gt;, &lt;i&gt;VIPCustomer&lt;/i&gt; and &lt;i&gt;CriticCustomer&lt;/i&gt; supply those rules. &lt;i&gt;ComboMeal&lt;/i&gt; is a &lt;i&gt;MenuItem&lt;/i&gt;, so Order, Chef and pricing handle it without concrete-type checks." style="shape=note;whiteSpace=wrap;html=1;size=16;align=left;verticalAlign=top;spacing=10;fillColor=#FFF9C4;strokeColor=#C9B037;fontFamily=Arial;fontSize=13;fontColor=#253342;" vertex="1" parent="1">
           <mxGeometry x="1490" y="2206" width="1320" height="170" as="geometry" />
         </mxCell>
-        <mxCell id="note_composition" value="&lt;b&gt;Composition and aggregation&lt;/b&gt;&lt;br&gt;&lt;i&gt;Restaurant&lt;/i&gt; creates and owns its 2 &lt;i&gt;Tables&lt;/i&gt; and 4 &lt;i&gt;MenuItems&lt;/i&gt; for its whole life (filled diamond). &lt;i&gt;GameSnapshot&lt;/i&gt; owns its &lt;i&gt;CustomerView&lt;/i&gt; and &lt;i&gt;TableView&lt;/i&gt; copies. &lt;i&gt;ComboMeal&lt;/i&gt; only references the existing Salad and Pasta, which the menu still owns. One &lt;i&gt;HappyHour&lt;/i&gt; is shared by &lt;i&gt;TurnManager&lt;/i&gt; and &lt;i&gt;Waiter&lt;/i&gt;, so it's an association, not composition." style="shape=note;whiteSpace=wrap;html=1;size=16;align=left;verticalAlign=top;spacing=10;fillColor=#FFF9C4;strokeColor=#C9B037;fontFamily=Arial;fontSize=13;fontColor=#253342;" vertex="1" parent="1">
+        <mxCell id="note_composition" value="&lt;b&gt;Composition and associations&lt;/b&gt;&lt;br&gt;&lt;i&gt;Restaurant&lt;/i&gt; creates and owns its 2 &lt;i&gt;Tables&lt;/i&gt; and 4 &lt;i&gt;MenuItems&lt;/i&gt; (filled diamonds). &lt;i&gt;GameSnapshot&lt;/i&gt; stores immutable &lt;i&gt;CustomerView&lt;/i&gt; and &lt;i&gt;TableView&lt;/i&gt; values. &lt;i&gt;ComboMeal&lt;/i&gt; references the existing Salad and Pasta also held by the menu; those component links are ordinary associations. One &lt;i&gt;HappyHour&lt;/i&gt; is shared by &lt;i&gt;TurnManager&lt;/i&gt; and &lt;i&gt;Waiter&lt;/i&gt;, so those links are associations too." style="shape=note;whiteSpace=wrap;html=1;size=16;align=left;verticalAlign=top;spacing=10;fillColor=#FFF9C4;strokeColor=#C9B037;fontFamily=Arial;fontSize=13;fontColor=#253342;" vertex="1" parent="1">
           <mxGeometry x="2870" y="2206" width="1320" height="170" as="geometry" />
         </mxCell>
       </root>

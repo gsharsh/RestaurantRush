@@ -53,7 +53,7 @@ The Stage 1 design and shared workflow are in [the Stage 1 contract](docs/class-
 
 - Java Development Kit 17 or newer
 - Bash for the supplied helper scripts
-- Draw.io/diagrams.net for UML editing
+- Draw.io/diagrams.net for class-diagram editing; [PlantUML](https://plantuml.com/sequence-diagram) for the main sequence diagram
 
 The project is compiled with `javac --release 17`, even when a newer JDK is installed.
 
@@ -179,8 +179,25 @@ Stage 1 remains extensible through behaviour it genuinely uses: game code depend
 - Record observed tests using [docs/testing/TEST-TEMPLATE.md](docs/testing/TEST-TEMPLATE.md).
 - Keep each stage's diagrams in `docs/uml/stage-N-uml/`. The final class diagram in `docs/uml/stage-3-uml/` carries the encapsulation, polymorphism and composition notes required by brief §5.
 - The sequence diagram in `docs/uml/stage-3-uml/` shows a VIP customer ordering during Happy Hour (turn 4 of the victory replay), from the CLI through `GameController`, `TurnManager`, `HappyHour`, `Host`, `Waiter` and `Chef`.
+- Sequence exports, generated with PlantUML: [three-page PDF](docs/uml/stage-3-uml/sequence-diagram.pdf), [continuous PNG](docs/uml/stage-3-uml/sequence-diagram.png), [continuous SVG](docs/uml/stage-3-uml/sequence-diagram.svg) and [editable source](docs/uml/stage-3-uml/sequence-diagram.puml). The PDF contains one continuation per page, with selectable text and page bookmarks.
+- The [class diagram PNG](docs/uml/stage-3-uml/class-diagram.png) and [editable Draw.io source](docs/uml/stage-3-uml/class-diagram.drawio) are in the same folder.
 - Before creating each stage tag, compile the candidate commit, run its tests and victory/defeat scenarios, and have another member review the evidence.
 - Keep tests under the same feature branch as the behaviour they verify, and record the observed result against the exact commit SHA.
+
+The sequence follows the existing victory replay: VIP customer 2 arrives on turn 4, orders during Happy Hour, is served on turn 5 and pays on turn 7, followed by the result check after turn 18. The manager's Happy Hour choice changes the bill, as shown in the pricing note. The three PDF pages retain the same lifeline columns and continuous message numbering, with activation bars, relevant guards, `opt` branches, a remaining-turn `loop` and a final-result `alt`.
+
+| Sequence page | Assignment evidence |
+| --- | --- |
+| 1 — Arrival, order and cooking | Manager activates Happy Hour; scheduled VIP arrival; Host seating; Waiter assignment; VIP and Happy Hour pricing; locked Order creation; Chef assignment and READY |
+| 2 — Service and eating | Turn 5 recovery; READY → SERVED with C2 EATING; READY_TO_PAY on turn 6; payment delayed by the eligibility guard |
+| 3 — Payment and result | Automatic payment on turn 7; table release; remaining-turn loop; all three victory targets and the observed final result |
+
+To regenerate with PlantUML 1.2026.10, use the source's `newpage` breaks for the three continuations, or define `CONTINUOUS=1` for the complete timeline. Replace the JAR path below with your local installation; use `--svg` instead of `--png` for vector output. The PDF is assembled from the three SVG continuations with one diagram per page.
+
+```bash
+java -jar /path/to/plantuml.jar --png --output-dir /tmp/rr-sequence-pages docs/uml/stage-3-uml/sequence-diagram.puml
+java -jar /path/to/plantuml.jar --define CONTINUOUS=1 --png --output-dir /tmp/rr-sequence-continuous docs/uml/stage-3-uml/sequence-diagram.puml
+```
 
 ## Stage 1 → Stage 2 transition
 
@@ -239,7 +256,7 @@ changes. The `stage-1` and `stage-2` tags remain unchanged.
 | Changed boundary and views | `src/restaurantrush/boundary/RestaurantCLI.java`, `src/restaurantrush/view/GameSnapshot.java`, `src/restaurantrush/app/RestaurantRushApp.java` | Ask about Happy Hour only while it is unused, add the `Host>` prompt, show turns left and staff status, and wire one shared `HappyHour` and `Host`. [CLI and views](https://github.com/gsharsh/RestaurantRush/commit/28850f9096ee8eac626e87760245885096e65170), [merge with the turn flow](https://github.com/gsharsh/RestaurantRush/commit/3646b36d45e8dbde1dfc339cca91d2062351f55d). |
 | New tests | `tests/restaurantrush/domain/ComboMealTest.java`, `HappyHourTest.java`; `tests/restaurantrush/staff/HostTest.java`, `StaffHappyHourTest.java` | Verify each new class and the Happy Hour pricing and locked bills. [Staff Happy Hour tests](https://github.com/gsharsh/RestaurantRush/commit/498b72e2b13c0d1214bb61bf82ff4c63d5297980); other tests come with the commits above. |
 | Extended tests | `tests/restaurantrush/domain/CustomerTest.java`, `RegularCustomerTest.java`, `VIPCustomerTest.java`, `CriticCustomerTest.java`, `RestaurantStateTest.java`; `tests/restaurantrush/staff/StaffTest.java`, `StaffMixedCustomerTest.java`; `tests/restaurantrush/control/TurnManagerTest.java`, `GameControllerTest.java`; `tests/restaurantrush/view/ViewRecordsTest.java`; `tests/restaurantrush/boundary/RestaurantCLITest.java` | Cover recovery, combo selection over the four-item menu, the Host's task and the new snapshot fields. [Combo selection tests](https://github.com/gsharsh/RestaurantRush/commit/d649608e70da87e91834eaddad8989150542d7d1); the rest come with the commits above. |
-| New Stage 3 evidence | `docs/testing/stage-3-tests.md`; `docs/testing/stage-3-testscript/stage-3-{victory,defeat}.{txt,out}`; `docs/uml/stage-3-uml/{class-diagram,sequence-diagram}.{drawio,png}`; `docs/ai-prompts/stage-3-prompts/*.md` | Record tests, replay inputs and outputs, the final annotated class diagram, the sequence diagram and AI assistance. [Replays and test record](https://github.com/gsharsh/RestaurantRush/commit/af3b0db36a07d6a3e1a88e98b9353c6e1e96b0b9), [diagrams](https://github.com/gsharsh/RestaurantRush/commit/7d8375844010ee403bbb1356711d02e1fceb7541). |
+| New Stage 3 evidence | `docs/testing/stage-3-tests.md`; `docs/testing/stage-3-testscript/stage-3-{victory,defeat}.{txt,out}`; `docs/uml/stage-3-uml/class-diagram.{drawio,png}`; `docs/uml/stage-3-uml/sequence-diagram.{puml,png,pdf}`; `docs/ai-prompts/stage-3-prompts/*.md` | Record tests, replay inputs and outputs, the final annotated class diagram, the sequence diagram and AI assistance. [Replays and test record](https://github.com/gsharsh/RestaurantRush/commit/af3b0db36a07d6a3e1a88e98b9353c6e1e96b0b9), [diagrams](https://github.com/gsharsh/RestaurantRush/commit/7d8375844010ee403bbb1356711d02e1fceb7541). |
 | Changed documentation | `README.md` | Record the Stage 3 status, tests, replays and this transition. This documentation update. |
 | Removed placeholders | `.gitkeep` under `docs/testing/stage-3-testscript/` and `docs/uml/stage-3-uml/` | Removed once real evidence files were added. No class or test was deleted or moved in Stage 3. |
 

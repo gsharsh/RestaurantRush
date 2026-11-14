@@ -48,26 +48,27 @@ Replay earlier stages from their tags; their historical inputs and outputs are s
 
 ## Final UML
 
-| Diagram | Editable source | Exports |
+| Diagram | Editable source | Export |
 | --- | --- | --- |
 | Class diagram | [Draw.io](docs/uml/stage-3-uml/class-diagram.drawio) | [PNG](docs/uml/stage-3-uml/class-diagram.png) |
-| Sequence diagram | [PlantUML](docs/uml/stage-3-uml/sequence-diagram.puml) | [Three-page PDF](docs/uml/stage-3-uml/sequence-diagram.pdf), [continuous PNG](docs/uml/stage-3-uml/sequence-diagram.png), [SVG](docs/uml/stage-3-uml/sequence-diagram.svg) |
+| Sequence diagram | [PlantUML](docs/uml/stage-3-uml/sequence-diagram.puml) | [Continuous PNG](docs/uml/stage-3-uml/sequence-diagram.png) |
 
-The class diagram includes the final types, relationships and examples of encapsulation, polymorphism and composition. The sequence follows VIP C2 through the victory replay, showing how the manager's Happy Hour choice changes the bill.
+The class diagram shows the final types, relationships and examples of encapsulation, polymorphism and composition.
 
-| PDF page | Scenario |
+The sequence diagram follows VIP C2 through the victory replay as one continuous timeline, showing how the manager's Happy Hour choice changes the bill. It includes activation bars, guards, `opt`/`alt` branches and loops. Yellow annotations explain CLI/controller responsibilities, polymorphic customer rules, Order encapsulation and automatic payment.
+
+| Turns | Scenario |
 | --- | --- |
-| 1 | Turn 4 arrival, Host seating, Waiter ordering, VIP/Happy Hour pricing and Chef preparation to READY |
-| 2 | Turn 5 service to SERVED/EATING, then READY_TO_PAY on turn 6 with payment delayed by its guard |
-| 3 | Turn 7 payment and table release, remaining-turn loop and the final result check after turn 18 |
+| 4 | Arrival, Host seating, Waiter ordering, VIP/Happy Hour pricing and Chef preparation to READY |
+| 5–6 | Service to SERVED/EATING on turn 5, then READY_TO_PAY on turn 6 with payment delayed by its guard |
+| 7–18 | Payment and table release on turn 7, remaining-turn loop and the final result check after turn 18 |
 
 <details>
 <summary>Regenerate the sequence diagram</summary>
 
-Use PlantUML 1.2026.10, replacing the JAR path below with your installation. The source's `newpage` breaks generate three continuations; `CONTINUOUS=1` generates the complete timeline. Use `--svg` instead of `--png` for vector output. The PDF combines the three SVG continuations, one per page.
+Use PlantUML 1.2026.10, replacing the JAR path below with your installation. `CONTINUOUS=1` generates the complete timeline. Omit that option to generate three separate continuation images using the source's `newpage` breaks.
 
 ```bash
-java -jar /path/to/plantuml.jar --png --output-dir /tmp/rr-sequence-pages docs/uml/stage-3-uml/sequence-diagram.puml
 java -jar /path/to/plantuml.jar --define CONTINUOUS=1 --png --output-dir /tmp/rr-sequence-continuous docs/uml/stage-3-uml/sequence-diagram.puml
 ```
 

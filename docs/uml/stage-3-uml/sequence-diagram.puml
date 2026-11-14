@@ -6,14 +6,21 @@
 ignore newpage
 !endif
 skinparam style strictuml
-skinparam monochrome true
+skinparam monochrome false
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 17
 skinparam dpi 180
 skinparam BoxPadding 8
 skinparam maxMessageSize 240
-skinparam NoteBackgroundColor white
+skinparam NoteBackgroundColor #FFF8D6
+skinparam NoteBorderColor #C7AF54
+skinparam NoteFontColor #202020
+skinparam ParticipantBackgroundColor #E2E2E2
+skinparam ActorBackgroundColor #E2E2E2
+skinparam BoundaryBackgroundColor #E2E2E2
+skinparam ControlBackgroundColor #E2E2E2
+skinparam EntityBackgroundColor #E2E2E2
 skinparam NoteFontSize 15
 skinparam sequenceMessageAlign left
 skinparam sequenceDividerBackgroundColor white
@@ -43,6 +50,11 @@ entity "t2:Table" as T2
 
 == Turn 4 - manager choice, arrival, order and READY ==
 note over M, GC: Turns 1-3 complete; Happy Hour unused; table 2 free.
+note over CLI, GC
+  **Responsibilities**
+  CLI reads manager choices;
+  controller coordinates actions.
+end note
 activate CLI
 M -> CLI : Happy Hour> on
 ' @java GameController.startTurn/1
@@ -102,6 +114,11 @@ activate GC
 ' @java Waiter.takeOrder/3
 GC -> W : takeOrder(r, 2, 4)
 activate W
+note over W, C2
+  **Polymorphism**
+  Customer supplies the food choice and quote;
+  VIPCustomer provides its own rules.
+end note
 ' @java Customer.chooseMenuItem/1
 W -> C2 : chooseMenuItem(r.getMenu())
 activate C2
@@ -143,7 +160,7 @@ activate Chef
 ' @java Order.prepareOneUnit/0
 Chef -> O2 : prepareOneUnit()
 activate O2
-note right of O2: [canPrepare()]\n1 -> 0 units; READY
+note right of O2: **Encapsulation**\nOrder owns its preparation and status.\n[canPrepare()] 1 -> 0 units; READY
 deactivate O2
 Chef --> GC : ActionResult.ok("Burger is READY to serve.")
 deactivate Chef
@@ -283,6 +300,11 @@ activate TM
 ' @java Cashier.collectOne/2
 TM -> Cash : collectOne(r, 7)
 activate Cash
+note over R, Cash
+  **Automatic payment**
+  At most one eligible customer per turn;
+  payment readiness must be from an earlier turn.
+end note
 ' @java Restaurant.oldestEligiblePayer/1
 Cash -> R : oldestEligiblePayer(7)
 activate R

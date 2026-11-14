@@ -1,6 +1,6 @@
-# RestaurantRush Stage 3 class contracts draft
+# RestaurantRush Stage 3 class contracts
 
-The [Stage 1 contract](stage-1-class-contracts.md) and [Stage 2 addendum](stage-2-class-contracts.md) remain the baseline for customer rules, lifecycle, staff actions, failure handling and ownership. This document proposes the Stage 3 APIs and team handoffs; it does not claim implementation or completed tests. The proposed choices below are design decisions, not additional requirements from the brief.
+This document describes the implemented Stage 3 APIs and team ownership. The [Stage 1 contract](stage-1-class-contracts.md) and [Stage 2 addendum](stage-2-class-contracts.md) supply the inherited lifecycle and customer rules. Verification is recorded in the [Stage 3 test record](../testing/stage-3-tests.md); the `stage-3` release tag remains pending. The gameplay choices below are team design decisions, not additional requirements from the brief.
 
 ## Required scope
 
@@ -10,9 +10,9 @@ The [Stage 1 contract](stage-1-class-contracts.md) and [Stage 2 addendum](stage-
 | ComboMeal | Combine two existing menu items; preparation units are their sum, and price is 90% of their combined price, rounded to the nearest cent. Customers choose combos using a documented rule. |
 | Happy Hour | Activate once per game at the start of a turn, lasting that turn and the next. Show remaining duration. Orders taken while active receive 20% off after the customer's VIP discount. At each active turn's start, customers waiting for a table or food recover 15 satisfaction, capped at 100. |
 
-Retain two tables, the three base dishes, the six mixed arrivals on turns 1, 4, 7, 10, 13 and 16, all 18 turns, and the same victory thresholds: at least four paid customers, 4500 cents revenue and average paid satisfaction of at least 60. Existing orders keep their locked bills; departed customers are unaffected. The game remains independently playable offline at `stage-3`, using integer cents and the existing Java 17 build target.
+Retain two tables, the three base dishes, the six mixed arrivals on turns 1, 4, 7, 10, 13 and 16, all 18 turns, and the same victory thresholds: at least four paid customers, 4500 cents revenue and average paid satisfaction of at least 60. Existing orders keep their locked bills; departed customers are unaffected. The game runs offline using integer cents and the existing Java 17 build target.
 
-### Proposed gameplay choices
+### Gameplay choices
 
 - Add one `Salad + Pasta Combo` after Salad, Burger and Pasta in the menu. It costs 2430 cents and requires 3 preparation units. Keep the existing Regular/VIP ID-cycle selection over the resulting four-item menu and the Critic's preparation/price/menu-order preference. Customer 4 therefore chooses the combo; the manager never chooses a customer's food.
 - Use the order **Host → Waiter → Chef**. A customer seated by the Host can have an order taken and its first preparation unit completed that turn. Both Host and Waiter may seat different customers when tables are free.
@@ -20,7 +20,7 @@ Retain two tables, the three base dishes, the six mixed arrivals on turns 1, 4, 
 - Derive Happy Hour's remaining duration from its activation turn instead of maintaining a second clock. Allow activation on turn 18; the game still ends after turn 18.
 - Round each monetary step to the nearest cent, with half cents rounded up: combo price, customer quote, then Happy Hour. Preserve the existing VIP rounding policy.
 
-## Proposed ownership and handoffs
+## Ownership and handoffs
 
 | Owner | Stage 3 responsibility | Handoff / review |
 | --- | --- | --- |
@@ -30,7 +30,7 @@ Retain two tables, the three base dishes, the six mixed arrivals on turns 1, 4, 
 | M4 — Viti | TurnManager/GameController changes and timing/integration tests | Agree start/action order with M3/M5; preserve arrival and result rules |
 | M5 — Devansh | App wiring, CLI/views, replay evidence, README transition and diagram coordination | Each owner supplies/verifies their class details and shared scenarios |
 
-## Proposed new class contracts
+## New class contracts
 
 Constructor nulls and invalid values throw `IllegalArgumentException`. Invalid internal lifecycle calls throw `IllegalStateException`. Rejected manager actions return `ActionResult.fail(...)`, preserve state and do not consume a staff choice. Fields remain private; collections and snapshots remain immutable.
 
@@ -96,7 +96,7 @@ Unlisted APIs retain their Stage 2 contracts. Update affected Stage 3 callers an
 
 ### `Waiter` — M3
 
-Add a private `final HappyHour happyHour` reference. Replace the constructor and order-taking signatures below; seating and serving are unchanged.
+Waiter holds a private `final HappyHour happyHour` reference. The app uses the turn-aware APIs below; seating and serving are unchanged. The no-argument constructor and two-argument `takeOrder` remain as compatibility overloads used by regression tests.
 
 | Public operation | Stage 3 contract |
 | --- | --- |
@@ -111,13 +111,13 @@ The controller supplies the current turn. Neither Cashier nor payment accounting
 
 | Class / public operation | Stage 3 contract |
 | --- | --- |
-| `public GameController(Restaurant restaurant, TurnManager turnManager, Host host, Waiter waiter, Chef chef)` | Replace the existing constructor; store the five non-null shared collaborators. |
-| `GameController`: `public ActionResult startTurn(boolean activateHappyHour)` | Replace `startTurn()`. Delegate to the new `beginTurn(...)`; return its result. |
+| `public GameController(Restaurant restaurant, TurnManager turnManager, Host host, Waiter waiter, Chef chef)` | Store the five non-null shared collaborators. |
+| `GameController`: `public ActionResult startTurn(boolean activateHappyHour)` | Call `turnManager.beginTurn(...)`, then return `ActionResult.ok(...)`. Convert a lifecycle/activation `IllegalStateException` into `ActionResult.fail(...)`. |
 | `GameController`: `public ActionResult seatCustomerWithHost(int customerId, int tableId)` | Fail before invoking Host if its choice is unavailable; record the Host task only after successful seating. |
 | `GameController`: `public ActionResult waitHost()` | Consume the available Host choice; fail without mutation if unavailable. |
 | `GameController`: existing `takeOrder(int customerId)` | Pass the current turn to Waiter and record the Waiter choice only after success. |
-| `public TurnManager(Cashier cashier, ArrivalSchedule arrivals, HappyHour happyHour)` | Replace the existing constructor; store the three non-null collaborators. |
-| `TurnManager`: `public ActionResult beginTurn(Restaurant restaurant, boolean activateHappyHour)` | Replace `beginTurn(Restaurant)`. Reject repeated activation with a failure result before any mutation. Null Restaurant and duplicate/finished turn starts retain their existing exceptions. On success, begin the turn according to the sequence below. |
+| `public TurnManager(Cashier cashier, ArrivalSchedule arrivals, HappyHour happyHour)` | Store the three non-null collaborators. |
+| `TurnManager`: `public void beginTurn(Restaurant restaurant, boolean activateHappyHour)` | Reject a null Restaurant with `IllegalArgumentException`; reject duplicate/finished starts or repeated activation with `IllegalStateException` before mutation. On success, begin the turn according to the sequence below. |
 | `TurnManager`: `public boolean canAssignHost()` | True only during an active unresolved turn before the Host choice is used. |
 | `TurnManager`: `public void recordHostTask()` | Require `canAssignHost()`; otherwise throw `IllegalStateException` without mutation. |
 | `TurnManager`: existing `canAssignWaiter()` / `canAssignChef()` | Waiter requires the Host choice to be complete; Chef still requires the Waiter choice to be complete. Each choice is usable once. |
@@ -147,16 +147,10 @@ Keep `GameController.seatCustomer(...)` as the Waiter's seating action. The arri
 
 Happy Hour is active only on its activation turn and the following turn. Recovery occurs before staff actions and does not replace the normal end-of-turn losses. An order taken during the active period keeps its discounted bill after expiry; one taken earlier keeps its earlier bill. Waiter-before-Chef still prevents serving a dish completed later in the same turn, and the existing eating/payment delays remain in force.
 
-## Acceptance and evidence checklist
+## Verification and release
 
-These are planned checks; no Stage 3 result is claimed yet.
+The [Stage 3 test record](../testing/stage-3-tests.md) contains the verified commit/runtime, all 19 test runners and the saved victory/defeat results. It covers combo selection and arithmetic, shared component identity, Host task limits, two-turn Happy Hour duration/recovery, discount order, locked bills and unchanged lifecycle timing.
 
-- [ ] Verify combo component identity, 2430-cent/3-unit base values, rounding, null/name validation and overflow handling through the existing MenuItem/Order APIs.
-- [ ] Verify customer-owned combo selection, unchanged VIP/Critic rules and no concrete-type branching in controller or staff behaviour.
-- [ ] Verify Host and Waiter can each seat once, same-turn Host seating/Waiter ordering/Chef preparation, task gates and rejected-action preservation.
-- [ ] Verify Happy Hour activates once, lasts exactly two turns, displays 2 → 1 → 0, rejects reactivation without mutation and does not extend turn 18.
-- [ ] Verify exactly one 15-point recovery per active turn, capping at 100; include queued, seated and READY-but-unserved customers and exclude eating, payment-ready, paid and departed customers. Preserve normal waiting losses.
-- [ ] Verify VIP-before-Happy-Hour quotation, combo pricing, rounding boundaries, locked earlier orders, post-expiry bills and paid-only totals.
-- [ ] Run the existing and new Java tests, plus separate saved 18-turn Stage 3 victory/defeat scenarios. Record expected/observed results, candidate SHA and Java version in `docs/testing/stage-3-tests.md`, following the concise Stage 1/2 format.
-- [ ] Update the final class diagram to match Stage 3, with visibility, relationships/multiplicities and genuine encapsulation, polymorphism and composition examples. Complete one sequence diagram showing a manager decision, arrival/order, staff assignments, READY/SERVED, eating, payment, result check and a Stage 2/3 behaviour, as required by brief §5.
-- [ ] Record the Stage 2 → Stage 3 file changes, reasons and commit/compare links in the README; review the runnable final candidate and publish `stage-3`, preserving earlier stage tags.
+The [README](../../README.md#final-uml) links the final class and sequence diagrams and records the [Stage 2 → Stage 3 file changes](../../README.md#stage-2--stage-3-transition). The sequence follows VIP C2 from arrival on turn 4 to payment on turn 7 and the final result after turn 18.
+
+Before submission, complete team review, provide the video link/timestamps and tag the reviewed runnable commit as `stage-3`. The existing `stage-1` and `stage-2` tags preserve the earlier implementations.

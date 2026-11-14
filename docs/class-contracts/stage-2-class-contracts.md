@@ -4,7 +4,9 @@
 
 Originally prepared on 2026-10-29 from the [assignment brief](../SC2002_Restaurant_Rush_Group_Assignment.docx), especially §§2–3, 4.2, 4.4 and 5. Updated on 2026-11-06 to describe the implemented Stage 2 behaviour and its verification.
 
-The published Stage 1 baseline is tag `stage-1` at `1b9ebf92330316628010880245f98a67416aaef9`. Stage 2 implementation, mixed-customer tests, replay evidence and UML are integrated in candidate `97463b1ce1481806c5861047f7a16bb71b0674e2`, which includes the folder reorganisation from `1dadd0b`. The [Stage 2 test record](../testing/stage-2-tests.md) records the observed checks and release gates. The Critic preference, ownership split and type-label API are confirmed; the arrival mapping below is implemented and exercised by the saved runs. General-price VIP rounding is implemented as the documented working policy; separate human agreement on that design choice is not recorded. The `stage-2` tag has not yet been created or published.
+Stage 2 is tagged `stage-2` at `27b7c9f`; Stage 1 is preserved at `stage-1` (`1b9ebf9`). The [Stage 2 test record](../testing/stage-2-tests.md) records the original integrated verification at `97463b1`, including its runtime limitations. This document describes Stage 2 only; see the [Stage 3 contract](stage-3-class-contracts.md) for the later Host, ComboMeal and Happy Hour additions.
+
+Critic preference, ownership, type labels and the arrival mapping below are implemented. General-price VIP rounding follows the documented working policy; separate human agreement on that choice is not recorded.
 
 The [Stage 1 contract](stage-1-class-contracts.md) remains the baseline for lifecycle, state ownership, staff actions, failure handling and collaboration. Stage 2 extends customer rules and arrival construction. Stage 1 evidence remains available at its published tag and in `docs/testing/stage-1-tests.md`.
 
@@ -110,7 +112,7 @@ Customer-type labels are adopted as a Stage 2 team requirement so players can id
 1. The confirmed Critic preference, ownership split and required type-label API guided the implementation. VIP uses the documented general-price rounding policy; its separate human agreement remains to be recorded.
 2. VIP, Critic, the base type-label API and the view/CLI handoff are implemented with focused tests. Existing lifecycle and staff contracts are preserved.
 3. The mixed arrival schedule is integrated. All 15 test runners, including actual-subtype staff/payment regressions, passed alongside the saved 18-turn victory and defeat replays.
-4. The Stage 2 Draw.io source/export and gameplay evidence are present. The README records the implemented transition. The team still reviews the final documentation candidate and records human sign-off before creating and publishing `stage-2`.
+4. The Stage 2 diagrams and gameplay evidence are present, the README records the transition, and `stage-2` identifies the runnable release snapshot.
 
 Use focused feature branches from the current `main`, owner-reviewed pull requests and the existing AI-prompt/test evidence templates. Keep the published `stage-1` tag fixed while developing Stage 2.
 
@@ -133,13 +135,8 @@ The technical checks below were verified in the integrated audit; the [Stage 2 t
 - [x] Add the Stage 2 Draw.io source/export under `docs/uml/stage-2-uml/` to match implemented Stage 2 classes. Preserve Stage 1 scenario files as historical evidence; Stage 2 outputs differ intentionally.
 - [x] Complete the README transition record with actual new/changed/deleted files, reasons and relevant implementation commit or compare links.
 - [ ] Record human evidence review, including agreement on the implemented general-price VIP rounding policy and UML owner confirmation.
-- [ ] Commit the final documentation, verify the resulting candidate and clean working tree, then create and publish `stage-2` through the team's release process.
+- [x] Preserve the runnable Stage 2 snapshot at tag `stage-2` (`27b7c9f`).
 
-## Diagram completion after Stage 3
+## Final diagrams
 
-Maintain the Stage 2 class diagram for its release. Schedule the following final-submission diagram work after Stage 3 is complete; these are not Stage 2 release gates:
-
-- [ ] Annotate the final class diagram with genuine examples of encapsulation, polymorphism and composition, as required by brief §5. Each member supplies the details for their classes, with M5 coordinating the Draw.io source and export.
-- [ ] Choose a scenario, assign ownership and complete the sequence diagram after Stage 3. It must include a Stage 2 or Stage 3 behaviour; VIP pricing is a possible scenario, with the final choice deferred until then.
-
-Stage 2 gameplay and technical verification are complete as recorded above. Human release sign-off and publication of `stage-2` remain pending; this document does not claim either has occurred.
+The Stage 2 class diagram remains in `docs/uml/stage-2-uml/`. The completed Stage 3 class and sequence diagrams are linked from the [README](../../README.md#final-uml); they include the final OOP annotations and a manager-choice scenario with VIP pricing and Happy Hour.

@@ -4,7 +4,17 @@ RestaurantRush is the SC2002 Object-Oriented Design and Programming assignment: 
 
 - **Repository:** [gsharsh/RestaurantRush](https://github.com/gsharsh/RestaurantRush)
 - **Assignment brief:** [SC2002 Restaurant Rush](docs/SC2002_Restaurant_Rush_Group_Assignment.docx)
-- **Current status:** Stage 3 implementation, tests and final UML are complete. The `stage-3` tag and final video details remain to be added.
+- **Current status:** Stage 3 implementation, tests and final UML are complete, and all three stage tags are published. Final video details will be added after filming.
+
+## Stage releases
+
+All three stages are tagged and available as runnable snapshots.
+
+| Tag | Runnable scope | Commit |
+| --- | --- | --- |
+| [stage-1](https://github.com/gsharsh/RestaurantRush/tree/stage-1) | Regular customers and the complete core game | [1b9ebf9](https://github.com/gsharsh/RestaurantRush/commit/1b9ebf92330316628010880245f98a67416aaef9) |
+| [stage-2](https://github.com/gsharsh/RestaurantRush/tree/stage-2) | VIP and Critic behaviour | [27b7c9f](https://github.com/gsharsh/RestaurantRush/commit/27b7c9f475b77ab3efa533e5e88317ea6c1b0e55) |
+| [stage-3](https://github.com/gsharsh/RestaurantRush/tree/stage-3) | Host, ComboMeal and Happy Hour | [f7c3365](https://github.com/gsharsh/RestaurantRush/commit/f7c33655e2633bed0a53a36bc980d1c744779516) |
 
 ## Build and run
 
@@ -105,22 +115,9 @@ java -jar /path/to/plantuml.jar --define CONTINUOUS=1 --png --output-dir /tmp/rr
 | M4 - Viti     | Game controller, turns and arrivals   | Host task limits and Happy Hour timing |
 | M5 - Devansh  | CLI, views, app wiring and evidence   | Display, replays and UML coordination  |
 
-
-
-
-## Stage releases
-
-
-| Tag       | Runnable scope                               | Status      |
-| --------- | -------------------------------------------- | ----------- |
-| `stage-1` | Regular customers and the complete core game | `1b9ebf9`   |
-| `stage-2` | VIP and Critic behaviour                     | `27b7c9f`   |
-| `stage-3` | Host, ComboMeal and Happy Hour               | Tag pending |
-
-
-The tables below record the new, changed, moved and deleted files required by brief Section 5. Java paths are relative to `src/restaurantrush/`; test paths are relative to `tests/restaurantrush/` unless stated otherwise.
-
 ## Stage 1 → Stage 2 transition
+
+Both transition tables record the new, changed, moved and deleted files required by brief Section 5. Java paths are relative to `src/restaurantrush/`; test paths are relative to `tests/restaurantrush/` unless stated otherwise.
 
 [Compare the runnable Stage 1 and Stage 2 tags](https://github.com/gsharsh/RestaurantRush/compare/stage-1...stage-2).
 
@@ -142,7 +139,7 @@ No gameplay class was deleted. The old paths were replaced by the moves above.
 
 ## Stage 2 → Stage 3 transition
 
-[Compare Stage 2 with the integrated Stage 3 implementation](https://github.com/gsharsh/RestaurantRush/compare/stage-2...5c583fb484eafb985eb432540a816a59407b75ee). [Evidence and final UML](https://github.com/gsharsh/RestaurantRush/compare/5c583fb484eafb985eb432540a816a59407b75ee...26d7d38) were merged afterwards. The `stage-3` tag is pending.
+[Compare the runnable Stage 2 and Stage 3 tags](https://github.com/gsharsh/RestaurantRush/compare/stage-2...stage-3). The `stage-3` tag points to `f7c3365`, including the implementation, final UML and documentation updates.
 
 
 | Change                     | Files                                                                                                                                                                                                                                                 | Reason                                                                            |

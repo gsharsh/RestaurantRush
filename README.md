@@ -4,17 +4,42 @@ RestaurantRush is the SC2002 Object-Oriented Design and Programming assignment: 
 
 - **Repository:** [gsharsh/RestaurantRush](https://github.com/gsharsh/RestaurantRush)
 - **Assignment brief:** [SC2002 Restaurant Rush](docs/SC2002_Restaurant_Rush_Group_Assignment.docx)
-- **Current status:** Stage 3 implementation, tests and final UML are complete, and all three stage tags are published. Final video details will be added after filming.
+- **Current status:** Stage 3 implementation, tests and final UML are complete, and all three stage tags are published. The [recorded demo and timestamps](#recorded-video) are available below.
+
+## Recorded video
+
+**Demo video:** [SC2002: RestaurantRush](https://youtu.be/w8lqyMRiCBE) (12:59).
+
+The timestamps below cover the seven required segments and a separate live demo.
+
+
+| Segment                                 | Timestamp                                   |
+| --------------------------------------- | ------------------------------------------- |
+| Launch from the submitted project       | [00:15](https://youtu.be/w8lqyMRiCBE?t=15)  |
+| Manager choices with constrained staff  | [00:42](https://youtu.be/w8lqyMRiCBE?t=42)  |
+| READY → SERVED → payment                | [02:02](https://youtu.be/w8lqyMRiCBE?t=122) |
+| VIP or Critic behaviour                 | [02:50](https://youtu.be/w8lqyMRiCBE?t=170) |
+| A Stage 3 feature                       | [03:45](https://youtu.be/w8lqyMRiCBE?t=225) |
+| Victory and defeat                      | [05:22](https://youtu.be/w8lqyMRiCBE?t=322) |
+| Stage tag comparisons and UML diagrams  | [06:33](https://youtu.be/w8lqyMRiCBE?t=393) |
+| Live demo — VIP service with Happy Hour | [11:18](https://youtu.be/w8lqyMRiCBE?t=678) |
+
+
+
 
 ## Stage releases
 
 All three stages are tagged and available as runnable snapshots.
 
-| Tag | Runnable scope | Commit |
-| --- | --- | --- |
+
+| Tag                                                               | Runnable scope                               | Commit                                                                                               |
+| ----------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | [stage-1](https://github.com/gsharsh/RestaurantRush/tree/stage-1) | Regular customers and the complete core game | [1b9ebf9](https://github.com/gsharsh/RestaurantRush/commit/1b9ebf92330316628010880245f98a67416aaef9) |
-| [stage-2](https://github.com/gsharsh/RestaurantRush/tree/stage-2) | VIP and Critic behaviour | [27b7c9f](https://github.com/gsharsh/RestaurantRush/commit/27b7c9f475b77ab3efa533e5e88317ea6c1b0e55) |
-| [stage-3](https://github.com/gsharsh/RestaurantRush/tree/stage-3) | Host, ComboMeal and Happy Hour | [f7c3365](https://github.com/gsharsh/RestaurantRush/commit/f7c33655e2633bed0a53a36bc980d1c744779516) |
+| [stage-2](https://github.com/gsharsh/RestaurantRush/tree/stage-2) | VIP and Critic behaviour                     | [27b7c9f](https://github.com/gsharsh/RestaurantRush/commit/27b7c9f475b77ab3efa533e5e88317ea6c1b0e55) |
+| [stage-3](https://github.com/gsharsh/RestaurantRush/tree/stage-3) | Host, ComboMeal and Happy Hour               | [f7c3365](https://github.com/gsharsh/RestaurantRush/commit/f7c33655e2633bed0a53a36bc980d1c744779516) |
+
+
+
 
 ## Build and run
 
@@ -115,6 +140,9 @@ java -jar /path/to/plantuml.jar --define CONTINUOUS=1 --png --output-dir /tmp/rr
 | M4 - Viti     | Game controller, turns and arrivals   | Host task limits and Happy Hour timing |
 | M5 - Devansh  | CLI, views, app wiring and evidence   | Display, replays and UML coordination  |
 
+
+
+
 ## Stage 1 → Stage 2 transition
 
 Both transition tables record the new, changed, moved and deleted files required by brief Section 5. Java paths are relative to `src/restaurantrush/`; test paths are relative to `tests/restaurantrush/` unless stated otherwise.
@@ -157,20 +185,3 @@ No gameplay class was deleted. The old paths were replaced by the moves above.
 
 
 No gameplay class or test was deleted or moved. Within Stage 3, the initial Draw.io sequence source was replaced by PlantUML and updated PNG exports. Compatibility Waiter overloads remain in use by the regression tests.
-
-## Recorded video
-
-Video filename/link and timestamps have not yet been provided. Brief Section 6.2 requires these seven segments:
-
-
-| Segment                                | Timestamp |
-| -------------------------------------- | --------- |
-| Launch from the submitted project      | Pending   |
-| Manager choices with constrained staff | Pending   |
-| READY → SERVED → payment               | Pending   |
-| VIP or Critic behaviour                | Pending   |
-| A Stage 3 feature                      | Pending   |
-| Victory and defeat                     | Pending   |
-| Stage tag comparisons and UML diagrams | Pending   |
-
-
